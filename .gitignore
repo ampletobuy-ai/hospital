@@ -1,0 +1,58 @@
+# CodeIgniter runtime
+application/cache/*
+!application/cache/index.html
+!application/cache/.htaccess
+
+application/logs/*
+!application/logs/index.html
+!application/logs/.htaccess
+
+application/sessions/*
+!application/sessions/.gitkeep
+
+# User uploads (keep folder placeholders)
+uploads/**
+!uploads/**/
+!uploads/**/index.html
+!uploads/**/.htaccess
+
+# Database backups and temp dumps
+backup/database_backup/*
+!backup/database_backup/index.html
+backup/temp_uploaded/*
+!backup/temp_uploaded/index.html
+backup/_tmp/*
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Composer / Node (root only; bundled third_party vendors stay tracked)
+/vendor/
+/node_modules/
+composer.phar
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editors and IDEs
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# PHP / debug
+*.log
+.phpunit.result.cache
+.php_cs.cache
+.php-cs-fixer.cache
+/cgi-bin/
