@@ -1,6 +1,6 @@
 <?php
 
-defined('BASEPATH') or exit('No direct script access allowed');
+defined('BASEPATH') OR exit('No direct script access allowed');
 
 class SaasValidation
 {
@@ -19,40 +19,90 @@ class SaasValidation
             $this->CI->load->library('ResourceQuota');
         }
     }
-    
+
     public function applicationQuotas()
     {
-        return TRUE;
+        return $this->sass_enabled ? $this->CI->resourcequota : true;
     }
 
     public function validateCanAddNewResource($input, $resource_name, $no_of_record)
     {
-        return TRUE;		
+        if (!$this->sass_enabled) {
+            return true;
+        }
+
+        $limit = $this->CI->resourcequota->getLimit($resource_name);
+        if ($limit === null || $limit <= 0) {
+            return true;
+        }
+
+        $usage = $this->CI->resourcequota->getUsage($resource_name);
+        if (($usage + (int) $no_of_record) > $limit) {
+            $this->CI->form_validation->set_message('validateCanAddNewResource', 'Plan limit reached for ' . $resource_name . '. Please upgrade your subscription.');
+
+            return false;
+        }
+
+        return true;
     }
-	
+
     public function getResourceLimit($resource)
     {
-        return TRUE;
+        if (!$this->sass_enabled) {
+            return true;
+        }
+
+        return $this->CI->resourcequota->getLimit($resource);
     }
-	
-    public function validateCanUploadFile($input, $storage_array = [])
-    {         
-        return TRUE;
+
+    public function validateCanUploadFile($input, $storage_array = array())
+    {
+        if (!$this->sass_enabled) {
+            return true;
+        }
+
+        $limitKb = $this->CI->resourcequota->getLimit('storage');
+        if ($limitKb === null || $limitKb <= 0) {
+            return true;
+        }
+
+        $additionalKb = 0;
+        if (!empty($storage_array) && is_array($storage_array)) {
+            foreach ($storage_array as $field) {
+                $field = trim((string) $field);
+                if ($field === '') {
+                    continue;
+                }
+                if (is_array($_FILES[$field]['name'] ?? null)) {
+                    $additionalKb += (int) $this->CI->media_storage->getTmpMultipleFileSize($field);
+                } else {
+                    $additionalKb += (int) $this->CI->media_storage->getTmpFileSize($field);
+                }
+            }
+        }
+
+        $usageKb = $this->CI->resourcequota->getUsage('storage');
+        if (($usageKb + $additionalKb) > $limitKb) {
+            $this->CI->form_validation->set_message('validateCanUploadFile', 'Storage limit exceeded. Please upgrade your subscription or remove old files.');
+
+            return false;
+        }
+
+        return true;
     }
 
     public function updateStorageLimit($resource, $storage_array)
-    {        
-        return TRUE; // return true when saas is not enabled
+    {
+        return true;
     }
 
     public function updateResouceQuota($resource, $resource_usage)
-    {        
-        return TRUE; // return true when saas is not enabled
+    {
+        return true;
     }
 
     public function deleteResouceQuota($resource, $resource_usage)
-    {        
-        return TRUE; // return true when saas is not enabled
+    {
+        return true;
     }
-
 }

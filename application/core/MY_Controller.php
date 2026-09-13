@@ -75,7 +75,35 @@ class Admin_Controller extends MY_Controller
         parent::__construct();
         $this->load->library('rbac');
         $this->auth->is_logged_in();
+        $this->enforceSubscriptionAccess();
         $this->check_license();       
+    }
+
+    private function enforceSubscriptionAccess()
+    {
+        $this->load->config('tenancy-config');
+        if (!$this->config->item('tenancy_enabled')) {
+            return;
+        }
+
+        $tenantId = (string) $this->session->userdata('tenant_id');
+        if ($tenantId === '') {
+            return;
+        }
+
+        $this->load->library('subscription_resolver');
+        if ($this->subscription_resolver->isAccessAllowed($tenantId)) {
+            return;
+        }
+
+        if ($this->input->method(true) !== 'GET') {
+            show_error('Your subscription has expired. Please renew to continue.', 403);
+        }
+
+        $this->load->vars(array(
+            'subscription_locked' => true,
+            'portal_subscription_url' => $this->config->item('portal_subscription_url'),
+        ));
     }
   
     public function check_license()

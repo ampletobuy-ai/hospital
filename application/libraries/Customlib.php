@@ -1951,70 +1951,105 @@ class Customlib
     }
 
 
-     public function generatebarcode($admission_no, $default_return_code = 'barcode')
+    public function generatebarcode($admission_no, $default_return_code = 'barcode')
     {
-        $data = [];
-        $code = $admission_no;
-        //load library
-        $this->CI->load->library('zend');
-        //load in folder Zend
-        $this->CI->zend->load('Zend/Barcode');
-        //generate barcode
-        $imageResource = Zend_Barcode::factory('code128', 'image', array('text' => $code, 'barHeight' => 20), array())->draw();
-        $barcode_dir = $this->CI->customlib->getFolderPath().'uploads/patient_id_card/barcodes/';
-        if (!is_dir($barcode_dir)) {
-            mkdir($barcode_dir, 0755, true);
-        }
-        imagepng($imageResource, $barcode_dir . $admission_no . '.png');
         $barcode = 'uploads/patient_id_card/barcodes/' . $admission_no . '.png';
+        $qrcode  = 'uploads/patient_id_card/qrcode/' . $admission_no . '.png';
+        $code    = (string) $admission_no;
 
-        //=============qrcode=================
-        $this->CI->load->library('QR_Code');
-        $path = $this->CI->customlib->getFolderPath().'uploads/patient_id_card/qrcode/';
-        if (!is_dir($path)) {
-            mkdir($path, 0755, true);
+        if ($code === '') {
+            return ($default_return_code == 'qrcode') ? $qrcode : $barcode;
         }
-        $qrcode = $this->CI->qr_code->generate($path, $code, $admission_no);
 
-        if ($default_return_code == "barcode") {
-            return $barcode;
-        } elseif ($default_return_code == "qrcode") {
-            return 'uploads/patient_id_card/qrcode/' . $admission_no . '.png';
+        $barcode_dir  = $this->CI->customlib->getFolderPath() . 'uploads/patient_id_card/barcodes/';
+        $qr_dir       = $this->CI->customlib->getFolderPath() . 'uploads/patient_id_card/qrcode/';
+        $barcode_file = $barcode_dir . $admission_no . '.png';
+        $qr_file      = $qr_dir . $admission_no . '.png';
+
+        try {
+            if (!is_dir($barcode_dir)) {
+                @mkdir($barcode_dir, 0777, true);
+            }
+            if (!is_dir($qr_dir)) {
+                @mkdir($qr_dir, 0777, true);
+            }
+
+            // Reuse existing files when Apache cannot overwrite user-owned PNGs.
+            if (!is_file($barcode_file) || is_writable($barcode_file)) {
+                $this->CI->load->library('zend');
+                $this->CI->zend->load('Zend/Barcode');
+                $imageResource = Zend_Barcode::factory('code128', 'image', array('text' => $code, 'barHeight' => 20), array())->draw();
+                if (@imagepng($imageResource, $barcode_file)) {
+                    @chmod($barcode_file, 0666);
+                }
+            }
+
+            if (!is_file($qr_file) || is_writable($qr_file)) {
+                $this->CI->load->library('QR_Code');
+                $this->CI->qr_code->generate($qr_dir, $code, $admission_no);
+                if (is_file($qr_file)) {
+                    @chmod($qr_file, 0666);
+                }
+            }
+        } catch (Throwable $e) {
+            log_message('error', 'Patient barcode/QR generation failed for id ' . $admission_no . ': ' . $e->getMessage());
         }
+
+        if ($default_return_code == 'qrcode') {
+            return $qrcode;
+        }
+        return $barcode;
     }
 
 
     public function generatestaffbarcode($employee_id, $staff_id, $default_return_code = 'barcode')
-    {  
-        $data = [];
-        $code = $employee_id;
-        //load library
-        $this->CI->load->library('zend');
-        //load in folder Zend
-        $this->CI->zend->load('Zend/Barcode');
-        //generate barcode
-        $imageResource = Zend_Barcode::factory('code128', 'image', array('text' => $code, 'barHeight' => 20), array())->draw();
-        $barcode_dir = $this->CI->customlib->getFolderPath().'uploads/staff_id_card/barcodes/';
-        if (!is_dir($barcode_dir)) {
-            mkdir($barcode_dir, 0755, true);
-        }
-        imagepng($imageResource, $barcode_dir . $staff_id . '.png');
+    {
         $barcode = 'uploads/staff_id_card/barcodes/' . $staff_id . '.png';
-        //=============qrcode=================
-        $this->CI->load->library('QR_Code');
+        $qrcode  = 'uploads/staff_id_card/qrcode/' . $staff_id . '.png';
+        $code    = (string) $employee_id;
 
-        $path = $this->CI->customlib->getFolderPath().'uploads/staff_id_card/qrcode/';
-        if (!is_dir($path)) {
-            mkdir($path, 0755, true);
+        if ($code === '') {
+            return ($default_return_code == 'qrcode') ? $qrcode : $barcode;
         }
-        
-        $qrcode =   $this->CI->qr_code->generate($path,$code,$staff_id);
 
-        if ($default_return_code == "barcode") {
-            return $barcode;
-        } elseif ($default_return_code == "qrcode") {
-            return 'uploads/staff_id_card/qrcode/' . $staff_id . '.png';
+        $barcode_dir  = $this->CI->customlib->getFolderPath() . 'uploads/staff_id_card/barcodes/';
+        $qr_dir       = $this->CI->customlib->getFolderPath() . 'uploads/staff_id_card/qrcode/';
+        $barcode_file = $barcode_dir . $staff_id . '.png';
+        $qr_file      = $qr_dir . $staff_id . '.png';
+
+        try {
+            if (!is_dir($barcode_dir)) {
+                @mkdir($barcode_dir, 0777, true);
+            }
+            if (!is_dir($qr_dir)) {
+                @mkdir($qr_dir, 0777, true);
+            }
+
+            // Reuse existing files when Apache cannot overwrite user-owned PNGs.
+            if (!is_file($barcode_file) || is_writable($barcode_file)) {
+                $this->CI->load->library('zend');
+                $this->CI->zend->load('Zend/Barcode');
+                $imageResource = Zend_Barcode::factory('code128', 'image', array('text' => $code, 'barHeight' => 20), array())->draw();
+                if (@imagepng($imageResource, $barcode_file)) {
+                    @chmod($barcode_file, 0666);
+                }
+            }
+
+            if (!is_file($qr_file) || is_writable($qr_file)) {
+                $this->CI->load->library('QR_Code');
+                $this->CI->qr_code->generate($qr_dir, $code, $staff_id);
+                if (is_file($qr_file)) {
+                    @chmod($qr_file, 0666);
+                }
+            }
+        } catch (Throwable $e) {
+            log_message('error', 'Staff barcode/QR generation failed for staff ' . $staff_id . ': ' . $e->getMessage());
         }
+
+        if ($default_return_code == 'qrcode') {
+            return $qrcode;
+        }
+        return $barcode;
     }
 
     public function bulkmailnotificationtype()
