@@ -10,6 +10,7 @@ class Printing extends Admin_Controller
         parent::__construct();
         $this->load->library('media_storage');
         $this->load->library('SaasValidation');
+        $this->printing_model->setVisibilityFiltering(false);
     }
 
     /**
@@ -398,6 +399,8 @@ class Printing extends Admin_Controller
             $insertData = array(
                 'id'           => $id,
                 'print_footer' => $this->input->post('footer_content', TRUE),
+                'show_header'  => $this->input->post('show_header', TRUE) ? 1 : 0,
+                'show_footer'  => $this->input->post('show_footer', TRUE) ? 1 : 0,
                 'is_active'    => 'yes',
             ); 
 				
