@@ -113,11 +113,13 @@ function reset_form(selector){
 
 
 
-     if ($('.purchasemodal').length <= 0 && chk_validate == "") {
+     if ($('#activelicmodal').length && $('.purchasemodal').length <= 0 && chk_validate == "") {
          $("#activelicmodal").modal('show');
      }
      $(document).on('click', '.purchasemodal', function() {
-         $("#activelicmodal").modal('show');
+         if ($('#activelicmodal').length) {
+             $("#activelicmodal").modal('show');
+         }
      });
 
      $('#activelicmodal').on('shown.bs.modal', function() {

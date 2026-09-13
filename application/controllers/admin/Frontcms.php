@@ -90,26 +90,35 @@ class Frontcms extends Admin_Controller
                 'linkedin_url'                 => $this->input->post('linkedin_url', TRUE),
             );
            
+            $row = null;
+            if ($this->input->post('id', TRUE) != '') {
+                $row = $this->frontcms_setting_model->get($this->input->post('id', TRUE));
+            }
+
             if (isset($_FILES["logo"]) && !empty($_FILES["logo"]['name'])) {
                 $img_name = $this->media_storage->fileupload("logo", "./uploads/hospital_content/logo/");
-                if ($this->input->post('id', TRUE) != '') {
-                    $row = $this->frontcms_setting_model->get($this->input->post('id', TRUE));
-                    if ($row->logo != '') {
-                        $this->media_storage->filedelete($row->logo, "uploads/hospital_content/logo/");
-                    }
+                if ($row && $row->logo != '') {
+                    $this->media_storage->filedelete($row->logo, "uploads/hospital_content/logo/");
                 }
-                $data['logo'] = "./uploads/hospital_content/logo/" .$img_name;
+                $data['logo'] = "./uploads/hospital_content/logo/" . $img_name;
+            } elseif ($this->input->post('remove_logo')) {
+                if ($row && $row->logo != '') {
+                    $this->media_storage->filedelete($row->logo, "uploads/hospital_content/logo/");
+                }
+                $data['logo'] = '';
             }
 
             if (isset($_FILES["fav_icon"]) && !empty($_FILES["fav_icon"]['name'])) {
                 $img_name = $this->media_storage->fileupload("fav_icon", "./uploads/hospital_content/logo/");
-                if ($this->input->post('id', TRUE) != '') {
-                    $row = $this->frontcms_setting_model->get($this->input->post('id', TRUE));
-                    if ($row->fav_icon != '') {
-                        $this->media_storage->filedelete($row->fav_icon, "uploads/hospital_content/logo/");
-                    }
+                if ($row && $row->fav_icon != '') {
+                    $this->media_storage->filedelete($row->fav_icon, "uploads/hospital_content/logo/");
                 }
-                $data['fav_icon'] = "./uploads/hospital_content/logo/" .$img_name;
+                $data['fav_icon'] = "./uploads/hospital_content/logo/" . $img_name;
+            } elseif ($this->input->post('remove_fav_icon')) {
+                if ($row && $row->fav_icon != '') {
+                    $this->media_storage->filedelete($row->fav_icon, "uploads/hospital_content/logo/");
+                }
+                $data['fav_icon'] = '';
             }
 
             $this->frontcms_setting_model->add($data);

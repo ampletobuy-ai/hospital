@@ -184,10 +184,16 @@ function hospital_cli_bootstrap_tenant(array $defaultCfg, $tenantDatabase, $tena
     $folderPath = rtrim(str_replace('\\', '/', dirname(__DIR__)), '/') . '/';
     $baseUrl = hospital_env('HOSPITAL_BASE_URL', 'http://localhost/hospital/');
 
-    $stmt = $mysqli->prepare('UPDATE sch_settings SET name = ?, base_url = ?, folder_path = ?, saas_key = ? WHERE id = 1');
-    $stmt->bind_param('ssss', $hospitalName, $baseUrl, $folderPath, $tenantId);
+    $stmt = $mysqli->prepare('UPDATE sch_settings SET name = ?, base_url = ?, folder_path = ?, saas_key = ?, image = ?, mini_logo = ?, app_logo = ? WHERE id = 1');
+    $image = 'qubex_track_logo.png';
+    $miniLogo = 'qubex_track_app.png';
+    $appLogo = 'qubex_track_app.png';
+    $stmt->bind_param('sssssss', $hospitalName, $baseUrl, $folderPath, $tenantId, $image, $miniLogo, $appLogo);
     $stmt->execute();
     $stmt->close();
+
+    // Product branding defaults for new tenants (Qubex Track).
+    $mysqli->query("UPDATE front_cms_settings SET logo = './uploads/hospital_content/logo/qubex_track_logo.png', fav_icon = './uploads/hospital_content/logo/qubex_track_favicon.png' WHERE id = 1");
 
     $mysqli->query('DELETE FROM staff_roles');
     $mysqli->query('DELETE FROM staff');

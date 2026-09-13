@@ -41,32 +41,18 @@
                 <h5 class="modal-title" id="addonUpdateModalLabel"><?php echo $this->lang->line('update_your_addon'); ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="<?php echo site_url('admin/admin/updateAddonVerify'); ?>" method="POST" id="update_addon_verify">
-                <div class="pup-scroll-area">
-                    <div class="modal-body addon_update_modal-body">
-                        <div class="sh-form-card">
-                            <div class="sh-card-header">
-                                <span class="sh-card-header-title"><?php echo $this->lang->line('details'); ?></span>
-                            </div>
-                            <div class="p-2">
-                                <div class="error_message">
-                                </div>
-                                <input type="hidden" name="addon" class="addon_name" value="">
-                                <input type="hidden" name="product_id" class="product_id" value="">
-                                <div class="mb-3">
-                                    <label class="ainline"><span>Envato Market Purchase Code for Addon Update ( <a target="_blank" href="https://help.market.envato.com/hc/en-us/articles/202822600-Where-Is-My-Purchase-Code-"> How to find it?</a> )</span></label>
-                                    <input type="text" class="form-control" id="input-addon_check_update_envato_market_purchase_code" name="addon_check_update_envato_market_purchase_code">
-                                    <div id="error" class="input-error text text-danger"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <div class="pup-scroll-area">
+                <div class="modal-body addon_update_modal-body">
+                    <div class="error_message"></div>
+                    <p class="mb-0"><?php echo $this->lang->line('update_your_addon'); ?>?</p>
+                    <input type="hidden" class="addon_name" value="">
+                    <input type="hidden" class="product_id" value="">
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><?php echo $this->lang->line('cancel'); ?></button>
-                    <button type="submit" class="btn btn-info" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Saving..."><?php echo $this->lang->line('update'); ?></button>
-                </div>
-            </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><?php echo $this->lang->line('cancel'); ?></button>
+                <button type="button" class="btn btn-info btn-confirm-addon-update" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Saving..."><?php echo $this->lang->line('update'); ?></button>
+            </div>
         </div>
     </div>
 </div>
@@ -215,71 +201,17 @@
         let addon_name = $(e.relatedTarget).data('addonName');
         $(this).find("input[class=product_id]").val(product_id);
         $(this).find("input[class=addon_name]").val(addon_name);
-        $(this).find("button[type=submit]").data('product_id', product_id);
-        $(this).find("button[type=submit]").data('directory', directory);
+        $(this).find("button.btn-confirm-addon-update").data('product_id', product_id);
+        $(this).find("button.btn-confirm-addon-update").data('directory', directory);
     });
 
-    $("#update_addon_verify").on('submit', (function(e) {
+    $(document).on('click', '.btn-confirm-addon-update', function(e) {
         e.preventDefault();
-        let form = $(this);
-        let $this = $(this).find("button[type=submit]:focus");
-        $this.btnLoading();
-        let actionUrl = form.attr('action');
-        $.ajax({
-            url: actionUrl,
-            type: "POST",
-            data: form.serialize(),
-            dataType: 'json',
-              
-            beforeSend: function() {
-                $('.addon_update_modal-body .error_message').html("");
-                $("[class^='input-error']").html("");
-                $this.btnLoading();
-            },
-            success: function(response, textStatus, xhr) {
-                if (xhr.status != 200) {
-                 
-                 }else if(xhr.status == 200){
-
-                     if (response.status == 0) {
-                         $.each(response.error, function(key, value) {
-                        
-                        $('#input-' + key).parents('.form-group').find('#error').html(value);
-                    });
-                     } else if(response.status == 2){
-     
-                         errorMsg(response.message);
-                     }else if(response.status == 1){     
-    
-                        let product_id = $this.data('product_id');
-                        let directory =   $this.data('directory');
-                        update_addon(product_id,directory);
-                     }
-
-                 }
-              
-                $this.btnReset();
-            },
-            error: function(xhr) { // if error occured
-             
-                $this.btnReset();
-
-                if (xhr.status != 200) {
-                    console.log("sdfsdfdsf");
-                    var r = jQuery.parseJSON(xhr.responseText);          
-               var $newmsgDiv = $("<div/>") // creates a div element              
-                         .addClass("alert alert-danger") // add a class
-                         .html(r.message);
-                     $('.addon_update_modal-body .error_message').append($newmsgDiv);
-                 }
-
-            },
-            complete: function() {
-                $this.btnReset();
-            }
-
-        });
-    }));
+        let $this = $(this);
+        let product_id = $this.data('product_id');
+        let directory = $this.data('directory');
+        update_addon(product_id, directory);
+    });
 
 let update_addon=(product_id,directory)=>{
         let _button = $(this);     

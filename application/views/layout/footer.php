@@ -883,9 +883,11 @@ if (typeof popup === 'undefined') {
     </div>
 </div>
 
-<!-- License-registration modals (opened by .purchasemodal click or hospital-custom.js auto-show when SHLK is empty) -->
-<?php if ($this->config->item('license_check_enabled')) { $this->load->view('layout/routine_update'); } ?>
-<?php $this->load->view('layout/addon_update'); ?>
+<!-- License-registration modals (only when remote license checks are enabled) -->
+<?php if ($this->config->item('license_check_enabled')) {
+    $this->load->view('layout/routine_update');
+    $this->load->view('layout/addon_update');
+} ?>
 
 <!-- Multi-branch switch modal (trigger button is in header.php; same visibility guard) -->
 <?php

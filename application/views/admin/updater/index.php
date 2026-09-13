@@ -107,7 +107,7 @@
                         <div class="sh-updater-meta-icon"><i class="fa fa-key"></i></div>
                         <div>
                             <div class="sh-updater-meta-key">License</div>
-                            <div class="sh-updater-meta-val">Active</div>
+                            <div class="sh-updater-meta-val"><?php echo ($this->config->item('license_check_enabled') && $this->config->item('SHLK') === '') ? 'Unregistered' : 'Active'; ?></div>
                         </div>
                     </div>
                 </div>

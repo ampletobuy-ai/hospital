@@ -21,7 +21,10 @@ class Schsettings extends Admin_Controller
     public function index()
     {        
         $app_ver         = $this->config->item('app_ver');
-        $data['app_response']   = $this->auth->andapp_validate();     
+        // Skip remote Android app license check when disabled (Qubex local/self-hosted).
+        $data['app_response']   = $this->config->item('license_check_enabled')
+            ? $this->auth->andapp_validate()
+            : true;
 
         $this->session->set_userdata('top_menu', 'setup');
         $this->session->set_userdata('sub_menu', 'schsettings/index');

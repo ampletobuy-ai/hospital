@@ -231,7 +231,13 @@ if (!empty($cms_pages)) {
             <div class="fcms-upload-body">
               <div class="nm"><?php echo $this->lang->line('logo'); ?></div>
               <div class="sb"><?php echo $this->lang->line('logo_dimensions_hint'); ?></div>
-              <input type="file" class="filestyle form-control-file" name="logo" data-height="40" data-default-file="<?php echo html_escape($this->customlib->getBaseUrl().$frontcmslist->logo); ?>">
+              <input type="file" class="filestyle form-control-file" name="logo" data-height="40" data-default-file="<?php echo !empty($frontcmslist->logo) ? html_escape($this->customlib->getBaseUrl().$frontcmslist->logo) : ''; ?>">
+              <?php if (!empty($frontcmslist->logo)): ?>
+              <label class="form-check mt-2 mb-0">
+                <input type="checkbox" class="form-check-input" name="remove_logo" value="1">
+                <span class="form-check-label"><?php echo $this->lang->line('remove'); ?> <?php echo $this->lang->line('logo'); ?></span>
+              </label>
+              <?php endif; ?>
               <span class="text-danger d-block mt-1"><?php echo form_error('logo'); ?></span>
             </div>
           </div>
@@ -248,7 +254,13 @@ if (!empty($cms_pages)) {
             <div class="fcms-upload-body">
               <div class="nm"><?php echo $this->lang->line('favicon'); ?></div>
               <div class="sb"><?php echo $this->lang->line('favicon_dimensions_hint'); ?></div>
-              <input type="file" class="filestyle form-control-file" name="fav_icon" data-height="40" data-default-file="<?php echo html_escape($this->customlib->getBaseUrl().$frontcmslist->fav_icon); ?>">
+              <input type="file" class="filestyle form-control-file" name="fav_icon" data-height="40" data-default-file="<?php echo !empty($frontcmslist->fav_icon) ? html_escape($this->customlib->getBaseUrl().$frontcmslist->fav_icon) : ''; ?>">
+              <?php if (!empty($frontcmslist->fav_icon)): ?>
+              <label class="form-check mt-2 mb-0">
+                <input type="checkbox" class="form-check-input" name="remove_fav_icon" value="1">
+                <span class="form-check-label"><?php echo $this->lang->line('remove'); ?> <?php echo $this->lang->line('favicon'); ?></span>
+              </label>
+              <?php endif; ?>
             </div>
           </div>
 

@@ -13,12 +13,12 @@
                     </div>
                     <div class="error_message"></div>
                     <div class="mb-3">
-                        <label for="input-envato_market_purchase_code" class="form-label"><?php echo $this->lang->line('envato_market_purchase_code_for_smart_hospital_android_app'); ?> ( <a target="_blank" href="https://help.market.envato.com/hc/en-us/articles/202822600-Where-Is-My-Purchase-Code-"> How to find it?</a> )</label>
-                        <input type="text" class="form-control" id="input-envato_market_purchase_code" name="envato_market_purchase_code">
+                        <label for="input-qubex_purchase_code" class="form-label"><?php echo $this->lang->line('qubex_purchase_code_for_android_app'); ?></label>
+                        <input type="text" class="form-control" id="input-qubex_purchase_code" name="qubex_purchase_code">
                         <div id="error" class="text text-danger"></div>
                     </div>
                     <div class="mb-3">
-                        <label for="input-email" class="form-label"><?= $this->lang->line('your_email_registered_with_envato') ?></label>
+                        <label for="input-email" class="form-label"><?= $this->lang->line('your_email_registered_with_qubex') ?></label>
                         <input type="text" class="form-control" id="input-email" name="email">
                         <div id="error" class="text text-danger"></div>
                     </div>

@@ -5,6 +5,6 @@ if (!defined('BASEPATH')) {
 }
 
 $config['license_check_enabled'] = false;
-$config['envato_market_purchase_code'] = '';
-$config['envato_market_username'] = '';
+$config['qubex_purchase_code'] = '';
+$config['qubex_username'] = '';
 $config['SHLK'] = '';

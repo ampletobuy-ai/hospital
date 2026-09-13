@@ -29,6 +29,16 @@ class Hospital_tenant_bootstrap
             'base_url' => $baseUrl,
             'folder_path' => $folderPath,
             'saas_key' => $tenantId,
+            'image' => 'qubex_track_logo.png',
+            'mini_logo' => 'qubex_track_app.png',
+            'app_logo' => 'qubex_track_app.png',
+        ));
+
+        // Product branding defaults for new tenants (Qubex Track).
+        $db->where('id', 1);
+        $db->update('front_cms_settings', array(
+            'logo' => './uploads/hospital_content/logo/qubex_track_logo.png',
+            'fav_icon' => './uploads/hospital_content/logo/qubex_track_favicon.png',
         ));
 
         $db->query('DELETE FROM staff_roles');

@@ -300,7 +300,7 @@ class Auth
     {
 
         $email                       = $this->CI->input->post('email');
-        $envato_market_purchase_code = $this->CI->input->post('envato_market_purchase_code');
+        $qubex_purchase_code = $this->CI->input->post('qubex_purchase_code');
         $url                         = $this->CI->enc_lib->dycrypt(DEBUG_SYSTEM_UPDATE);     
         $ch                          = curl_init();
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
@@ -311,7 +311,7 @@ class Auth
 
         $data = array(
             'email'         => $email,
-            'purchase_code' => $envato_market_purchase_code,
+            'purchase_code' => $qubex_purchase_code,
             'base_url'      => base_url(),
         );
 
@@ -351,6 +351,9 @@ class Auth
 
     public function andapp_validate()
     {
+        if (!$this->CI->config->item('license_check_enabled')) {
+            return true;
+        }
 
         $shlk = $this->CI->config->item('SHLK');    
         $url  = $this->CI->enc_lib->dycrypt(DEBUG_SYSTEM_APP_REG);
@@ -379,7 +382,7 @@ class Auth
     public function andapp_update()
     {
         $email                       = $this->CI->input->post('app-email');
-        $envato_market_purchase_code = $this->CI->input->post('app-envato_market_purchase_code');
+        $qubex_purchase_code = $this->CI->input->post('app-qubex_purchase_code');
         $shlk                        = $this->CI->config->item('SHLK');
         $url                         = $this->CI->enc_lib->dycrypt(DEBUG_SYSTEM_APP);
         
@@ -392,7 +395,7 @@ class Auth
         $data = array(
             'email'         => $email,
             'shlk'          => $shlk,
-            'purchase_code' => $envato_market_purchase_code,
+            'purchase_code' => $qubex_purchase_code,
             'base_url'      => base_url(),
         );
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
@@ -694,7 +697,12 @@ class Auth
     }
     
     public function addonchk($prod = null, $return_url = false)
-    {      
+    {
+        // When remote license checks are off (Qubex), treat installed addons as registered.
+        if (!$this->CI->config->item('license_check_enabled')) {
+            return true;
+        }
+
         if ($prod != null) {
             $addon_prod = $this->CI->config->item('addon_prod');
             $addon_ver  = $this->CI->config->item('addon_ver');
@@ -727,7 +735,7 @@ class Auth
         $email                       = $this->CI->input->post('app-email');
         $addon                       = $this->CI->input->post('addon');
         $addon_version               = $this->CI->input->post('addon_version');
-        $envato_market_purchase_code = $this->CI->input->post('app-envato_market_purchase_code');
+        $qubex_purchase_code = $this->CI->input->post('app-qubex_purchase_code');
         $shlk                        = $this->CI->config->item('SHLK');
         
         $url                         = $this->CI->enc_lib->dycrypt(DEBUG_SYSTEM_ADDON);       
@@ -741,7 +749,7 @@ class Auth
         $data = array(
             'email'         => $email,
             'shlk'          => $shlk,
-            'purchase_code' => $envato_market_purchase_code,
+            'purchase_code' => $qubex_purchase_code,
             'addon_version' => $addon_version,
             'addon'         => $addon,
             'base_url'      => base_url(),
@@ -819,7 +827,7 @@ class Auth
 		$email                       = $this->CI->input->post('app-email');
         $addon                       = $this->CI->input->post('addon');
         $addon_version               = $this->CI->input->post('addon_version');
-        $envato_market_purchase_code = $this->CI->input->post('app-envato_market_purchase_code');
+        $qubex_purchase_code = $this->CI->input->post('app-qubex_purchase_code');
         $shlk                        = $this->CI->config->item('SHLK');
        
         $url                         = $this->CI->enc_lib->dycrypt(DEBUG_SYSTEM_ADDON);
@@ -833,7 +841,7 @@ class Auth
         $data = array(
             'email'         => $email,
             'shlk'          => $shlk,
-            'purchase_code' => $envato_market_purchase_code,
+            'purchase_code' => $qubex_purchase_code,
             'addon_version' => $addon_version,
             'addon'         => $addon,
             'base_url'      => base_url(),
