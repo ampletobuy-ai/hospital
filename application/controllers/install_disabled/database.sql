@@ -3453,6 +3453,8 @@ CREATE TABLE `print_setting` (
   `id` int NOT NULL,
   `print_header` text CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
   `print_footer` text CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
+  `show_header` tinyint(1) NOT NULL DEFAULT '1',
+  `show_footer` tinyint(1) NOT NULL DEFAULT '1',
   `setting_for` varchar(200) NOT NULL,
   `is_active` varchar(50) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

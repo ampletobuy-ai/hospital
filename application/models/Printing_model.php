@@ -6,6 +6,35 @@ if (!defined('BASEPATH')) {
 
 class Printing_model extends MY_Model
 {
+    private $visibility_filtering = true;
+    private $hidden_header_placeholder = 'backend/images/print-header-placeholder.svg';
+
+    /**
+     * The settings screen must display saved content even when it is hidden
+     * from printed documents.
+     */
+    public function setVisibilityFiltering($enabled)
+    {
+        $this->visibility_filtering = (bool) $enabled;
+        return $this;
+    }
+
+    private function applyVisibility($record)
+    {
+        if (!$this->visibility_filtering || empty($record)) {
+            return $record;
+        }
+
+        if (isset($record['show_header']) && !(int) $record['show_header']) {
+            $record['print_header'] = $this->hidden_header_placeholder;
+        }
+
+        if (isset($record['show_footer']) && !(int) $record['show_footer']) {
+            $record['print_footer'] = '';
+        }
+
+        return $record;
+    }
 
     public function add($data)
     {
@@ -44,17 +73,17 @@ class Printing_model extends MY_Model
     {
         if (!empty($id)) {
             $query = $this->db->where("id", $id)->get("print_setting");
-            return $query->row_array();
+            return $this->applyVisibility($query->row_array());
         } else {
             $query = $this->db->where("setting_for", $setting_for)->get("print_setting");
-            return $query->result_array();
+            return array_map(array($this, 'applyVisibility'), $query->result_array());
         }
     }
 
     public function getheaderfooter($setting_for)
     {        
         $query = $this->db->where("setting_for", $setting_for)->get("print_setting");
-        return $query->row_array();        
+        return $this->applyVisibility($query->row_array());
     }
 
     public function delete($id)

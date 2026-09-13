@@ -13,6 +13,7 @@
                     <input type="hidden" name="function_name" value="<?php echo $function_name; ?>">
 
                     <div class="row g-3">
+                        <?php $this->load->view('admin/printing/_visibility_controls'); ?>
                         <div class="col-12">
                             <div class="sh-form-card h-100 mb-0">
                                 <div class="sh-card-header">
