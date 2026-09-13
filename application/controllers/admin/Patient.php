@@ -3127,6 +3127,13 @@ This Function is used to Import Multiple Patient Records
         $total_radiology           = $this->radio_model->totalPatientRadiology($patient_id);
         $total_blood_issue         = $this->bloodissue_model->totalPatientBloodIssue($patient_id);
         $total_ambulance           = $this->ambulance_model->totalPatientAmbulance($patient_id);
+        $total_visits              = (int) ($total_visits['total_visit'] ?? 0);
+        $total_ipd                 = (int) ($total_ipd['total'] ?? 0);
+        $total_pharmacy            = (int) ($total_pharmacy['total'] ?? 0);
+        $total_pathology           = (int) ($total_pathology['total'] ?? 0);
+        $total_radiology           = (int) ($total_radiology['total'] ?? 0);
+        $total_blood_issue         = (int) ($total_blood_issue['total'] ?? 0);
+        $total_ambulance           = (int) ($total_ambulance['total'] ?? 0);
         $data['total_ambulance']   = $total_ambulance;
         $data['total_blood_issue'] = $total_blood_issue;
         $data['total_radiology']   = $total_radiology;
