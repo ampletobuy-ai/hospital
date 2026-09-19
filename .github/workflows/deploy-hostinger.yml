@@ -1,0 +1,124 @@
+name: Deploy Hostinger
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: GitHub Environment name (staging|production)
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Deploy target environment
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+        default: staging
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+      - ".gitignore"
+
+concurrency:
+  group: deploy-hostinger-${{ github.event.inputs.environment || inputs.environment || 'staging' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: rsync to Hostinger
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || inputs.environment || 'staging' }}
+    steps:
+      - name: Check deploy enabled
+        run: |
+          if [ "${{ vars.HOSTINGER_DEPLOY_ENABLED }}" != "true" ]; then
+            echo "HOSTINGER_DEPLOY_ENABLED is not 'true' — skipping deploy."
+            echo "Set repository variable HOSTINGER_DEPLOY_ENABLED=true after secrets are configured."
+            exit 0
+          fi
+          echo "deploy_ready=true" >> "$GITHUB_ENV"
+
+      - name: Checkout
+        if: env.deploy_ready == 'true'
+        uses: actions/checkout@v4
+
+      - name: Verify deploy secrets
+        if: env.deploy_ready == 'true'
+        env:
+          HOSTINGER_HOST: ${{ secrets.HOSTINGER_HOST }}
+          HOSTINGER_USER: ${{ secrets.HOSTINGER_USER }}
+          HOSTINGER_SSH_KEY: ${{ secrets.HOSTINGER_SSH_KEY }}
+          HOSTINGER_REMOTE_PATH: ${{ secrets.HOSTINGER_REMOTE_PATH }}
+        run: |
+          set -euo pipefail
+          missing=0
+          [ -n "${HOSTINGER_HOST}" ] || { echo "::error::Missing secret HOSTINGER_HOST"; missing=1; }
+          [ -n "${HOSTINGER_USER}" ] || { echo "::error::Missing secret HOSTINGER_USER"; missing=1; }
+          [ -n "${HOSTINGER_SSH_KEY}" ] || { echo "::error::Missing secret HOSTINGER_SSH_KEY"; missing=1; }
+          [ -n "${HOSTINGER_REMOTE_PATH}" ] || { echo "::error::Missing secret HOSTINGER_REMOTE_PATH"; missing=1; }
+          if [ "$missing" -ne 0 ]; then
+            echo "Configure repository secrets before deploying. See docs/RELEASE_PIPELINE.md"
+            exit 1
+          fi
+
+      - name: Setup SSH
+        if: env.deploy_ready == 'true'
+        env:
+          SSH_KEY: ${{ secrets.HOSTINGER_SSH_KEY }}
+          SSH_HOST: ${{ secrets.HOSTINGER_HOST }}
+          SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT || '22' }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "${SSH_PORT}" -H "${SSH_HOST}" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Deploy with rsync (preserve .env and uploads)
+        if: env.deploy_ready == 'true'
+        env:
+          SSH_HOST: ${{ secrets.HOSTINGER_HOST }}
+          SSH_USER: ${{ secrets.HOSTINGER_USER }}
+          SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT || '22' }}
+          REMOTE_PATH: ${{ secrets.HOSTINGER_REMOTE_PATH }}
+        run: |
+          set -euo pipefail
+          RSYNC_SSH="ssh -i ~/.ssh/deploy_key -p ${SSH_PORT} -o StrictHostKeyChecking=accept-new"
+          rsync -az --delete \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude '.env' \
+            --exclude '.env.local' \
+            --exclude '.env.production' \
+            --exclude '.env.staging' \
+            --exclude 'uploads/' \
+            --exclude 'application/cache/*' \
+            --exclude 'application/logs/*' \
+            --exclude 'application/sessions/*' \
+            --exclude 'backup/database_backup/' \
+            --exclude 'backup/temp_uploaded/' \
+            --exclude 'backup/_tmp/' \
+            --exclude '.DS_Store' \
+            --exclude 'cgi-bin/' \
+            --exclude 'temp/' \
+            -e "${RSYNC_SSH}" \
+            ./ "${SSH_USER}@${SSH_HOST}:${REMOTE_PATH}/"
+
+      - name: Post-deploy remote checks
+        if: env.deploy_ready == 'true'
+        env:
+          SSH_HOST: ${{ secrets.HOSTINGER_HOST }}
+          SSH_USER: ${{ secrets.HOSTINGER_USER }}
+          SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT || '22' }}
+          REMOTE_PATH: ${{ secrets.HOSTINGER_REMOTE_PATH }}
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/deploy_key -p "${SSH_PORT}" -o StrictHostKeyChecking=accept-new \
+            "${SSH_USER}@${SSH_HOST}" \
+            "test -f '${REMOTE_PATH}/index.php' && test -f '${REMOTE_PATH}/.env' && echo 'Remote OK: index.php + .env present'"

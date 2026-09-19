@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, Features]
+  pull_request:
+    branches: [main, master, Features]
+  workflow_call:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  php-syntax:
+    name: PHP syntax check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          coverage: none
+          tools: none
+
+      - name: Lint application PHP (exclude third_party vendor trees)
+        run: |
+          set -euo pipefail
+          fail=0
+          while IFS= read -r -d '' file; do
+            if ! php -l "$file" >/dev/null; then
+              echo "::error file=$file::PHP syntax error"
+              php -l "$file" || true
+              fail=1
+            fi
+          done < <(
+            find application \
+              \( -path 'application/third_party/*/vendor' -o -path 'application/third_party/*/*/vendor' \) -prune -o \
+              -type f -name '*.php' -print0
+          )
+          for file in index.php seed-admin.php cli/*.php; do
+            [ -f "$file" ] || continue
+            if ! php -l "$file" >/dev/null; then
+              echo "::error file=$file::PHP syntax error"
+              php -l "$file" || true
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo "PHP syntax check failed"
+            exit 1
+          fi
+          echo "PHP syntax check passed"
+
+  package-sanity:
+    name: Package sanity
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Required paths exist
+        run: |
+          set -euo pipefail
+          test -f index.php
+          test -f .env.example
+          test -d application/controllers
+          test -d application/libraries
+          test -f application/libraries/Plan_feature_gate.php
+          test -f .htaccess
+          echo "Package sanity OK"
