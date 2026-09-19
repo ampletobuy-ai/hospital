@@ -35,6 +35,8 @@ class Vehicle extends Admin_Controller
         $this->patient_login_prefix = "pat";
         $this->load->helper('customfield_helper');
         $this->time_format = $this->customlib->getHospitalTimeFormat();
+        $this->load->library('plan_feature_gate');
+        $this->plan_feature_gate->denyUnless('ipd');
     }
 
     public function search()

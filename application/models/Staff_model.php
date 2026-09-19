@@ -377,8 +377,41 @@ class Staff_model extends MY_Model
                     }
                 }
             }
+            $result = $this->filterStaffRolesByPlan($result);
         }
         return $result;
+    }
+
+    /**
+     * Drop Pharmacist / Pathologist / Radiologist when plan features are off.
+     *
+     * @param array $roles
+     * @return array
+     */
+    private function filterStaffRolesByPlan($roles)
+    {
+        if (!is_array($roles) || empty($roles)) {
+            return $roles;
+        }
+
+        $CI =& get_instance();
+        if (!isset($CI->plan_feature_gate)) {
+            $CI->load->library('plan_feature_gate');
+        }
+
+        if (!$CI->plan_feature_gate->isEnforcing()) {
+            return $roles;
+        }
+
+        $filtered = array();
+        foreach ($roles as $role) {
+            $roleId = isset($role['id']) ? (int) $role['id'] : 0;
+            if ($CI->plan_feature_gate->roleAllowed($roleId)) {
+                $filtered[] = $role;
+            }
+        }
+
+        return array_values($filtered);
     }
 
     public function count_leave($month, $year, $staff_id)

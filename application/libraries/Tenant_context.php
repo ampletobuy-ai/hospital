@@ -121,6 +121,38 @@ class Tenant_context
         return $config;
     }
 
+    /**
+     * Switch the active CodeIgniter DB connection to this tenant and rebind loaded models.
+     * Assigning only $CI->db is not enough — already-loaded models keep the old connection.
+     *
+     * @return CI_DB_driver|false
+     */
+    public function activateConnection($tenantId = null)
+    {
+        if ($tenantId !== null) {
+            if (!$this->initialize($tenantId)) {
+                return false;
+            }
+        } elseif ($this->tenantId === null || $this->databaseName === null) {
+            return false;
+        }
+
+        $config = $this->tenantDatabaseConfig();
+        $tenantDb = $this->CI->load->database($config, true);
+        $this->CI->db = $tenantDb;
+
+        foreach (get_object_vars($this->CI) as $property => $object) {
+            if ($property === 'db' || !is_object($object)) {
+                continue;
+            }
+            if ($object instanceof CI_Model && property_exists($object, 'db')) {
+                $object->db = $tenantDb;
+            }
+        }
+
+        return $tenantDb;
+    }
+
     private function loadSubscription()
     {
         if ($this->tenantId === null) {

@@ -24,6 +24,15 @@ $route['translate_uri_dashes'] = false;
 $route['form/appointment']     = 'welcome/appointment';
 $route['page/annual_calendar']     = 'welcome/annual_calendar';
 
+$route['site/register'] = 'register/index';
+$route['site/register_otp_send'] = 'register/otp_send';
+$route['site/register_otp_verify'] = 'register/otp_verify';
+$route['site/register_checkout/(:any)'] = 'register/checkout/$1';
+$route['site/register_checkout_verify/(:any)'] = 'register/checkout_verify/$1';
+$route['site/register_checkout_activate/(:any)'] = 'register/checkout_activate/$1';
+$route['site/register_checkout_simulate/(:any)'] = 'register/checkout_simulate/$1';
+$route['site/register_complete/(:any)'] = 'register/complete/$1';
+
 //======= front url rewriting==========
 $route['page/(:any)'] = 'welcome/page/$1';
 $route['read/(:any)'] = 'welcome/read/$1';

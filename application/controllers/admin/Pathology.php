@@ -39,6 +39,8 @@ class Pathology extends Admin_Controller
         $this->load->helper('custom');
         $this->time_format = $this->customlib->getHospitalTimeFormat();
 		$this->agerange             = $this->config->item('agerange');
+        $this->load->library('plan_feature_gate');
+        $this->plan_feature_gate->denyUnless('laboratory');
     }
 
     public function unauthorized()

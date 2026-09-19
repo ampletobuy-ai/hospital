@@ -49,8 +49,14 @@ class Rbac
 
     public function hasPrivilege($category = null, $permission = null)
     {
+        $category = trim((string) $category);
+        $permission = trim((string) $permission);
 
-        $perm             = trim($category) . "-" . trim($permission);
+        if (!$this->planAllowsPermission($category, $permission)) {
+            return false;
+        }
+
+        $perm             = $category . "-" . $permission;
         $roles            = $this->CI->customlib->getStaffRole();
         $logged_user_role = json_decode($roles)->name;
 
@@ -65,6 +71,24 @@ class Rbac
         }
 
         return false;
+    }
+
+    /**
+     * @param string $category
+     * @param string|null $action
+     * @return bool
+     */
+    private function planAllowsPermission($category, $action = null)
+    {
+        if ($category === '') {
+            return true;
+        }
+
+        if (!isset($this->CI->plan_feature_gate)) {
+            $this->CI->load->library('plan_feature_gate');
+        }
+
+        return $this->CI->plan_feature_gate->permissionAllowed($category, $action);
     }
 
     public function hasPermission($permission)

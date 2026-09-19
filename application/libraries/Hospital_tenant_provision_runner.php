@@ -100,8 +100,14 @@ class Hospital_tenant_provision_runner
 
     private function cloneSchema(mysqli $mysqli, $templateDatabase, $tenantDatabase)
     {
-        $skip = array_map('strtolower', (array) $this->CI->config->item('skip_template_tables'));
-        $copyData = array_map('strtolower', (array) $this->CI->config->item('copy_template_data_tables'));
+        $skipSchema = array_map('strtolower', (array) $this->CI->config->item('skip_template_tables'));
+        $skipData = array_map('strtolower', (array) $this->CI->config->item('skip_template_data_tables'));
+        $copyWhitelist = array_map('strtolower', (array) $this->CI->config->item('copy_template_data_tables'));
+        $mode = strtolower((string) $this->CI->config->item('template_data_copy_mode'));
+        if ($mode !== 'whitelist') {
+            $mode = 'blacklist';
+        }
+
         $qTemplate = $this->quoteDb($templateDatabase);
         $qTenant = $this->quoteDb($tenantDatabase);
 
@@ -123,7 +129,7 @@ class Hospital_tenant_provision_runner
         $tables = array();
         while ($row = $tablesResult->fetch_array()) {
             $table = (string) $row[0];
-            if (in_array(strtolower($table), $skip, true)) {
+            if (in_array(strtolower($table), $skipSchema, true)) {
                 continue;
             }
             $tables[] = $table;
@@ -134,74 +140,74 @@ class Hospital_tenant_provision_runner
             }
         }
 
-        foreach ($copyData as $tableName) {
-            $match = null;
-            foreach ($tables as $table) {
-                if (strtolower($table) === strtolower((string) $tableName)) {
-                    $match = $table;
-                    break;
+        $tablesToCopy = array();
+        if ($mode === 'whitelist') {
+            foreach ($copyWhitelist as $tableName) {
+                foreach ($tables as $table) {
+                    if (strtolower($table) === $tableName) {
+                        $tablesToCopy[] = $table;
+                        break;
+                    }
                 }
             }
-            if ($match === null) {
+        } else {
+            foreach ($tables as $table) {
+                if (!in_array(strtolower($table), $skipData, true)) {
+                    $tablesToCopy[] = $table;
+                }
+            }
+        }
+
+        $mysqli->query('SET FOREIGN_KEY_CHECKS=0');
+        foreach ($tablesToCopy as $match) {
+            $qt = $this->quoteDb($match);
+            if (!$mysqli->query("TRUNCATE TABLE {$qTenant}.{$qt}")) {
+                log_message('error', 'Tenant truncate failed for ' . $match . ': ' . $mysqli->error);
                 continue;
             }
-            $qt = $this->quoteDb($match);
-            $mysqli->query('SET FOREIGN_KEY_CHECKS=0');
-            $mysqli->query("TRUNCATE TABLE {$qTenant}.{$qt}");
-            $mysqli->query("INSERT INTO {$qTenant}.{$qt} SELECT * FROM {$qTemplate}.{$qt}");
-            $mysqli->query('SET FOREIGN_KEY_CHECKS=1');
+            if (!$mysqli->query("INSERT INTO {$qTenant}.{$qt} SELECT * FROM {$qTemplate}.{$qt}")) {
+                log_message('error', 'Tenant data copy failed for ' . $match . ': ' . $mysqli->error);
+            }
         }
+        $mysqli->query('SET FOREIGN_KEY_CHECKS=1');
     }
 
     private function applyMigrations($tenantDatabase)
     {
-        $this->CI->tenant_context->initialize(str_replace((string) $this->CI->config->item('tenant_database_prefix'), '', $tenantDatabase));
-        $config = $this->CI->tenant_context->tenantDatabaseConfig();
-        $config['database'] = $tenantDatabase;
-        $tenantDb = $this->CI->load->database($config, true);
+        // Schema is cloned from the template database. Additive CI migration classes
+        // are not bootstrapped here (they require CI_Migration). Mark the tenant
+        // migrations row at the latest numeric version present on disk when possible.
+        try {
+            $this->CI->tenant_context->initialize(str_replace((string) $this->CI->config->item('tenant_database_prefix'), '', $tenantDatabase));
+            $config = $this->CI->tenant_context->tenantDatabaseConfig();
+            $config['database'] = $tenantDatabase;
+            $tenantDb = $this->CI->load->database($config, true);
 
-        if (!$tenantDb->table_exists('migrations')) {
-            return;
-        }
-
-        $migrationPath = APPPATH . 'migrations/';
-        if (!is_dir($migrationPath)) {
-            return;
-        }
-
-        $files = glob($migrationPath . '*.php');
-        if (!$files) {
-            return;
-        }
-        sort($files);
-
-        $applied = $tenantDb->get('migrations')->row_array();
-        $currentVersion = (int) ($applied['version'] ?? 0);
-
-        foreach ($files as $file) {
-            if (!preg_match('/(\d+)_/', basename($file), $matches)) {
-                continue;
-            }
-            $version = (int) $matches[1];
-            if ($version <= $currentVersion) {
-                continue;
+            if (!$tenantDb->table_exists('migrations')) {
+                return;
             }
 
-            require_once $file;
-            $class = 'Migration_' . ucfirst(str_replace('.php', '', basename($file)));
-            if (!class_exists($class)) {
-                $class = basename($file, '.php');
-                $class = str_replace(' ', '', ucwords(str_replace('_', ' ', $class)));
+            $migrationPath = APPPATH . 'migrations/';
+            if (!is_dir($migrationPath)) {
+                return;
             }
-            foreach (get_declared_classes() as $declared) {
-                if (stripos($declared, 'Migration') !== false && is_subclass_of($declared, 'CI_Migration')) {
-                    // skip
+
+            $files = glob($migrationPath . '*.php');
+            if (!$files) {
+                return;
+            }
+            sort($files);
+            $latest = 0;
+            foreach ($files as $file) {
+                if (preg_match('/(\d+)_/', basename($file), $matches)) {
+                    $latest = max($latest, (int) $matches[1]);
                 }
             }
-
-            // CI migrations use numeric filenames — update version row if schema already applied via clone.
-            $tenantDb->where('version <', $version);
-            $tenantDb->update('migrations', array('version' => $version));
+            if ($latest > 0) {
+                $tenantDb->update('migrations', array('version' => $latest));
+            }
+        } catch (Throwable $e) {
+            log_message('error', 'Hospital tenant migration stamp skipped: ' . $e->getMessage());
         }
     }
 

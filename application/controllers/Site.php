@@ -166,6 +166,11 @@ class Site extends Public_Controller
     public function register()
     {
         $this->load->config('tenancy-config');
+        $this->load->config('hospital_portal');
+        $saas = (bool) $this->config->item('hospital_saas_register') || (bool) $this->config->item('saas_register');
+        if ($saas) {
+            redirect('register');
+        }
         $url = (string) $this->config->item('portal_register_url');
         redirect($url !== '' ? $url : base_url('site/login'));
     }
@@ -769,10 +774,15 @@ class Site extends Public_Controller
     {
         $tenantId = (string) $candidate['id'];
         $this->load->library('tenant_context');
-        $this->tenant_context->initialize($tenantId);
+        if (!$this->tenant_context->activateConnection($tenantId)) {
+            $data = array(
+                'title' => 'Login',
+                'error_message' => 'Could not open hospital workspace. Please contact support.',
+            );
+            $this->load->view('admin/login', $data);
 
-        $config = $this->tenant_context->tenantDatabaseConfig();
-        $this->db = $this->load->database($config, true);
+            return;
+        }
 
         $login_post = array(
             'email' => $email,
@@ -780,12 +790,36 @@ class Site extends Public_Controller
         );
         $result = $this->staff_model->checkLogin($login_post);
         if (!$result || !(int) $result->is_active) {
-            redirect('site/login');
+            // Fallback: credential was already verified against the tenant DB.
+            $verified = isset($candidate['staff']) ? $candidate['staff'] : null;
+            if ($verified && (int) ($verified->is_active ?? 0) === 1) {
+                $this->load->model('staffroles_model');
+                $roles = $this->staffroles_model->getStaffRoles($verified->id);
+                if (!empty($roles[0])) {
+                    $verified->roles = array($roles[0]->name => $roles[0]->role_id);
+                    $result = $verified;
+                }
+            }
+        }
+        if (!$result || !(int) $result->is_active) {
+            $data = array(
+                'title' => 'Login',
+                'error_message' => $this->lang->line('invalid_username_or_password'),
+            );
+            $this->load->view('admin/login', $data);
+
+            return;
         }
 
         $setting_result = $this->setting_model->get();
         if (empty($setting_result)) {
-            redirect('site/login');
+            $data = array(
+                'title' => 'Login',
+                'error_message' => 'Hospital settings are missing. Please contact support.',
+            );
+            $this->load->view('admin/login', $data);
+
+            return;
         }
 
         if (!empty($result->language_id)) {

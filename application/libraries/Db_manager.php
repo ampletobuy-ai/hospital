@@ -18,17 +18,13 @@ class Db_manager
         if ($this->CI->config->item('tenancy_enabled')) {
             $this->CI->load->library('tenant_context');
             if ($this->CI->tenant_context->getTenantId()) {
-                $config = $this->CI->tenant_context->tenantDatabaseConfig();
-                $this->CI->db = $this->CI->load->database($config, true);
+                $this->CI->tenant_context->activateConnection();
 
                 return;
             }
 
             $tenantId = $this->CI->session->userdata('tenant_id');
-            if ($tenantId && $this->CI->tenant_context->initialize($tenantId)) {
-                $config = $this->CI->tenant_context->tenantDatabaseConfig();
-                $this->CI->db = $this->CI->load->database($config, true);
-
+            if ($tenantId && $this->CI->tenant_context->activateConnection($tenantId)) {
                 return;
             }
         }
@@ -39,10 +35,7 @@ class Db_manager
             $this->CI->db = $this->CI->load->database($database_group, true);
         } elseif ($this->CI->session->has_userdata('patient') && $this->CI->session->userdata('tenant_id')) {
             $this->CI->load->library('tenant_context');
-            if ($this->CI->tenant_context->initialize($this->CI->session->userdata('tenant_id'))) {
-                $config = $this->CI->tenant_context->tenantDatabaseConfig();
-                $this->CI->db = $this->CI->load->database($config, true);
-
+            if ($this->CI->tenant_context->activateConnection($this->CI->session->userdata('tenant_id'))) {
                 return;
             }
             $this->CI->db = $this->CI->load->database('default', true);
