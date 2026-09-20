@@ -1,0 +1,100 @@
+name: Deploy Features
+
+on:
+  push:
+    branches: [Features]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+  workflow_dispatch:
+    inputs:
+      build_on_vps:
+        description: "Build images on VPS instead of pulling GHCR"
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+
+concurrency:
+  group: deploy-hospital-features
+  cancel-in-progress: false
+
+jobs:
+  ci-gate:
+    name: CI gate
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    name: Deploy to hospital.ampletobuy.com
+    needs: ci-gate
+    runs-on: ubuntu-latest
+    environment: features
+    steps:
+      - name: Validate deploy config
+        env:
+          HOST_SECRET: ${{ secrets.VPS_HOST }}
+          HOST_VAR: ${{ vars.VPS_HOST }}
+          USER_SECRET: ${{ secrets.VPS_USER }}
+          USER_VAR: ${{ vars.VPS_USER }}
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          HOST="$(printf '%s' "${HOST_SECRET:-${HOST_VAR:-}}" | tr -d '\r' | xargs)"
+          if [ -z "$HOST" ]; then
+            echo "::error::VPS_HOST missing on Environment 'features' (use 50.6.44.85)."
+            exit 1
+          fi
+          if [ -z "${SSH_KEY:-}" ]; then
+            echo "::error::VPS_SSH_KEY missing on Environment 'features'."
+            exit 1
+          fi
+
+      - name: Resolve SSH host
+        id: ssh
+        env:
+          HOST_SECRET: ${{ secrets.VPS_HOST }}
+          HOST_VAR: ${{ vars.VPS_HOST }}
+          USER_SECRET: ${{ secrets.VPS_USER }}
+          USER_VAR: ${{ vars.VPS_USER }}
+        run: |
+          set -euo pipefail
+          HOST="$(printf '%s' "${HOST_SECRET:-${HOST_VAR:-}}" | tr -d '\r' | xargs)"
+          USER="$(printf '%s' "${USER_SECRET:-${USER_VAR:-}}" | tr -d '\r' | xargs)"
+          USER="${USER:-deploy}"
+          HOST="${HOST#ssh://}"
+          HOST="${HOST#https://}"
+          HOST="${HOST#http://}"
+          if [[ "$HOST" == *@* ]]; then
+            USER="${HOST%%@*}"
+            HOST="${HOST#*@}"
+          fi
+          HOST="${HOST%%/*}"
+          HOST="${HOST%%:*}"
+          echo "host=${HOST}" >> "$GITHUB_OUTPUT"
+          echo "user=${USER}" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ steps.ssh.outputs.host }}
+          username: ${{ steps.ssh.outputs.user }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script_stop: true
+          script: |
+            set -euo pipefail
+            cd /opt/hospital
+            git fetch origin Features
+            git checkout Features
+            git reset --hard origin/Features
+            export HOSPITAL_IMAGE_TAG=latest
+            export DEPLOY_HEALTHCHECK_URL='${{ secrets.DEPLOY_HEALTHCHECK_URL }}'
+            if [ -z "${DEPLOY_HEALTHCHECK_URL}" ]; then
+              export DEPLOY_HEALTHCHECK_URL='https://hospital.ampletobuy.com/'
+            fi
+            BUILD='${{ github.event.inputs.build_on_vps || "true" }}'
+            export HOSPITAL_BUILD_ON_VPS="${BUILD}"
+            chmod +x ./scripts/deploy.sh
+            ./scripts/deploy.sh
