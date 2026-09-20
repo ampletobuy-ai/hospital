@@ -18,7 +18,7 @@ on:
           - production
         default: staging
   push:
-    branches: [main, master, Features]
+    branches: [main, master]
     paths-ignore:
       - "docs/**"
       - "**/*.md"

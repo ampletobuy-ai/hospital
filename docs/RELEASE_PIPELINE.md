@@ -1,94 +1,59 @@
-# Release pipeline (CI + Hostinger deploy)
+# Release pipeline — Hospital features on VPS
 
-## Targets
+## Live staging
 
-| Branch / trigger | GitHub Environment | Site |
-|--|--|--|
-| `Features` push | **staging** | https://hospital.ampletobuy.com |
-| `main` / `master` push | **production** | set `PRODUCTION_URL` repo variable |
-| Tag `v*` | release + **production** deploy | same as production |
-| Manual “Deploy Hostinger” | choose staging / production | as selected |
+| Item | Value |
+|--|--|
+| URL | https://hospital.ampletobuy.com |
+| Branch | `Features` |
+| VPS | `50.6.44.85` (`retail-pos-features` / deploy user) |
+| App dir | `/opt/hospital` |
+| Edge | Traefik on Docker network `edge` |
+| DB | `platform-mysql` on `shared_db` (DB `hospital` + central `trackpossystem`) |
 
 ## What runs
 
 | Workflow | Trigger | Purpose |
 |--|--|--|
-| [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | PR / push to `main`, `master`, `Features` | PHP syntax lint + package sanity |
-| [`.github/workflows/deploy-hostinger.yml`](../.github/workflows/deploy-hostinger.yml) | Push `Features`→staging, `main`→production, dispatch, release | rsync (keeps `.env` + `uploads/`) |
-| [`.github/workflows/release.yml`](../.github/workflows/release.yml) | Tag `v*` | CI → GitHub Release + archive → production deploy |
+| [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | PR / push `Features`, `main` | PHP syntax + package sanity |
+| [`.github/workflows/deploy-features.yml`](../.github/workflows/deploy-features.yml) | Push `Features` / manual | `git pull` + `scripts/deploy.sh` on VPS |
+| [`.github/workflows/release.yml`](../.github/workflows/release.yml) | Tag `v*` | GitHub Release archive |
+| [`.github/workflows/deploy-hostinger.yml`](../.github/workflows/deploy-hostinger.yml) | `main` only (optional) | Legacy rsync path — not used for Features |
 
-Deploy jobs no-op until repository variable `HOSTINGER_DEPLOY_ENABLED=true`.
+## GitHub Environment `features` secrets
 
-## Hostinger: create feature site (one-time)
+Same pattern as retail-pos / bookingengine:
 
-In hPanel for `ampletobuy.com`:
-
-1. **Domains → Subdomains** → create `hospital` → full host `hospital.ampletobuy.com`
-2. Note the document root (typical):  
-   `/home/<user>/domains/hospital.ampletobuy.com/public_html`  
-   or  
-   `/home/<user>/domains/ampletobuy.com/public_html/hospital`
-3. **Advanced → SSH Access** → enable SSH and add your deploy public key
-4. Upload a first `.env` into that docroot (copy from `.env.example`, set):
-   - `HOSPITAL_BASE_URL=https://hospital.ampletobuy.com/`
-   - DB credentials for this feature environment
-5. Point DNS if needed: `hospital` CNAME/A to Hostinger (auto if subdomain created in hPanel)
-
-## GitHub setup
-
-### 1. Environments
-
-Create **staging** and **production** (Settings → Environments).  
-Optional: required reviewers on **production**.
-
-Put **staging** secrets so they target `hospital.ampletobuy.com` only.
-
-### 2. Repository variable
-
-| Variable | Value |
+| Secret / var | Value |
 |--|--|
-| `HOSTINGER_DEPLOY_ENABLED` | `true` when ready |
-| `PRODUCTION_URL` | optional, e.g. `https://your-prod-host` (for smoke check) |
+| `VPS_HOST` | `50.6.44.85` |
+| `VPS_USER` | `deploy` |
+| `VPS_SSH_KEY` | Private key for deploy user |
+| `DEPLOY_HEALTHCHECK_URL` | `https://hospital.ampletobuy.com/site/login` (optional) |
 
-### 3. Secrets (prefer **per-environment**)
-
-| Secret | Staging (Features) | Production |
-|--|--|--|
-| `HOSTINGER_HOST` | SSH host / IP | same or prod host |
-| `HOSTINGER_USER` | SSH user | … |
-| `HOSTINGER_SSH_KEY` | Private key PEM | … |
-| `HOSTINGER_REMOTE_PATH` | Docroot of **hospital.ampletobuy.com** | prod docroot |
-| `HOSTINGER_SSH_PORT` | optional (`22`) | optional |
-
-Deploys never overwrite `.env` or `uploads/`.
-
-## Cut a feature release to staging
+## Deploy Features
 
 ```bash
 git checkout Features
 git push origin Features
-# → CI + deploy to https://hospital.ampletobuy.com
+# → CI + deploy-features → https://hospital.ampletobuy.com
 ```
 
-## Promote to production
+Manual on VPS:
 
 ```bash
-git checkout main
-git merge Features
-git push origin main
-# → production environment deploy
-
-git tag -a v1.2.0 -m "Plan feature gates Phase 2"
-git push origin v1.2.0
-# → GitHub Release + production deploy
+ssh retail-pos-features
+cd /opt/hospital
+git fetch origin Features && git reset --hard origin/Features
+HOSPITAL_BUILD_ON_VPS=1 ./scripts/deploy.sh
 ```
 
-## Manual deploy
+## First-time notes (already done on VPS)
 
-Actions → **Deploy Hostinger** → Run workflow → `staging` (hospital.ampletobuy.com) or `production`.
+- `/opt/hospital` cloned from `Features`
+- `.env` created (not in git)
+- MySQL DB `hospital` + user `hospital` on `platform-mysql`
+- Schema imported from `deploy/vps/hospital-schema.sql.gz` + theme table patch
+- Traefik router `Host(hospital.ampletobuy.com)` via `docker-compose.vps.yml`
 
-## Notes
-
-- `--delete` on rsync removes remote files gone from git (except excluded paths).
-- Archive overwrite deploy is not used so live `.env` / uploads stay safe.
-- After staging deploy, verify plan gates with a Starter tenant on https://hospital.ampletobuy.com
+If Let’s Encrypt still shows a temporary/self-signed cert, wait for Traefik ACME or check that port 80 reaches Traefik for HTTP-01.
