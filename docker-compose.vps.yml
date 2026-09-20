@@ -1,0 +1,45 @@
+# Hospital HMS — VPS override for Traefik + platform-mysql
+# Usage (from /opt/hospital):
+#   docker compose -f docker-compose.prod.yml -f docker-compose.vps.yml up -d --build
+#   HOSPITAL_IMAGE_TAG=latest docker compose -f docker-compose.prod.yml -f docker-compose.vps.yml pull && up -d
+#
+# Prerequisites:
+#   docker network create edge
+#   docker network create shared_db
+#   Traefik on edge; platform-mysql on shared_db
+#
+# Optional .env:
+#   HOSPITAL_HOST=hospital.ampletobuy.com
+#   HOSPITAL_IMAGE_TAG=latest
+
+services:
+  app:
+    pull_policy: if_not_present
+    environment:
+      DB_HOST: platform-mysql
+      DB_PORT: "3306"
+      DB_CENTRAL_HOST: platform-mysql
+      DB_CENTRAL_PORT: "3306"
+    networks:
+      - hospital
+      - shared_db
+
+  nginx:
+    pull_policy: if_not_present
+    ports: !reset []
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=edge"
+      - "traefik.http.routers.hospital.rule=Host(`${HOSPITAL_HOST:-hospital.ampletobuy.com}`)"
+      - "traefik.http.routers.hospital.entrypoints=websecure"
+      - "traefik.http.routers.hospital.tls.certresolver=le"
+      - "traefik.http.services.hospital.loadbalancer.server.port=80"
+    networks:
+      - hospital
+      - edge
+
+networks:
+  edge:
+    external: true
+  shared_db:
+    external: true

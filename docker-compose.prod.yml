@@ -1,0 +1,55 @@
+# Hospital HMS — Production Docker Compose
+# Usage:
+#   Build locally:  docker compose -f docker-compose.prod.yml up -d --build
+#   Pull from GHCR: HOSPITAL_IMAGE_TAG=latest docker compose -f docker-compose.prod.yml pull && up -d
+#
+# Images (from GitHub Actions → ghcr.io):
+#   ghcr.io/ampletobuy-ai/hospital/hospital-app:<tag>
+#   ghcr.io/ampletobuy-ai/hospital/hospital-nginx:<tag>
+
+services:
+  app:
+    image: ghcr.io/ampletobuy-ai/hospital/hospital-app:${HOSPITAL_IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: production
+    container_name: hospital-app
+    restart: always
+    env_file:
+      - .env
+    environment:
+      DB_HOST: ${DB_HOST:-platform-mysql}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_CENTRAL_HOST: ${DB_CENTRAL_HOST:-platform-mysql}
+      DB_CENTRAL_PORT: ${DB_CENTRAL_PORT:-3306}
+    volumes:
+      - hospital-uploads:/var/www/html/uploads
+      - hospital-sessions:/var/www/html/application/sessions
+      - hospital-logs:/var/www/html/application/logs
+    networks:
+      - hospital
+
+  nginx:
+    image: ghcr.io/ampletobuy-ai/hospital/hospital-nginx:${HOSPITAL_IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: web
+    container_name: hospital-nginx
+    restart: always
+    ports:
+      - "${APP_PORT:-8088}:80"
+    depends_on:
+      - app
+    networks:
+      - hospital
+
+networks:
+  hospital:
+    driver: bridge
+
+volumes:
+  hospital-uploads:
+  hospital-sessions:
+  hospital-logs:

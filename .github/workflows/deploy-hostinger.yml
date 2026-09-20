@@ -18,22 +18,47 @@ on:
           - production
         default: staging
   push:
-    branches: [main, master]
+    branches: [main, master, Features]
     paths-ignore:
       - "docs/**"
       - "**/*.md"
       - ".gitignore"
 
 concurrency:
-  group: deploy-hostinger-${{ github.event.inputs.environment || inputs.environment || 'staging' }}
+  group: deploy-hostinger-${{ github.event.inputs.environment || inputs.environment || (github.ref_name == 'Features' && 'staging') || 'staging' }}
   cancel-in-progress: false
 
 jobs:
   deploy:
     name: rsync to Hostinger
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || inputs.environment || 'staging' }}
+    # Features → staging (hospital.ampletobuy.com); main/master → production
+    environment: ${{ github.event.inputs.environment || inputs.environment || (github.ref_name == 'Features' && 'staging') || (github.ref_name == 'main' && 'production') || (github.ref_name == 'master' && 'production') || 'staging' }}
+    env:
+      # Feature/staging site URL
+      STAGING_URL: https://hospital.ampletobuy.com
     steps:
+      - name: Resolve target
+        id: target
+        run: |
+          set -euo pipefail
+          ENV_NAME="${{ github.event.inputs.environment || inputs.environment || '' }}"
+          if [ -z "$ENV_NAME" ]; then
+            case "${{ github.ref_name }}" in
+              Features) ENV_NAME=staging ;;
+              main|master) ENV_NAME=production ;;
+              *) ENV_NAME=staging ;;
+            esac
+          fi
+          if [ "$ENV_NAME" = "staging" ]; then
+            echo "deploy_url=${STAGING_URL}" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy_url=${{ vars.PRODUCTION_URL || '' }}" >> "$GITHUB_OUTPUT"
+          fi
+          echo "environment=${ENV_NAME}" >> "$GITHUB_OUTPUT"
+          echo "Deploy environment: ${ENV_NAME}"
+          echo "Expected URL: $( [ "$ENV_NAME" = staging ] && echo "$STAGING_URL" || echo "${{ vars.PRODUCTION_URL || '(set PRODUCTION_URL var)' }}" )"
+
       - name: Check deploy enabled
         run: |
           if [ "${{ vars.HOSTINGER_DEPLOY_ENABLED }}" != "true" ]; then
@@ -60,9 +85,9 @@ jobs:
           [ -n "${HOSTINGER_HOST}" ] || { echo "::error::Missing secret HOSTINGER_HOST"; missing=1; }
           [ -n "${HOSTINGER_USER}" ] || { echo "::error::Missing secret HOSTINGER_USER"; missing=1; }
           [ -n "${HOSTINGER_SSH_KEY}" ] || { echo "::error::Missing secret HOSTINGER_SSH_KEY"; missing=1; }
-          [ -n "${HOSTINGER_REMOTE_PATH}" ] || { echo "::error::Missing secret HOSTINGER_REMOTE_PATH"; missing=1; }
+          [ -n "${HOSTINGER_REMOTE_PATH}" ] || { echo "::error::Missing secret HOSTINGER_REMOTE_PATH (staging should point at hospital.ampletobuy.com docroot)"; missing=1; }
           if [ "$missing" -ne 0 ]; then
-            echo "Configure repository secrets before deploying. See docs/RELEASE_PIPELINE.md"
+            echo "Configure environment secrets for '${{ steps.target.outputs.environment }}'. See docs/RELEASE_PIPELINE.md"
             exit 1
           fi
 
@@ -122,3 +147,16 @@ jobs:
           ssh -i ~/.ssh/deploy_key -p "${SSH_PORT}" -o StrictHostKeyChecking=accept-new \
             "${SSH_USER}@${SSH_HOST}" \
             "test -f '${REMOTE_PATH}/index.php' && test -f '${REMOTE_PATH}/.env' && echo 'Remote OK: index.php + .env present'"
+
+      - name: HTTP smoke check
+        if: env.deploy_ready == 'true' && steps.target.outputs.deploy_url != ''
+        run: |
+          set -euo pipefail
+          URL="${{ steps.target.outputs.deploy_url }}"
+          echo "Checking ${URL}"
+          code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 -L "${URL}/" || true)
+          echo "HTTP status: ${code}"
+          case "$code" in
+            200|301|302|303|307|308) echo "Smoke check OK" ;;
+            *) echo "::warning::Unexpected HTTP ${code} from ${URL} (DNS/SSL/.env may still be pending)" ;;
+          esac
