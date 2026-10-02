@@ -41,6 +41,15 @@ class Mailer
             $mail->Port       = $this->CI->mail_config->smtp_port;
             $mail->Username   = $this->CI->mail_config->smtp_username;
             $mail->Password   = $this->CI->mail_config->smtp_password;
+            // Local VPS mail relay (same as retail MAIL_VERIFY_PEER=false) often uses a
+            // private IP / self-signed cert — skip peer verification for SMTP TLS.
+            $mail->SMTPOptions = array(
+                'ssl' => array(
+                    'verify_peer'       => false,
+                    'verify_peer_name'  => false,
+                    'allow_self_signed' => true,
+                ),
+            );
             $mail->SetFrom($this->CI->mail_config->smtp_username, $hospital_name);
             $mail->AddReplyTo($this->CI->mail_config->smtp_username, $this->CI->mail_config->smtp_username);
         } else {

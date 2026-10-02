@@ -167,14 +167,21 @@ class Hospital_signup_otp
     {
         $subject = 'Your verification code';
         $body = "Your verification code is {$otp}. It expires in {$ttlMinutes} minutes.";
+        $sent = false;
         try {
             if (method_exists($this->CI->mailer, 'send_mail')) {
-                $this->CI->mailer->send_mail($email, $subject, $body);
+                $sent = (bool) $this->CI->mailer->send_mail($email, $subject, $body);
             } elseif (function_exists('mail')) {
-                @mail($email, $subject, $body);
+                $sent = (bool) @mail($email, $subject, $body);
             }
         } catch (Exception $e) {
             log_message('error', 'Hospital signup OTP email failed: ' . $e->getMessage());
+            throw new RuntimeException('Could not send verification email. Please try again or contact support.');
+        }
+
+        if (!$sent) {
+            log_message('error', 'Hospital signup OTP email failed: mailer returned false for ' . $email);
+            throw new RuntimeException('Could not send verification email. Please try again or contact support.');
         }
     }
 }
