@@ -27,6 +27,7 @@ backup/_tmp/*
 .env
 .env.*
 !.env.example
+.deploy-keys/
 
 # Composer / Node (root only; bundled third_party vendors stay tracked)
 /vendor/
