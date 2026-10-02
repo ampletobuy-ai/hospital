@@ -214,10 +214,7 @@ $genderList = $this->customlib->getGender();
                                 <!-- Mobile App -->
                                 <div class="settinghr"></div>
                                 <div class="d-flex align-items-center gap-3 mb-3">
-                                    <h4 class="session-head mb-0"><?php echo $this->lang->line('mobile_app'); ?> <?php if ($app_response): ?><small class="text-success">(<?php echo $this->lang->line('android_app_purchase_code_already_registered'); ?>)</small><?php endif; ?></h4>
-                                    <?php if (!$app_response): ?>
-                                        <button type="button" class="btn btn-info btn-sm impbtntitle3" data-bs-toggle="modal" data-bs-target="#andappModal"><?php echo $this->lang->line('register_your_android_app')?></button>
-                                    <?php endif; ?>
+                                    <h4 class="session-head mb-0"><?php echo $this->lang->line('mobile_app'); ?></h4>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-12">
@@ -403,47 +400,6 @@ $genderList = $this->customlib->getGender();
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><?php echo $this->lang->line('cancel'); ?></button>
                     <button type="button" class="btn btn-info submit_logo" disabled><i class="fa fa-upload"></i> <?php echo $this->lang->line('upload'); ?></button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<div id="andappModal" class="modal fade sh-modal sh-modal-accent" tabindex="-1" aria-labelledby="andappModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="andappModalLabel"><?php echo $this->lang->line('register_your_android_app_purchase_code'); ?></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="<?php echo site_url('admin/admin/updateandappCode') ?>" method="POST" id="andapp_code">
-                <div class="pup-scroll-area">
-                    <div class="modal-body andapp_modal-body">
-                        <div class="error_message"></div>
-                        <div class="sh-form-card">
-                            <div class="sh-card-header">
-                                <span class="sh-card-header-title"><?php echo $this->lang->line('details'); ?></span>
-                            </div>
-                            <div class="p-2">
-                                <div class="row g-3">
-                                    <div class="col-sm-12">
-                                        <label class="form-label form-label-sm ainline" for="input-app-envato_market_purchase_code"><span><?php echo $this->lang->line('envato_market_purchase_code_for_smart_hospital_android_app'); ?> ( <a target="_blank" href="https://help.market.envato.com/hc/en-us/articles/202822600-Where-Is-My-Purchase-Code-"> <?php echo $this->lang->line('how_to_find_it'); ?></a> )</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="input-app-envato_market_purchase_code" name="app-envato_market_purchase_code">
-                                        <div class="input-error text text-danger"></div>
-                                    </div>
-                                    <div class="col-sm-12">
-                                        <label class="form-label form-label-sm" for="input-app-email"><?php echo $this->lang->line('your_email_registered_with_envato'); ?></label>
-                                        <input type="text" class="form-control form-control-sm" id="input-app-email" name="app-email">
-                                        <div class="input-error text text-danger"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><?php echo $this->lang->line('cancel'); ?></button>
-                    <button type="submit" class="btn btn-info" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Saving..."><?php echo $this->lang->line('save'); ?></button>
                 </div>
             </form>
         </div>

@@ -46,6 +46,13 @@ class Itemstore extends Admin_Controller
 
             $array = array('status' => 'fail', 'error' => $msg, 'message' => '');
         } else {
+            $quotaError = $this->assertCanAddStore();
+            if ($quotaError !== null) {
+                $array = array('status' => 'fail', 'error' => array('plan' => $quotaError), 'message' => $quotaError);
+                echo json_encode($array);
+                return;
+            }
+
             $data = array(
                 'item_store'  => $this->input->post('name', TRUE),
                 'code'        => $this->input->post('code', TRUE),
@@ -83,6 +90,13 @@ class Itemstore extends Admin_Controller
             $this->load->view('admin/itemstore/itemstoreList', $data);
             $this->load->view('layout/footer', $data);
         } else {
+            $quotaError = $this->assertCanAddStore();
+            if ($quotaError !== null) {
+                $this->session->set_flashdata('msg', '<div class="alert alert-danger text-left">' . html_escape($quotaError) . '</div>');
+                redirect('admin/itemstore/index');
+                return;
+            }
+
             $data = array(
                 'item_store'  => $this->input->post('name', TRUE),
                 'code'        => $this->input->post('code', TRUE),
@@ -92,6 +106,40 @@ class Itemstore extends Admin_Controller
             $this->session->set_flashdata('msg', '<div class="alert alert-success text-left"></div>');
             redirect('admin/itemstore/index');
         }
+    }
+
+    /**
+     * Enforce max_warehouses + multi_branch before creating an inventory store.
+     *
+     * @return string|null error message, or null when allowed
+     */
+    private function assertCanAddStore()
+    {
+        $this->load->library('plan_feature_gate');
+        $this->load->library('subscription_resolver');
+
+        $existing = $this->itemstore_model->get();
+        $currentCount = is_array($existing) ? count($existing) : 0;
+        $newCount = $currentCount + 1;
+
+        if ($newCount > 1 && !$this->plan_feature_gate->can('multi_branch')) {
+            return 'Multiple stores/branches are not available on your current plan. Please upgrade your subscription.';
+        }
+
+        $tenantId = (string) $this->session->userdata('tenant_id');
+        if ($tenantId === '' || !$this->plan_feature_gate->isEnforcing()) {
+            return null;
+        }
+
+        $limits = $this->subscription_resolver->quotaLimits($tenantId);
+        if (isset($limits['max_warehouses']) && is_numeric($limits['max_warehouses'])) {
+            $max = (int) $limits['max_warehouses'];
+            if ($max > 0 && $newCount > $max) {
+                return 'Store limit reached for your current plan (' . $max . '). Please upgrade your subscription.';
+            }
+        }
+
+        return null;
     }
 
     public function edit()

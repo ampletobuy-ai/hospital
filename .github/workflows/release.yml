@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  ci-gate:
+    name: CI gate
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    name: Create GitHub Release
+    needs: ci-gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build release archive
+        id: archive
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          ARCHIVE="hospital-${TAG}.tar.gz"
+          tar -czf "/tmp/${ARCHIVE}" \
+            --exclude='./.git' \
+            --exclude='./.github' \
+            --exclude='./.env' \
+            --exclude='./uploads' \
+            --exclude='./application/cache' \
+            --exclude='./application/logs' \
+            --exclude='./application/sessions' \
+            --exclude='./backup/database_backup' \
+            --exclude='./backup/temp_uploaded' \
+            --exclude='./backup/_tmp' \
+            --exclude='./.DS_Store' \
+            --exclude='./cgi-bin' \
+            --exclude='./temp' \
+            .
+          # Drop any accidental .env.* secrets except .env.example
+          mkdir -p /tmp/release-unpack
+          tar -xzf "/tmp/${ARCHIVE}" -C /tmp/release-unpack
+          find /tmp/release-unpack -maxdepth 1 -type f -name '.env.*' ! -name '.env.example' -delete
+          tar -czf "./${ARCHIVE}" -C /tmp/release-unpack .
+          echo "name=${ARCHIVE}" >> "$GITHUB_OUTPUT"
+          ls -lh "./${ARCHIVE}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Hospital ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            ${{ steps.archive.outputs.name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-production:
+    name: Deploy to Hostinger (production)
+    needs: release
+    if: ${{ vars.HOSTINGER_DEPLOY_ENABLED == 'true' }}
+    uses: ./.github/workflows/deploy-hostinger.yml
+    with:
+      environment: production
+    secrets: inherit

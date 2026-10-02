@@ -161,12 +161,14 @@ function delete_recordByIdReload(url) {
    ============================================================= */
 $(document).ready(function () {
 
-  /* --- License modal --- */
-  if ($('.purchasemodal').length <= 0 && chk_validate == '') {
+  /* --- License modal (only if registration UI is present) --- */
+  if ($('#activelicmodal').length && $('.purchasemodal').length <= 0 && chk_validate == '') {
     shModal('activelicmodal').show();
   }
   $(document).on('click', '.purchasemodal', function () {
-    shModal('activelicmodal').show();
+    if ($('#activelicmodal').length) {
+      shModal('activelicmodal').show();
+    }
   });
   $('#activelicmodal').on('shown.bs.modal', function () {
     $(this).find('input').next('div').html('');

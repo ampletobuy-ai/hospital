@@ -42,6 +42,8 @@ class Pharmacy extends Admin_Controller
         $this->time_format = $this->customlib->getHospitalTimeFormat();
         $this->opd_prefix  = $this->prefix_model->getByCategory(array('opd_no'))[0]->prefix;
         $this->agerange    = $this->config->item('agerange');
+        $this->load->library('plan_feature_gate');
+        $this->plan_feature_gate->denyUnless('pharmacy');
     }
 
     public function unauthorized()

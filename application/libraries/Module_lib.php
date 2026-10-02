@@ -58,19 +58,32 @@ class Module_lib {
     }
 
     function hasActive($module = null) {
-
-        if ($this->modules[$module]) {
-            return true;
+        if (empty($module) || empty($this->modules[$module])) {
+            return false;
         }
 
-        return false;
+        return $this->planAllowsModule($module);
     }
 
     function hasPatientActive($module = null) {
-        if ($this->patientModules[$module]) {
-            return true;
+        if (empty($module) || empty($this->patientModules[$module])) {
+            return false;
         }
-        return false;
+
+        return $this->planAllowsModule($module);
+    }
+
+    /**
+     * @param string $module
+     * @return bool
+     */
+    private function planAllowsModule($module)
+    {
+        if (!isset($this->CI->plan_feature_gate)) {
+            $this->CI->load->library('plan_feature_gate');
+        }
+
+        return $this->CI->plan_feature_gate->moduleAllowed($module);
     }
 
 	function hasModule($module_shortcode) {

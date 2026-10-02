@@ -2,6 +2,9 @@
 
 defined('BASEPATH') OR exit('No direct script access allowed');
 
+require_once APPPATH . 'helpers/env_helper.php';
+hospital_env_boot(dirname(APPPATH));
+
 /*
   | -------------------------------------------------------------------
   | DATABASE CONNECTIVITY SETTINGS
@@ -76,10 +79,32 @@ $query_builder = TRUE;
 
 $db['default'] = array(
     'dsn' => '',
-	'hostname' => 'localhost',
-    'username' => 'root',
-    'password' => '',
-    'database' => 'hospital',
+	'hostname' => hospital_env('DB_HOST', 'localhost'),
+    'username' => hospital_env('DB_USERNAME', 'root'),
+    'password' => hospital_env('DB_PASSWORD', ''),
+    'database' => hospital_env('DB_DATABASE', 'hospital'),
+    'dbdriver' => 'mysqli',
+    'dbprefix' => '',
+    'pconnect' => FALSE,
+    'db_debug' => (ENVIRONMENT !== 'production'),
+    'cache_on' => FALSE,
+    'cachedir' => '',
+    'char_set' => 'utf8',
+    'dbcollat' => 'utf8_general_ci',
+    'swap_pre' => '',
+    'encrypt' => FALSE,
+    'compress' => FALSE,
+    'stricton' => FALSE,
+    'failover' => array(),
+    'save_queries' => TRUE
+);
+
+$db['central'] = array(
+    'dsn' => '',
+    'hostname' => hospital_env('DB_CENTRAL_HOST', hospital_env('DB_HOST', 'localhost')),
+    'username' => hospital_env('DB_CENTRAL_USERNAME', hospital_env('DB_USERNAME', 'root')),
+    'password' => hospital_env('DB_CENTRAL_PASSWORD', hospital_env('DB_PASSWORD', '')),
+    'database' => hospital_env('DB_CENTRAL_DATABASE', 'trackpossystem'),
     'dbdriver' => 'mysqli',
     'dbprefix' => '',
     'pconnect' => FALSE,

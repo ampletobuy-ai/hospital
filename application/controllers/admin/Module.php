@@ -36,6 +36,14 @@ class Module extends Admin_Controller
         $status     = $this->input->post("status", TRUE);
 
         if (!empty($short_code)) {
+            $this->load->library('plan_feature_gate');
+            if ((string) $status === '1' && !$this->plan_feature_gate->moduleAllowed($short_code)) {
+                echo json_encode(array(
+                    'status' => 0,
+                    'msg' => 'This module is not available on your current plan. Please upgrade your subscription.',
+                ));
+                return;
+            }
 
             $data         = array('short_code' => $short_code, 'is_active' => $status);
             $data_patient = array('permission_group_short_code' => $short_code, 'is_active' => $status);

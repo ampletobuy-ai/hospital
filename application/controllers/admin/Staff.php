@@ -460,7 +460,25 @@ class Staff extends Admin_Controller
         return $this->saasvalidation->validateCanAddNewResource($input, $resource_name, $quantity);
     }
 
+    /**
+     * Reject Pharmacist / Pathologist / Radiologist when plan features are off.
+     *
+     * @param string $roleId
+     * @return bool
+     */
+    public function validatePlanRole($roleId)
+    {
+        $this->load->library('plan_feature_gate');
+        if ($this->plan_feature_gate->roleAllowed($roleId)) {
+            return true;
+        }
 
+        $this->form_validation->set_message(
+            'validatePlanRole',
+            'This role is not available on your current plan. Please upgrade your subscription.'
+        );
+        return false;
+    }
 
     public function create()
     {
@@ -501,7 +519,7 @@ class Staff extends Admin_Controller
         }
 
         $this->form_validation->set_rules('name', $this->lang->line('name'), 'trim|required|xss_clean');
-        $this->form_validation->set_rules('role', $this->lang->line('role'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('role', $this->lang->line('role'), 'trim|required|xss_clean|callback_validatePlanRole');
         $this->form_validation->set_rules('gender', $this->lang->line('gender'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('dob', $this->lang->line('date_of_birth'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('email', $this->lang->line('email'), array('required', 'xss_clean', 'valid_email',
@@ -877,7 +895,7 @@ class Staff extends Admin_Controller
         }
 
         $this->form_validation->set_rules('name', $this->lang->line('name'), 'trim|required|xss_clean');
-        $this->form_validation->set_rules('role', $this->lang->line('role'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('role', $this->lang->line('role'), 'trim|required|xss_clean|callback_validatePlanRole');
         $this->form_validation->set_rules('gender', $this->lang->line('gender'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('dob', $this->lang->line('date_of_birth'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('file', $this->lang->line('image'), 'callback_handle_image_upload[file]|callback_validateCanUploadFile[file,first_doc,second_doc,third_doc,fourth_doc]');
@@ -1465,7 +1483,7 @@ class Staff extends Admin_Controller
         $data["department"]  = $department;
 
         $this->form_validation->set_rules('file', $this->lang->line('file'), 'callback_handle_csv_upload');
-        $this->form_validation->set_rules('role', $this->lang->line('role'), 'required|xss_clean');
+        $this->form_validation->set_rules('role', $this->lang->line('role'), 'required|xss_clean|callback_validatePlanRole');
 
         if ($this->form_validation->run() == false) {
             $data['module'] = 'human_resource';

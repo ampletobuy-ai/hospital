@@ -278,11 +278,14 @@ class Printing extends Admin_Controller
         $this->form_validation->set_rules('header_image', 'header_image', 'callback_handle_upload|callback_validateCanUploadFile[header_image]');
 
         // SaaS: snapshot the existing header image size for quota release/diff below.
-        // print_header stores a full relative path (uploads/printing/<file>), so the
-        // empty-path form of getUploadedFileSize() resolves it directly from FCPATH.
+        // print_header stores a full relative path (uploads/.../printing/<file>).
         $old_header = (!empty($result['print_header'])) ? $result['print_header'] : '';
         $old_kb     = (!empty($old_header)) ? $this->media_storage->getUploadedFileSize($old_header, '') : 0;
-        
+
+        $this->load->library('tenant_uploads');
+        $printingRelDir = $this->tenant_uploads->ensureDir('printing');
+        $printingUploadPath = $printingRelDir . '/';
+
         if ($this->form_validation->run() == false) {
             $this->load->view('layout/header');
             if ($function_name == 'opdpresprinting') {
@@ -377,10 +380,10 @@ class Printing extends Admin_Controller
                         'print_header'     => ''
                     );
                      $this->printing_model->add($insertData);
-                     
-                     $last_id   = str_replace('uploads/printing/', "", $result['print_header']);
 
-                     $this->media_storage->filedelete($last_id, "./uploads/printing/");
+                     if (!empty($result['print_header'])) {
+                         $this->tenant_uploads->deleteStoredFile($result['print_header']);
+                     }
 
                     // SaaS: release the removed header image's storage. Zero out the
                     // snapshot so the upload block below (if a new file is also sent in
@@ -405,10 +408,10 @@ class Printing extends Admin_Controller
             ); 
 				
 			if (isset($_FILES["header_image"]) && !empty($_FILES['header_image']['name'])) {
-                $file_name = $this->media_storage->fileupload("header_image", "./uploads/printing/");
+                $file_name = $this->media_storage->fileupload("header_image", $printingUploadPath);
 
                 if (!IsNullOrEmptyString($file_name)) {
-					$insertData['print_header'] = 'uploads/printing/' . $file_name;
+					$insertData['print_header'] = $this->tenant_uploads->storedPath('printing', $file_name);
 
                     // SaaS: adjust storage quota by the size difference (new vs replaced).
                     // If the old image was already removed above, $old_kb is 0 → add-only.
@@ -426,8 +429,7 @@ class Printing extends Admin_Controller
                     // Remove the orphaned old physical file (replace without an explicit
                     // remove never deleted it). Skipped when $old_header was cleared above.
                     if (!empty($old_header)) {
-                        $old_basename = str_replace('uploads/printing/', '', $old_header);
-                        $this->media_storage->filedelete($old_basename, './uploads/printing/');
+                        $this->tenant_uploads->deleteStoredFile($old_header);
                     }
                 }
             }

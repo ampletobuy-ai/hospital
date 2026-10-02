@@ -12,3 +12,10 @@ defined('BASEPATH') or exit('No direct script access allowed');
 |    https://codeigniter.com/user_guide/general/hooks.html
 |
  */
+
+$hook['pre_controller'] = array(
+    'class'    => 'Tenant_hook',
+    'function' => 'initialize_tenant',
+    'filename' => 'Tenant_hook.php',
+    'filepath' => 'hooks',
+);

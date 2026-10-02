@@ -2197,6 +2197,9 @@ This Function is used to Import Multiple Patient Records
 
     public function ipdsearch($bedid = '', $bedgroupid = '')
     {
+        $this->load->library('plan_feature_gate');
+        $this->plan_feature_gate->denyUnless('ipd');
+
         if (!$this->rbac->hasPrivilege('ipd_patient', 'can_view')) {
             access_denied();
         }
@@ -5865,6 +5868,9 @@ This Function is used to Import Multiple Patient Records
 
     public function add_inpatient()
     {
+        $this->load->library('plan_feature_gate');
+        $this->plan_feature_gate->denyUnless('ipd');
+
         if (!$this->rbac->hasPrivilege('ipd_patient', 'can_add')) {
             access_denied();
         }
@@ -7919,6 +7925,9 @@ This Function is used to Import Multiple Patient Records
 
     public function moveipd($id)
     {
+        $this->load->library('plan_feature_gate');
+        $this->plan_feature_gate->denyUnless('ipd');
+
         $appointment_details = $this->patient_model->getDetails($id);
         $patient_name        = $appointment_details['patient_name'];
         $patient_id          = $appointment_details['id'];

@@ -21,6 +21,8 @@ class Referral extends Admin_Controller
         $this->load->library('datatables');
         $this->load->helper('custom');
         $this->time_format = $this->customlib->getHospitalTimeFormat();
+        $this->load->library('plan_feature_gate');
+        $this->plan_feature_gate->denyUnless('doctor_commission');
     }
 
     public function category()

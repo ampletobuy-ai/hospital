@@ -142,6 +142,19 @@ try {
           </button>
         </form>
 
+        <?php
+        $this->config->load('tenancy-config');
+        $this->config->load('hospital_portal');
+        $saas_register = (bool) $this->config->item('hospital_saas_register')
+            || (bool) $this->config->item('saas_register');
+        if ($auth_portal === 'admin' && $saas_register):
+        ?>
+        <p class="portal-auth-switch">
+          New hospital?
+          <a href="<?php echo site_url('site/register'); ?>">Create account</a>
+        </p>
+        <?php endif; ?>
+
         <p class="portal-auth-switch">
           <?php echo html_escape($switch_text); ?>
           <a href="<?php echo $switch_link_url; ?>"><?php echo html_escape($switch_link_text); ?></a>

@@ -38,6 +38,8 @@ class Bloodbank extends Admin_Controller
         $this->load->helper('custom');
         $this->config->load('image_valid');
         $this->time_format = $this->customlib->getHospitalTimeFormat();
+        $this->load->library('plan_feature_gate');
+        $this->plan_feature_gate->denyUnless('ipd');
     }
 
     public function unauthorized()

@@ -66,7 +66,15 @@ class Updater extends Admin_Controller
 
     public function checkup()
     {
-        $version  = "";
+        $version = "";
+
+        // When product license checks are disabled (white-label / Qubex),
+        // do not call the upstream updater — it returns an
+        // "unregistered version" error with an empty SHLK.
+        if (!$this->config->item('license_check_enabled')) {
+            return json_encode(array('version' => $version));
+        }
+
         $response = $this->auth->checkupdate();
 
         if ($response) {

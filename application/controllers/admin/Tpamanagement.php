@@ -15,6 +15,8 @@ class Tpamanagement extends Admin_Controller
         $this->load->library("datatables");
         $this->config->load("payroll"); // search_type config is defined in payroll config
         $this->search_type = $this->config->item('search_type');
+        $this->load->library('plan_feature_gate');
+        $this->plan_feature_gate->denyUnless('tpa_insurance');
     }
 
     public function index()
