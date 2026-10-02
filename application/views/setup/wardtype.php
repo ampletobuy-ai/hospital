@@ -6,13 +6,13 @@
         <!-- general form elements -->
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title titlefix"><?php echo $this->lang->line('ward')." ".$this->lang->line('type')." ".." " . $this->lang->line('list'); ?></h3>
+                <h3 class="card-title titlefix"><?php echo $this->lang->line('ward')." ".$this->lang->line('type')." ".$this->lang->line('list'); ?></h3>
                 <div class="d-flex gap-2 align-items-center flex-wrap float-end">
                     <a data-bs-toggle="modal" data-bs-target="#myModal" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add'); ?></a>
                 </div>
             </div>
             <div class="card-body">
-                <div class="download_label"><?php echo $this->lang->line('ward')." ".$this->lang->line('type')." ".." " . $this->lang->line('list'); ?></div>
+                <div class="download_label"><?php echo $this->lang->line('ward')." ".$this->lang->line('type')." ".$this->lang->line('list'); ?></div>
                 <div class="table-responsive mailbox-messages">
                     <table class="table table-hover table-striped table-bordered example">
                         <thead>

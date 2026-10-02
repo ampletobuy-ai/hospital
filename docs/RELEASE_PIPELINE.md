@@ -22,14 +22,17 @@
 
 ## GitHub Environment `features` secrets
 
-Same pattern as retail-pos / bookingengine:
+Configured on Environment **features** (branch policy: `Features` only). Same pattern as retail-pos:
 
-| Secret / var | Value |
+| Secret | Value |
 |--|--|
 | `VPS_HOST` | `50.6.44.85` |
 | `VPS_USER` | `deploy` |
-| `VPS_SSH_KEY` | Private key for deploy user |
-| `DEPLOY_HEALTHCHECK_URL` | `https://hospital.ampletobuy.com/site/login` (optional) |
+| `VPS_SSH_KEY` | Private key for deploy user (`~/retail-pos-deploy`) |
+| `DEPLOY_HEALTHCHECK_URL` | `https://hospital.ampletobuy.com/` |
+
+CI excludes legacy `application/libraries/Zend*` from PHP lint (PHP 8 incompatible) and gates deploy via reusable `ci.yml`.
+
 
 ## Deploy Features
 

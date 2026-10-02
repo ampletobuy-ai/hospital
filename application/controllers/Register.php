@@ -67,6 +67,7 @@ class Register extends Public_Controller
             'hospital_plans' => (array) $this->config->item('hospital_plans'),
             'partner_code_prefill' => $this->input->get('partner_code') ?: $this->input->get('ref'),
             'coupon_code_prefill' => $this->input->get('coupon_code') ?: $this->input->get('coupon'),
+            'plan_code_prefill' => $this->input->get('plan') ?: $this->input->get('plan_code'),
         );
 
         return array_merge($data, $extra);

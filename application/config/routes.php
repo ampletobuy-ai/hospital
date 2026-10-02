@@ -15,7 +15,8 @@ function my_autoloader($class)
 }
 spl_autoload_register('my_autoloader');
 
-$route['default_controller']                 = 'welcome/index';
+// Apex = SaaS platform home (when HOSPITAL_SAAS_REGISTER=true). Front CMS stays at /frontend.
+$route['default_controller']                 = 'home';
 $route['user/resetpassword/([a-z]+)/(:any)'] = 'site/resetpassword/$1/$2';
 $route['admin/resetpassword/(:any)']         = 'site/admin_resetpassword/$1';
 $route['admin/unauthorized']                 = 'admin/admin/unauthorized';
@@ -24,6 +25,7 @@ $route['translate_uri_dashes'] = false;
 $route['form/appointment']     = 'welcome/appointment';
 $route['page/annual_calendar']     = 'welcome/annual_calendar';
 
+$route['register'] = 'register/index';
 $route['site/register'] = 'register/index';
 $route['site/register_otp_send'] = 'register/otp_send';
 $route['site/register_otp_verify'] = 'register/otp_verify';
@@ -36,7 +38,7 @@ $route['site/register_complete/(:any)'] = 'register/complete/$1';
 //======= front url rewriting==========
 $route['page/(:any)'] = 'welcome/page/$1';
 $route['read/(:any)'] = 'welcome/read/$1';
-$route['frontend']    = 'welcome';
+$route['frontend']    = 'welcome/index';
 
 //======= Survey Forms — Public listing page ==========
 $route['surveys'] = 'welcome/survey_forms';

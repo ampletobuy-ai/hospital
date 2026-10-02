@@ -38,8 +38,13 @@ jobs:
             fi
           done < <(
             find application \
-              \( -path 'application/third_party/*/vendor' -o -path 'application/third_party/*/*/vendor' \) -prune -o \
-              -type f -name '*.php' -print0
+              \( -path 'application/third_party/*/vendor' \
+                 -o -path 'application/third_party/*/*/vendor' \
+                 -o -path 'application/libraries/Zend' \
+                 -o -path 'application/libraries/Zend/*' \
+                 -o -path 'application/vendor' \
+                 -o -path 'application/vendor/*' \) -prune -o \
+              -type f -name '*.php' ! -name 'Zend.php' -print0
           )
           for file in index.php seed-admin.php cli/*.php; do
             [ -f "$file" ] || continue

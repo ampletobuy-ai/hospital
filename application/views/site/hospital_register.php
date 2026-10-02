@@ -205,22 +205,32 @@ $this->load->view('site/partials/register_layout_start', compact('page_title', '
       <legend class="portal-auth-fieldset__legend">Package</legend>
       <div class="row g-3">
         <div class="col-12 col-md-7">
+          <?php
+          $plan_prefill = isset($plan_code_prefill) ? (string) $plan_code_prefill : '';
+          $allowed_plans = array('trial', 'hospital_starter', 'hospital_business', 'hospital_enterprise');
+          if (!in_array($plan_prefill, $allowed_plans, true)) {
+              $plan_prefill = 'trial';
+          }
+          ?>
           <label for="plan_code" class="form-label">Plan</label>
           <select class="form-select portal-auth-input" id="plan_code" name="plan_code" required>
-            <option value="trial" selected>14-day Business trial (free)</option>
+            <option value="trial"<?php echo $plan_prefill === 'trial' ? ' selected' : ''; ?>>14-day Business trial (free)</option>
             <option value="hospital_starter"
               data-annual="<?php echo $plan_price_inr($starter, 'annual'); ?>"
-              data-monthly="<?php echo $plan_price_inr($starter, 'monthly'); ?>">
+              data-monthly="<?php echo $plan_price_inr($starter, 'monthly'); ?>"
+              <?php echo $plan_prefill === 'hospital_starter' ? ' selected' : ''; ?>>
               Starter — ₹<?php echo number_format($plan_price_inr($starter, 'annual')); ?>/year excl. GST
             </option>
             <option value="hospital_business"
               data-annual="<?php echo $plan_price_inr($business, 'annual'); ?>"
-              data-monthly="<?php echo $plan_price_inr($business, 'monthly'); ?>">
+              data-monthly="<?php echo $plan_price_inr($business, 'monthly'); ?>"
+              <?php echo $plan_prefill === 'hospital_business' ? ' selected' : ''; ?>>
               Business ⭐ — ₹<?php echo number_format($plan_price_inr($business, 'annual')); ?>/year excl. GST
             </option>
             <option value="hospital_enterprise"
               data-annual="<?php echo $plan_price_inr($enterprise, 'annual'); ?>"
-              data-monthly="<?php echo $plan_price_inr($enterprise, 'monthly'); ?>">
+              data-monthly="<?php echo $plan_price_inr($enterprise, 'monthly'); ?>"
+              <?php echo $plan_prefill === 'hospital_enterprise' ? ' selected' : ''; ?>>
               Enterprise — ₹<?php echo number_format($plan_price_inr($enterprise, 'annual')); ?>/year excl. GST
             </option>
           </select>
