@@ -16,7 +16,7 @@
 | Workflow | Trigger | Purpose |
 |--|--|--|
 | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | PR / push `Features`, `main` | PHP syntax + package sanity |
-| [`.github/workflows/deploy-features.yml`](../.github/workflows/deploy-features.yml) | Push `Features` / manual | `git pull` + `scripts/deploy.sh` on VPS |
+| [`.github/workflows/deploy-vps-features.yml`](../.github/workflows/deploy-vps-features.yml) | Push `Features` / manual | `git pull` + `scripts/deploy.sh` on VPS |
 | [`.github/workflows/release.yml`](../.github/workflows/release.yml) | Tag `v*` | GitHub Release archive |
 | [`.github/workflows/deploy-hostinger.yml`](../.github/workflows/deploy-hostinger.yml) | `main` only (optional) | Legacy rsync path — not used for Features |
 

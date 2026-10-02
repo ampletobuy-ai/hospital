@@ -1,15 +1,16 @@
-name: Deploy Features
+name: Deploy Features VPS
 
 on:
   push:
-    branches: [Features]
+    branches:
+      - Features
     paths-ignore:
       - "docs/**"
       - "**/*.md"
   workflow_dispatch:
     inputs:
       build_on_vps:
-        description: "Build images on VPS instead of pulling GHCR"
+        description: Build images on VPS instead of pulling GHCR
         required: false
         default: "true"
         type: choice
@@ -86,6 +87,9 @@ jobs:
     needs: ci-gate
     runs-on: ubuntu-latest
     environment: features
+    env:
+      BUILD_ON_VPS: ${{ github.event.inputs.build_on_vps || 'true' }}
+      HEALTHCHECK_URL: ${{ secrets.DEPLOY_HEALTHCHECK_URL }}
     steps:
       - name: Validate deploy config
         env:
@@ -139,6 +143,7 @@ jobs:
           port: 22
           script_stop: true
           command_timeout: 30m
+          envs: BUILD_ON_VPS,HEALTHCHECK_URL
           script: |
             set -euo pipefail
             cd /opt/hospital
@@ -146,11 +151,7 @@ jobs:
             git checkout Features
             git reset --hard origin/Features
             export HOSPITAL_IMAGE_TAG=latest
-            export DEPLOY_HEALTHCHECK_URL='${{ secrets.DEPLOY_HEALTHCHECK_URL }}'
-            if [ -z "${DEPLOY_HEALTHCHECK_URL}" ]; then
-              export DEPLOY_HEALTHCHECK_URL='https://hospital.ampletobuy.com/'
-            fi
-            BUILD='${{ github.event.inputs.build_on_vps || "true" }}'
-            export HOSPITAL_BUILD_ON_VPS="${BUILD}"
+            export DEPLOY_HEALTHCHECK_URL="${HEALTHCHECK_URL:-https://hospital.ampletobuy.com/}"
+            export HOSPITAL_BUILD_ON_VPS="${BUILD_ON_VPS:-true}"
             chmod +x ./scripts/deploy.sh
             ./scripts/deploy.sh
