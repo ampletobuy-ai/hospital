@@ -144,10 +144,13 @@ $config['skip_template_data_tables'] = array(
     'users_authentication',
     'user_theme_preferences',
 
+    // Demo/QA custom field definitions from template must not ship to new hospitals
+    'custom_fields',
+    'custom_field_values',
+
     // CMS uploads / instance content
     'contents',
     'content_for',
-    'custom_field_values',
     'front_cms_media_gallery',
     'front_cms_page_contents',
     'front_cms_program_photos',
@@ -256,5 +259,4 @@ $config['copy_template_data_tables'] = array(
     'addons',
     'share_content_for',
     'content_types',
-    'custom_fields',
 );
