@@ -841,6 +841,9 @@ $_poll_ms = $_poll_seconds * 1000;
 if (typeof popup === 'undefined') {
     function popup(data) {
         var base_url = '<?php echo base_url(); ?>';
+        // Chrome print headers use the top-level document title for iframe prints.
+        var previousTitle = document.title;
+        document.title = '\u00A0';
         var frame1 = $('<iframe />');
         frame1[0].name = "frame1";
         frame1.css({"position": "absolute", "top": "-1000000px"});
@@ -849,7 +852,7 @@ if (typeof popup === 'undefined') {
             ? frame1[0].contentWindow
             : (frame1[0].contentDocument.document ? frame1[0].contentDocument.document : frame1[0].contentDocument);
         frameDoc.document.open();
-        frameDoc.document.write('<html><head><title></title>');
+        frameDoc.document.write('<html><head><title>\u00A0</title>');
         frameDoc.document.write('<link rel="preconnect" href="https://fonts.googleapis.com">');
         frameDoc.document.write('<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">');
         frameDoc.document.write('<link rel="stylesheet" href="' + base_url + 'backend/bootstrap5/css/bootstrap.min.css">');
@@ -860,7 +863,10 @@ if (typeof popup === 'undefined') {
         frameDoc.document.write(data);
         frameDoc.document.write('</body></html>');
         frameDoc.document.close();
-        setTimeout(function () { frame1.remove(); }, 3000);
+        setTimeout(function () {
+            frame1.remove();
+            document.title = previousTitle;
+        }, 3000);
         return true;
     }
 }

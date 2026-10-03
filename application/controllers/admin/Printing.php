@@ -11,6 +11,7 @@ class Printing extends Admin_Controller
         $this->load->library('media_storage');
         $this->load->library('SaasValidation');
         $this->printing_model->setVisibilityFiltering(false);
+        $this->ensurePrintVisibilityColumns();
     }
 
     /**
@@ -399,16 +400,18 @@ class Printing extends Admin_Controller
                     $old_header = '';
                 }
                 
-            // Ensure visibility columns exist on older tenant DBs (migration 125).
+            // Ensure visibility / spacing columns exist on older tenant DBs.
             $this->ensurePrintVisibilityColumns();
 
             // Native checkboxes: present + "1" when checked, absent when unchecked.
             $insertData = array(
-                'id'           => $id,
-                'print_footer' => $this->input->post('footer_content', FALSE),
-                'show_header'  => ($this->input->post('show_header') === '1' || $this->input->post('show_header') === 1) ? 1 : 0,
-                'show_footer'  => ($this->input->post('show_footer') === '1' || $this->input->post('show_footer') === 1) ? 1 : 0,
-                'is_active'    => 'yes',
+                'id'                        => $id,
+                'print_footer'              => $this->input->post('footer_content', FALSE),
+                'show_header'               => ($this->input->post('show_header') === '1' || $this->input->post('show_header') === 1) ? 1 : 0,
+                'show_footer'               => ($this->input->post('show_footer') === '1' || $this->input->post('show_footer') === 1) ? 1 : 0,
+                'blank_lines_before'        => max(0, min(50, (int) $this->input->post('blank_lines_before'))),
+                'blank_lines_after_header'  => max(0, min(50, (int) $this->input->post('blank_lines_after_header'))),
+                'is_active'                 => 'yes',
             ); 
 				
 			if (isset($_FILES["header_image"]) && !empty($_FILES['header_image']['name'])) {
@@ -495,7 +498,7 @@ class Printing extends Admin_Controller
 
     /**
      * Additive schema guard for tenant DBs that were provisioned before
-     * migration 125 (show_header / show_footer on print_setting).
+     * migrations 125/126 (visibility + blank-line spacing on print_setting).
      */
     private function ensurePrintVisibilityColumns()
     {
@@ -507,6 +510,12 @@ class Printing extends Admin_Controller
         }
         if (!$this->db->field_exists('show_footer', 'print_setting')) {
             $this->db->query("ALTER TABLE `print_setting` ADD COLUMN `show_footer` TINYINT(1) NOT NULL DEFAULT 1 AFTER `show_header`");
+        }
+        if (!$this->db->field_exists('blank_lines_before', 'print_setting')) {
+            $this->db->query("ALTER TABLE `print_setting` ADD COLUMN `blank_lines_before` TINYINT(3) UNSIGNED NOT NULL DEFAULT 0 AFTER `show_footer`");
+        }
+        if (!$this->db->field_exists('blank_lines_after_header', 'print_setting')) {
+            $this->db->query("ALTER TABLE `print_setting` ADD COLUMN `blank_lines_after_header` TINYINT(3) UNSIGNED NOT NULL DEFAULT 0 AFTER `blank_lines_before`");
         }
     }
 
