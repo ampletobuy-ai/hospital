@@ -198,7 +198,7 @@
   }
   .sh-print-info-table tr { vertical-align: top; }
   .sh-print-info-table th {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 500;
     color: #111;
     padding: 4px 6px 4px 0;
@@ -207,7 +207,7 @@
   .sh-print-info-table th::after { content: ' :'; color: #111; }
   .sh-print-info-table th:empty::after { content: ''; }
   .sh-print-info-table td {
-    font-size: 11.5px;
+    font-size: 12.5px;
     font-weight: 700;
     padding: 4px 10px 4px 4px;
     color: #111;
@@ -215,7 +215,7 @@
   }
 
   .sh-print-section-title {
-    font-size: 9.5px;
+    font-size: 10.5px;
     font-weight: 700;
     color: #111;
     border-bottom: 1px solid #a1a1aa;
@@ -226,7 +226,7 @@
   .sh-print-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 11.5px;
+    font-size: 12.5px;
     margin-bottom: 4px;
   }
   .sh-print-table thead th {
@@ -234,7 +234,7 @@
     border-bottom: 1px solid #94a3b8;
     padding: 7px 10px;
     font-weight: 600;
-    font-size: 10px;
+    font-size: 11px;
     color: #111;
     text-align: left;
   }
@@ -247,7 +247,7 @@
   .sh-print-table tbody tr:last-child td { border-bottom: 1px solid #94a3b8; }
   .sh-print-table tbody td small {
     color: #94a3b8;
-    font-size: 10px;
+    font-size: 11px;
     display: block;
     margin-top: 2px;
   }
@@ -255,7 +255,7 @@
     padding: 4px 10px;
     border: none;
     text-align: right;
-    font-size: 11px;
+    font-size: 12px;
     color: #111;
   }
   .sh-print-table tfoot .sh-row-first td { padding-top: 8px; }
@@ -276,7 +276,7 @@
   .sh-print-sig-box { text-align: center; width: 40%; }
   .sh-print-sig-line { border-top: 1px solid #374151; margin-bottom: 6px; }
   .sh-print-sig-label {
-    font-size: 10px;
+    font-size: 11px;
     color: #111;
     font-weight: 500;
     text-transform: uppercase;
@@ -355,7 +355,7 @@ label {font-family: 'Inter','Roboto'; font-weight: normal;}
 .sh-print-header-2col .sh-ph-photo-cell { width: 160px; text-align: center; border-right: 1px solid #ccc; }
 .sh-print-header-2col .sh-ph-photo-cell img { height: 130px; width: auto; display: block; margin: 0 auto; border: 1px solid #ddd; padding: 3px; background: #fff; }
 .sh-print-header-2col .sh-ph-info-cell .sh-ph-title { font-size: 16px; font-weight: 700; color: #111; padding: 0 0 8px; margin: 0 0 8px; border-bottom: 1px dashed #ccc; }
-.sh-print-header-2col .sh-ph-info-cell table { width: 100%; font-size: 11.5px; border-collapse: collapse; }
+.sh-print-header-2col .sh-ph-info-cell table { width: 100%; font-size: 12.5px; border-collapse: collapse; }
 .sh-print-header-2col .sh-ph-info-cell th { text-align: left; font-weight: 600; padding: 3px 8px 3px 0; width: 40%; color: #555; vertical-align: top; }
 .sh-print-header-2col .sh-ph-info-cell td { padding: 3px 0; font-weight: 700; color: #111; vertical-align: top; }
 
@@ -383,7 +383,7 @@ label {font-family: 'Inter','Roboto'; font-weight: normal;}
 }
 .sh-print-info-table tr { vertical-align: top; }
 .sh-print-info-table th {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
   color: #111;
   padding: 4px 6px 4px 0;
@@ -392,14 +392,14 @@ label {font-family: 'Inter','Roboto'; font-weight: normal;}
 .sh-print-info-table th::after { content: ' :'; color: #111; }
 .sh-print-info-table th:empty::after { content: ''; }
 .sh-print-info-table td {
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 700;
   padding: 4px 10px 4px 4px;
   color: #111;
   text-align: left;
 }
 .sh-print-section-title {
-  font-size: 9.5px;
+  font-size: 10.5px;
   font-weight: 700;
   color: #111;
   border-bottom: 1px solid #a1a1aa;
@@ -409,7 +409,7 @@ label {font-family: 'Inter','Roboto'; font-weight: normal;}
 .sh-print-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 11.5px;
+  font-size: 12.5px;
   margin-bottom: 4px;
 }
 .sh-print-table thead th {
@@ -418,7 +418,7 @@ label {font-family: 'Inter','Roboto'; font-weight: normal;}
   border-bottom: 1px solid #94a3b8;
   padding: 7px 10px;
   font-weight: 600;
-  font-size: 10px;
+  font-size: 11px;
   color: #111;
   text-align: left;
 }
@@ -431,7 +431,7 @@ label {font-family: 'Inter','Roboto'; font-weight: normal;}
 .sh-print-table tbody tr:last-child td { border-bottom: 1px solid #94a3b8; }
 .sh-print-table tbody td small {
   color: #94a3b8;
-  font-size: 10px;
+  font-size: 11px;
   display: block;
   margin-top: 2px;
   font-weight: 400;
@@ -440,7 +440,7 @@ label {font-family: 'Inter','Roboto'; font-weight: normal;}
   padding: 4px 10px;
   border: none;
   text-align: right;
-  font-size: 11px;
+  font-size: 12px;
   color: #111;
 }
 .sh-print-table tfoot .sh-row-first td { padding-top: 8px; }
@@ -461,7 +461,7 @@ label {font-family: 'Inter','Roboto'; font-weight: normal;}
 .sh-print-sig-box { text-align: center; width: 40%; }
 .sh-print-sig-line { border-top: 1px solid #374151; margin-bottom: 6px; width: 100%; }
 .sh-print-sig-label {
-  font-size: 10px;
+  font-size: 11px;
   color: #111;
   font-weight: 500;
   text-transform: uppercase;
