@@ -786,6 +786,18 @@ class Staff extends Admin_Controller
             //===================
 
             if ($staff_id) {
+                try {
+                    $this->load->library('hospital_tenant_login_service');
+                    $this->hospital_tenant_login_service->ensureStaffPortalAccess(array(
+                        'email' => $email,
+                        'name' => $this->input->post('name', true),
+                        'surname' => $this->input->post('surname', true),
+                        'contact_no' => $contact_no,
+                    ), $password);
+                } catch (Exception $e) {
+                    log_message('error', 'Staff portal mapping failed: ' . $e->getMessage());
+                }
+
                 $staff_login_detail = array('id' => $staff_id, 'credential_for' => 'staff', 'username' => $email, 'password' => $password, 'contact_no' => $contact_no, 'email' => $email);
                 $this->mailsmsconf->mailsms('login_credential', $staff_login_detail);
             }

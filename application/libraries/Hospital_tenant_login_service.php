@@ -107,4 +107,57 @@ class Hospital_tenant_login_service
 
         return 'Hospital ' . substr($tenantId, 0, 8);
     }
+
+    /**
+     * Ensure a tenant staff row can sign in via multi-tenant login
+     * (portal_accounts + tenant_user_mappings).
+     *
+     * @param array<string,mixed> $staff
+     */
+    public function ensureStaffPortalAccess(array $staff, $plainPassword = null)
+    {
+        $this->CI->load->config('tenancy-config');
+        if (!$this->CI->config->item('tenancy_enabled')) {
+            return null;
+        }
+
+        $tenantId = trim((string) $this->CI->session->userdata('tenant_id'));
+        if ($tenantId === '') {
+            $this->CI->load->library('tenant_context');
+            $tenantId = trim((string) $this->CI->tenant_context->getTenantId());
+        }
+        if ($tenantId === '') {
+            return null;
+        }
+
+        $email = strtolower(trim((string) ($staff['email'] ?? '')));
+        if ($email === '') {
+            return null;
+        }
+
+        $product = (string) $this->CI->config->item('product_code');
+        $portal = $this->CI->central_db->findPortalAccountByEmail($email);
+        if (!$portal) {
+            $portal = $this->CI->central_db->createPortalAccount(array(
+                'first_name' => (string) ($staff['name'] ?? 'Staff'),
+                'last_name' => (string) ($staff['surname'] ?? ''),
+                'email' => $email,
+                'phone' => $staff['contact_no'] ?? null,
+                'password' => ($plainPassword !== null && $plainPassword !== '')
+                    ? (string) $plainPassword
+                    : bin2hex(random_bytes(8)),
+            ));
+        }
+
+        $mapping = array(
+            'portal_account_id' => (int) $portal['id'],
+            'phone' => $staff['contact_no'] ?? ($portal['phone'] ?? null),
+            'is_primary_admin' => 0,
+        );
+        if ($this->CI->central_db->hasColumn('tenant_user_mappings', 'product_code')) {
+            $mapping['product_code'] = $product;
+        }
+
+        return $this->CI->central_db->upsertTenantUserMapping($tenantId, $email, $mapping);
+    }
 }
