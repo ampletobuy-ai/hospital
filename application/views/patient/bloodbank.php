@@ -9,8 +9,8 @@ if (!$_bb_has_image) {
         : mb_strtoupper(mb_substr($_bb_parts[0], 0, 1) . mb_substr($_bb_parts[count($_bb_parts) - 1], 0, 1)));
 }
 $_bb_age         = $this->customlib->get_patient_current_age($result['id']);
-$_bb_barcode     = './uploads/patient_id_card/barcodes/' . $id . '.png';
-$_bb_qrcode      = './uploads/patient_id_card/qrcode/' . $id . '.png';
+$_bb_barcode     = $this->customlib->getPatientIdCardAsset($id, 'barcode');
+$_bb_qrcode      = $this->customlib->getPatientIdCardAsset($id, 'qrcode');
 ?>
 <div class="container-fluid px-1 py-1">
 
@@ -55,14 +55,14 @@ $_bb_qrcode      = './uploads/patient_id_card/qrcode/' . $id . '.png';
         </div>
 
         <!-- Barcode / QR -->
-        <?php if (file_exists($_bb_barcode) || file_exists($_bb_qrcode)): ?>
+        <?php if (!empty($_bb_barcode) || !empty($_bb_qrcode)): ?>
         <div class="d-flex gap-3 align-items-center flex-shrink-0">
-            <?php if (file_exists($_bb_barcode)): ?>
+            <?php if (!empty($_bb_barcode)): ?>
             <a href="<?php echo $this->media_storage->getImageURL($_bb_barcode); ?>" target="_blank" rel="noopener">
                 <img class="sh-qr-code" src="<?php echo $this->media_storage->getImageURL($_bb_barcode); ?>" width="100" height="40" alt="barcode">
             </a>
             <?php endif; ?>
-            <?php if (file_exists($_bb_qrcode)): ?>
+            <?php if (!empty($_bb_qrcode)): ?>
             <a href="<?php echo $this->media_storage->getImageURL($_bb_qrcode); ?>" target="_blank" rel="noopener" class="sh-welcome-qr-link">
                 <img class="sh-qr-code sh-welcome-qr" src="<?php echo $this->media_storage->getImageURL($_bb_qrcode); ?>" width="50" height="50" alt="qr">
             </a>

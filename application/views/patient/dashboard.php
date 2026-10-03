@@ -20,8 +20,8 @@ $_gender        = isset($patient_detail['gender']) ? $patient_detail['gender'] :
 $_unique_id     = isset($patient_detail['id']) ? $patient_detail['id'] : '';
 $_last_visit    = isset($patient_detail['as_of_date']) && !empty($patient_detail['as_of_date'])
     ? $this->customlib->YYYYMMDDTodateFormat($patient_detail['as_of_date']) : '';
-$_qrcode_path   = 'uploads/patient_id_card/qrcode/' . $_unique_id . '.png';
-$_has_qrcode    = !empty($_unique_id) && file_exists(FCPATH . $_qrcode_path);
+$_qrcode_path   = !empty($_unique_id) ? $this->customlib->getPatientIdCardAsset($_unique_id, 'qrcode') : null;
+$_has_qrcode    = !empty($_qrcode_path);
 ?>
 
 <div class="container-fluid px-1 py-1">

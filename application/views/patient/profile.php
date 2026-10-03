@@ -171,42 +171,29 @@
                         ); ?></div>
                     </div>
                     <?php endif; ?>
-                    <?php if (
-                        file_exists(
-                            "./uploads/patient_id_card/barcodes/" . $id . ".png",
-                        )
-                    ): ?>
+                    <?php
+                    $sh_barcode = $this->customlib->getPatientIdCardAsset($id, 'barcode');
+                    $sh_qrcode  = $this->customlib->getPatientIdCardAsset($id, 'qrcode');
+                    if ($sh_barcode): ?>
                     <div class="field">
                         <div class="l"><?php echo $this->lang->line(
                             "barcode",
                         ); ?></div>
                         <div class="v">
-                            <a href="<?php echo $this->media_storage->getImageURL(
-                                "./uploads/patient_id_card/barcodes/" . $id . ".png",
-                            ); ?>" target="_blank">
-                                <img class="patient-id-img sh-qr-code" src="<?php echo $this->media_storage->getImageURL(
-                                    "./uploads/patient_id_card/barcodes/" . $id . ".png",
-                                ); ?>" height="30">
+                            <a href="<?php echo $this->media_storage->getImageURL($sh_barcode); ?>" target="_blank">
+                                <img class="patient-id-img sh-qr-code" src="<?php echo $this->media_storage->getImageURL($sh_barcode); ?>" height="30" alt="">
                             </a>
                         </div>
                     </div>
                     <?php endif; ?>
-                    <?php if (
-                        file_exists(
-                            "./uploads/patient_id_card/qrcode/" . $id . ".png",
-                        )
-                    ): ?>
+                    <?php if ($sh_qrcode): ?>
                     <div class="field">
                         <div class="l"><?php echo $this->lang->line(
                             "qrcode",
                         ); ?></div>
                         <div class="v">
-                            <a href="<?php echo $this->media_storage->getImageURL(
-                                "./uploads/patient_id_card/qrcode/" . $id . ".png",
-                            ); ?>" target="_blank">
-                                <img class="patient-id-img sh-qr-code" src="<?php echo $this->media_storage->getImageURL(
-                                    "./uploads/patient_id_card/qrcode/" . $id . ".png",
-                                ); ?>" width="50" height="50">
+                            <a href="<?php echo $this->media_storage->getImageURL($sh_qrcode); ?>" target="_blank">
+                                <img class="patient-id-img sh-qr-code" src="<?php echo $this->media_storage->getImageURL($sh_qrcode); ?>" width="50" height="50" alt="">
                             </a>
                         </div>
                     </div>
