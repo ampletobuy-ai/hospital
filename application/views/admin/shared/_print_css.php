@@ -233,8 +233,13 @@ body {
 /* ── @media print overrides ───────────────────────── */
 @media print {
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  @page { margin: 12mm; }
-  .fixed-print-header { position: fixed; top: 0; width: 100%; z-index: 10; }
+  /* Zero page margin removes browser-injected URL / date / page chrome. */
+  @page { margin: 0 !important; }
+  html, body {
+    margin: 0 !important;
+    padding: 10mm 12mm !important;
+  }
+  .fixed-print-header { position: fixed; top: 0; left: 0; right: 0; width: 100%; z-index: 10; }
   .footer-fixed { position: fixed; bottom: 0; width: 100%; background: #fff; }
   .sh-print-info-block { background: #f9fafb !important; page-break-inside: avoid; }
   .sh-print-table thead th { background: #f1f5f9 !important; }
