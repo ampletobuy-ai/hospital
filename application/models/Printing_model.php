@@ -43,12 +43,13 @@ class Printing_model extends MY_Model
         $this->db->trans_start(); # Starting Transaction
         $this->db->trans_strict(false); # See Note 01. If you wish can remove as well
         //=======================Code Start===========================
-        if (isset($data["id"])) {
-            $this->db->where("id", $data["id"])->update("print_setting", $data);            
-            $message = UPDATE_RECORD_CONSTANT . " On Print Setting id " . $data['id'];
-            $action = "Update";
+        if (isset($data["id"]) && $data["id"] !== '' && $data["id"] !== null) {
             $record_id = $data['id'];
-            $this->log($message, $record_id, $action);            
+            unset($data['id']); // do not SET primary key in UPDATE
+            $this->db->where("id", $record_id)->update("print_setting", $data);
+            $message = UPDATE_RECORD_CONSTANT . " On Print Setting id " . $record_id;
+            $action = "Update";
+            $this->log($message, $record_id, $action);
         } else {
             $this->db->insert("print_setting", $data);
             $insert_id = $this->db->insert_id();
