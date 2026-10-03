@@ -399,21 +399,15 @@ class Printing extends Admin_Controller
                     $old_header = '';
                 }
                 
-            $show_header = $this->input->post('show_header');
-            $show_footer = $this->input->post('show_footer');
-            // Multipart duplicate-name posts can arrive as an array; use last value.
-            if (is_array($show_header)) {
-                $show_header = end($show_header);
-            }
-            if (is_array($show_footer)) {
-                $show_footer = end($show_footer);
-            }
+            // Ensure visibility columns exist on older tenant DBs (migration 125).
+            $this->ensurePrintVisibilityColumns();
 
+            // Native checkboxes: present + "1" when checked, absent when unchecked.
             $insertData = array(
                 'id'           => $id,
                 'print_footer' => $this->input->post('footer_content', FALSE),
-                'show_header'  => ((string) $show_header === '1') ? 1 : 0,
-                'show_footer'  => ((string) $show_footer === '1') ? 1 : 0,
+                'show_header'  => ($this->input->post('show_header') === '1' || $this->input->post('show_header') === 1) ? 1 : 0,
+                'show_footer'  => ($this->input->post('show_footer') === '1' || $this->input->post('show_footer') === 1) ? 1 : 0,
                 'is_active'    => 'yes',
             ); 
 				
@@ -499,13 +493,30 @@ class Printing extends Admin_Controller
         }
     }
 
+    /**
+     * Additive schema guard for tenant DBs that were provisioned before
+     * migration 125 (show_header / show_footer on print_setting).
+     */
+    private function ensurePrintVisibilityColumns()
+    {
+        if (!$this->db->table_exists('print_setting')) {
+            return;
+        }
+        if (!$this->db->field_exists('show_header', 'print_setting')) {
+            $this->db->query("ALTER TABLE `print_setting` ADD COLUMN `show_header` TINYINT(1) NOT NULL DEFAULT 1 AFTER `print_footer`");
+        }
+        if (!$this->db->field_exists('show_footer', 'print_setting')) {
+            $this->db->query("ALTER TABLE `print_setting` ADD COLUMN `show_footer` TINYINT(1) NOT NULL DEFAULT 1 AFTER `show_header`");
+        }
+    }
+
     public function handle_upload()
     {
         // Header image is optional. CI still runs callback_* rules when the
         // field is empty, so we must return TRUE when no file was chosen —
         // otherwise every Save (including unchecking print visibility) fails
         // validation and nothing is persisted.
-        if (!isset($_FILES["header_image"]) || empty($_FILES['header_image']['name'])) {
+        if (!isset($_FILES["header_image"]) || empty($_FILES["header_image"]['name'])) {
             return true;
         }
 
