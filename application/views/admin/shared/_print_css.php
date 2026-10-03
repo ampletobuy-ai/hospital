@@ -1,3 +1,13 @@
+<?php
+$__print_details = (isset($print_details) && is_array($print_details)) ? $print_details : array();
+$__blank_before = max(0, min(50, (int) ($__print_details['blank_lines_before'] ?? 0)));
+$__blank_after_header = max(0, min(50, (int) ($__print_details['blank_lines_after_header'] ?? 0)));
+$__has_print_header = !empty($__print_details['print_header']);
+$__line_px = 18;
+$__header_img_h = $__has_print_header ? 100 : 0;
+$__header_space_h = $__header_img_h + ($__blank_before * $__line_px);
+$__content_pad_top = $__blank_after_header * $__line_px;
+?>
 <style>
 /* ============================================================
    Smart Hospital — Shared Print CSS
@@ -16,13 +26,17 @@ body {
 }
 
 /* ── Existing system classes (keep working) ───────── */
-.fixed-print-header { height: 100px; width: 100%; overflow: hidden; }
+.fixed-print-header {
+  height: <?php echo (int) $__header_img_h; ?>px !important;
+  width: 100%;
+  overflow: hidden;
+}
 .fixed-print-header img { height: 100px; width: 100%; display: block; object-fit: cover; }
-.header-space  { height: 100px; }
+.header-space  { height: <?php echo (int) $__header_space_h; ?>px !important; }
 .footer-space  { height: 70px; }
 .table-print-full { width: 100%; border-collapse: collapse; }
 .print-area { padding: 0; }
-.content-body { padding: 0 12px; }
+.content-body { padding: <?php echo (int) $__content_pad_top; ?>px 12px 0 !important; }
 
 .footer-fixed {
   position: fixed; bottom: 0; width: 100%;

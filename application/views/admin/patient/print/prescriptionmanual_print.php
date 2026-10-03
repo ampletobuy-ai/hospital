@@ -4,7 +4,7 @@ $print_date = date($this->customlib->getHospitalDateFormat(true, false));
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title><?php echo $this->lang->line('prescription'); ?></title>
+    <title>&nbsp;</title>
     <link rel="stylesheet" href="<?php echo base_url(); ?>backend/dist/css/sh-print.css">
     <?php include(APPPATH . 'views/admin/shared/_print_css.php'); ?>
 </head>
@@ -13,8 +13,6 @@ $print_date = date($this->customlib->getHospitalDateFormat(true, false));
 <div class="fixed-print-header">
     <?php if (!empty($print_details['print_header'])) : ?>
         <img src="<?php echo $this->media_storage->getImageURL($print_details['print_header']); ?>" style="height:100px; width:100%; object-fit:cover;" class="img-fluid">
-    <?php else : ?>
-        <div style="padding: 8px 0;"><span style="font-size: 16px; font-weight: bold;"><?php echo $this->lang->line('prescription'); ?></span></div>
     <?php endif; ?>
 </div>
 
