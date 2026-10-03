@@ -237,7 +237,7 @@ body {
   @page { margin: 0 !important; }
   html, body {
     margin: 0 !important;
-    padding: 8mm 0 !important;
+    padding: 8mm 0.5cm !important;
   }
   .fixed-print-header { position: fixed; top: 0; left: 0; right: 0; width: 100%; z-index: 10; }
   .footer-fixed { position: fixed; bottom: 0; width: 100%; background: #fff; }
