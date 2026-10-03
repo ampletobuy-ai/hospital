@@ -177,9 +177,19 @@ class Hospital_signup_quote
     {
         $type = strtolower((string) ($coupon['discount_type'] ?? 'percent'));
         if ($type === 'fixed' || $type === 'flat' || $type === 'amount') {
-            return max(0, min($listAmountPaise, (int) ($coupon['discount_value'] ?? $coupon['amount_paise'] ?? 0)));
+            return max(0, min($listAmountPaise, (int) (
+                $coupon['discount_value']
+                ?? $coupon['amount_off_paise']
+                ?? $coupon['amount_paise']
+                ?? 0
+            )));
         }
-        $percent = (float) ($coupon['discount_value'] ?? $coupon['percent'] ?? 0);
+        $percent = (float) (
+            $coupon['discount_value']
+            ?? $coupon['percent_off']
+            ?? $coupon['percent']
+            ?? 0
+        );
 
         return (int) round($listAmountPaise * max(0, min(100, $percent)) / 100);
     }
