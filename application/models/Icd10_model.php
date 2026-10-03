@@ -16,15 +16,25 @@ class Icd10_model extends MY_Model
 
     public function get($id = null)
     {
+        if (!$this->db->table_exists('icd10_codes')) {
+            return !empty($id) ? null : array();
+        }
+
         $this->db->select('icd10_codes.id, icd10_codes.icd_code, icd10_codes.icd_description, icd10_codes.group_id, icd10_groups.group_name');
         $this->db->from('icd10_codes');
-        $this->db->join('icd10_groups', 'icd10_groups.id = icd10_codes.group_id', 'left');
+        if ($this->db->table_exists('icd10_groups')) {
+            $this->db->join('icd10_groups', 'icd10_groups.id = icd10_codes.group_id', 'left');
+        }
         if (!empty($id)) {
             $this->db->where('icd10_codes.id', $id);
-            return $this->db->get()->row_array();
+            $query = $this->db->get();
+
+            return $query ? $query->row_array() : null;
         }
         $this->db->order_by('icd10_codes.icd_code', 'ASC');
-        return $this->db->get()->result_array();
+        $query = $this->db->get();
+
+        return $query ? $query->result_array() : array();
     }
 
     public function getByGroup($group_id)
@@ -79,14 +89,22 @@ class Icd10_model extends MY_Model
 
     public function getgroup($id = null)
     {
+        if (!$this->db->table_exists('icd10_groups')) {
+            return !empty($id) ? null : array();
+        }
+
         $this->db->select('id, group_name, description');
         $this->db->from('icd10_groups');
         if (!empty($id)) {
             $this->db->where('id', $id);
-            return $this->db->get()->row_array();
+            $query = $this->db->get();
+
+            return $query ? $query->row_array() : null;
         }
         $this->db->order_by('group_name', 'ASC');
-        return $this->db->get()->result_array();
+        $query = $this->db->get();
+
+        return $query ? $query->result_array() : array();
     }
 
     public function addgroup($data)

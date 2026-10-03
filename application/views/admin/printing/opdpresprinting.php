@@ -8,6 +8,7 @@
                 <h3 class="card-title titlefix"><?php echo $this->lang->line('opd_prescription_header_footer'); ?></h3>
             </div>
             <div class="card-body">
+                <?php if ($this->session->flashdata('msg')) { echo $this->session->flashdata('msg'); } ?>
                 <form enctype="multipart/form-data" action="<?php echo site_url('admin/printing/update'); ?>" method="post">
                     <input type="hidden" name="id" value="<?php if (!empty($printing_list)) { echo $printing_list[0]['id']; } ?>">
                     <input type="hidden" name="function_name" value="<?php echo $function_name; ?>">

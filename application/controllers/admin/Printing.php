@@ -33,7 +33,7 @@ class Printing extends Admin_Controller
         $this->session->set_userdata('sub_sidebar_menu', 'admin/printing/opdpresprinting');
         $this->session->set_userdata('sub_menu', 'admin/printing');
         $data["printing_list"] = $this->printing_model->get('', 'opdpre');
-        $data["function_name"] = 'index';
+        $data["function_name"] = 'opdpresprinting';
         $this->load->view('layout/header');
         $this->load->view('admin/printing/opdpresprinting', $data);
         $this->load->view('layout/footer');
@@ -288,7 +288,7 @@ class Printing extends Admin_Controller
 
         if ($this->form_validation->run() == false) {
             $this->load->view('layout/header');
-            if ($function_name == 'opdpresprinting') {
+            if ($function_name == 'opdpresprinting' || $function_name == 'index') {
                 $data["printing_list"] = $this->printing_model->get('', 'opdpre');
                 $data["function_name"] = 'opdpresprinting';
                 $this->load->view('admin/printing/opdpresprinting', $data);
@@ -399,11 +399,21 @@ class Printing extends Admin_Controller
                     $old_header = '';
                 }
                 
+            $show_header = $this->input->post('show_header');
+            $show_footer = $this->input->post('show_footer');
+            // Multipart duplicate-name posts can arrive as an array; use last value.
+            if (is_array($show_header)) {
+                $show_header = end($show_header);
+            }
+            if (is_array($show_footer)) {
+                $show_footer = end($show_footer);
+            }
+
             $insertData = array(
                 'id'           => $id,
-                'print_footer' => $this->input->post('footer_content', TRUE),
-                'show_header'  => $this->input->post('show_header', TRUE) ? 1 : 0,
-                'show_footer'  => $this->input->post('show_footer', TRUE) ? 1 : 0,
+                'print_footer' => $this->input->post('footer_content', FALSE),
+                'show_header'  => ((string) $show_header === '1') ? 1 : 0,
+                'show_footer'  => ((string) $show_footer === '1') ? 1 : 0,
                 'is_active'    => 'yes',
             ); 
 				
@@ -434,9 +444,18 @@ class Printing extends Admin_Controller
                 }
             }
 			
-            $this->printing_model->add($insertData);            
-            
-            if ($function_name == 'index') {
+            if ($id === '' || $id === null) {
+                $this->session->set_flashdata('msg', '<div class="alert alert-danger">Print setting record not found.</div>');
+            } else {
+                $saved = $this->printing_model->add($insertData);
+                if ($saved === false) {
+                    $this->session->set_flashdata('msg', '<div class="alert alert-danger">' . $this->lang->line('error_occurred_please_try_again') . '</div>');
+                } else {
+                    $this->session->set_flashdata('msg', '<div class="alert alert-success">' . $this->lang->line('success_message') . '</div>');
+                }
+            }
+
+            if ($function_name == 'index' || $function_name == 'opdpresprinting') {
                 redirect('admin/printing/opdpresprinting');
             } elseif ($function_name == 'opdprinting') {
                 redirect('admin/printing/opdprinting');
@@ -482,24 +501,31 @@ class Printing extends Admin_Controller
 
     public function handle_upload()
     {
-        if (isset($_FILES["header_image"]) && !empty($_FILES['header_image']['name'])) {
-            $allowedExts = array('jpg', 'jpeg', 'png', 'gif');
-            $temp        = explode(".", $_FILES["header_image"]["name"]);
-            $extension   = end($temp);
-            if ($_FILES["header_image"]["error"] > 0) {
-                $error .= $this->lang->line('error_opening_the_file') . "<br />";
-            }
-            if (($_FILES["header_image"]["type"] != "image/gif") && ($_FILES["header_image"]["type"] != "image/jpeg") && ($_FILES["header_image"]["type"] != "image/jpg") && ($_FILES["header_image"]["type"] != "image/png")) {
-                $this->form_validation->set_message('handle_upload', $this->lang->line('file_type_not_allowed'));
-                return false;
-            }
-
-            if (!in_array(strtolower($extension), $allowedExts)) {
-                $this->form_validation->set_message('handle_upload', $this->lang->line('file_extension_not_allowed'));
-                return false;
-            }
+        // Header image is optional. CI still runs callback_* rules when the
+        // field is empty, so we must return TRUE when no file was chosen —
+        // otherwise every Save (including unchecking print visibility) fails
+        // validation and nothing is persisted.
+        if (!isset($_FILES["header_image"]) || empty($_FILES['header_image']['name'])) {
             return true;
-        }        
+        }
+
+        $allowedExts = array('jpg', 'jpeg', 'png', 'gif');
+        $temp        = explode(".", $_FILES["header_image"]["name"]);
+        $extension   = end($temp);
+        if ($_FILES["header_image"]["error"] > 0) {
+            $this->form_validation->set_message('handle_upload', $this->lang->line('error_opening_the_file'));
+            return false;
+        }
+        if (($_FILES["header_image"]["type"] != "image/gif") && ($_FILES["header_image"]["type"] != "image/jpeg") && ($_FILES["header_image"]["type"] != "image/jpg") && ($_FILES["header_image"]["type"] != "image/png")) {
+            $this->form_validation->set_message('handle_upload', $this->lang->line('file_type_not_allowed'));
+            return false;
+        }
+
+        if (!in_array(strtolower($extension), $allowedExts)) {
+            $this->form_validation->set_message('handle_upload', $this->lang->line('file_extension_not_allowed'));
+            return false;
+        }
+        return true;
     }
 
     public function obstetrichistoryprinting()
