@@ -9,16 +9,28 @@ class User_theme_preference_model extends MY_Model
 
     public function getByUser($user_id, $user_type)
     {
+        if (!$this->db->table_exists('user_theme_preferences')) {
+            return null;
+        }
+
         $this->db->select('id, theme_preset, text_size, density');
         $this->db->from('user_theme_preferences');
         $this->db->where('user_id', (int)$user_id);
         $this->db->where('user_type', $user_type);
         $query = $this->db->get();
+        if (!$query) {
+            return null;
+        }
+
         return $query->row_array();
     }
 
     public function upsert($user_id, $user_type, $data)
     {
+        if (!$this->db->table_exists('user_theme_preferences')) {
+            return false;
+        }
+
         $this->db->trans_start();
         $this->db->trans_strict(false);
 
@@ -51,6 +63,10 @@ class User_theme_preference_model extends MY_Model
 
     public function deleteByUser($user_id, $user_type)
     {
+        if (!$this->db->table_exists('user_theme_preferences')) {
+            return true;
+        }
+
         $this->db->trans_start();
         $this->db->trans_strict(false);
 
