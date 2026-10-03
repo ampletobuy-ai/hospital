@@ -502,9 +502,18 @@ class Central_db
     {
         $db = $this->connect();
         $data['updated_at'] = date('Y-m-d H:i:s');
+        $filtered = array();
+        foreach ($data as $col => $val) {
+            if ($this->hasColumn('pending_signups', $col)) {
+                $filtered[$col] = $val;
+            }
+        }
+        if ($filtered === array()) {
+            return false;
+        }
         $db->where('id', (int) $id);
 
-        return $db->update('pending_signups', $data);
+        return $db->update('pending_signups', $filtered);
     }
 
     public function hasActivePendingSignup($email)

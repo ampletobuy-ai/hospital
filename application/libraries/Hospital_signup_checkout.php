@@ -20,10 +20,8 @@ class Hospital_signup_checkout
 
     public function isComplimentarySignup(array $pending)
     {
-        return (int) ($pending['amount_paise'] ?? 0) <= 0
-            && (int) ($pending['gst_paise'] ?? 0) <= 0
-            && (int) ($pending['discount_paise'] ?? 0) > 0
-            && trim((string) ($pending['coupon_code'] ?? '')) !== '';
+        // Any zero-payable signup skips Razorpay (100% coupon or promotional).
+        return ((int) ($pending['amount_paise'] ?? 0) + (int) ($pending['gst_paise'] ?? 0)) <= 0;
     }
 
     /**
