@@ -105,16 +105,22 @@ $genderList = $this->customlib->getGender();
                           <div class="field"><div class="l"><?php echo $this->lang->line('tpa_id'); ?></div><div class="v"><?php echo !empty($result['insurance_id']) ? html_escape($result['insurance_id']) : '<span class="v mut">—</span>'; ?></div></div>
                           <div class="field"><div class="l"><?php echo $this->lang->line('tpa_validity'); ?></div><div class="v"><?php echo !empty($result['insurance_validity']) ? $this->customlib->YYYYMMDDTodateFormat($result['insurance_validity']) : '<span class="v mut">—</span>'; ?></div></div>
                           <div class="field"><div class="l"><?php echo $this->lang->line('total_visits'); ?></div><div class="v"><?php echo (int)$total_visits; ?></div></div>
+                          <?php
+                          $sh_barcode = $this->customlib->getPatientIdCardAsset($patient_id, 'barcode');
+                          $sh_qrcode  = $this->customlib->getPatientIdCardAsset($patient_id, 'qrcode');
+                          if ($sh_barcode) { ?>
                           <div class="field">
                             <div class="l"><?php echo $this->lang->line('barcode'); ?></div>
-                            <div class="v"><a href="<?php echo $this->media_storage->getImageURL('./uploads/patient_id_card/barcodes/'.$patient_id.'.png'); ?>" target="_blank">
-                              <img  class="sh-qr-code" src="<?php echo $this->media_storage->getImageURL('./uploads/patient_id_card/barcodes/'.$patient_id.'.png'); ?>" width="80" height="22"></a></div>
+                            <div class="v"><a href="<?php echo $this->media_storage->getImageURL($sh_barcode); ?>" target="_blank">
+                              <img  class="sh-qr-code" src="<?php echo $this->media_storage->getImageURL($sh_barcode); ?>" width="80" height="22" alt=""></a></div>
                           </div>
+                          <?php } if ($sh_qrcode) { ?>
                           <div class="field">
                             <div class="l"><?php echo $this->lang->line('qrcode'); ?></div>
-                            <div class="v"><a href="<?php echo $this->media_storage->getImageURL('./uploads/patient_id_card/qrcode/'.$patient_id.'.png'); ?>" target="_blank">
-                              <img  class="sh-qr-code"  src="<?php echo $this->media_storage->getImageURL('./uploads/patient_id_card/qrcode/'.$patient_id.'.png'); ?>" width="48" height="48"></a></div>
+                            <div class="v"><a href="<?php echo $this->media_storage->getImageURL($sh_qrcode); ?>" target="_blank">
+                              <img  class="sh-qr-code"  src="<?php echo $this->media_storage->getImageURL($sh_qrcode); ?>" width="48" height="48" alt=""></a></div>
                           </div>
+                          <?php } ?>
                         </div>
                       </section><!-- /.bcard -->
 

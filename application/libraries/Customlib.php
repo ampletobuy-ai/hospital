@@ -1951,30 +1951,83 @@ class Customlib
     }
 
 
+    /**
+     * Relative web path for a patient barcode/QR asset (tenant-scoped when tenancy is on).
+     * Falls back to legacy shared uploads/patient_id_card/... and migrates into the tenant folder when found.
+     *
+     * @param int|string $patient_id
+     * @param string     $type barcode|qrcode
+     * @return string|null relative path or null when missing
+     */
+    public function getPatientIdCardAsset($patient_id, $type = 'barcode')
+    {
+        $patient_id = (int) $patient_id;
+        if ($patient_id <= 0) {
+            return null;
+        }
+
+        $subdir = ($type === 'qrcode') ? 'patient_id_card/qrcode' : 'patient_id_card/barcodes';
+        $this->CI->load->library('tenant_uploads');
+        $this->CI->load->config('tenancy-config');
+
+        $rel = $this->CI->tenant_uploads->relativeDir($subdir) . '/' . $patient_id . '.png';
+        $abs = rtrim(FCPATH, '/\\') . '/' . $rel;
+        if (is_file($abs)) {
+            return $rel;
+        }
+
+        $legacy_rel = 'uploads/' . $subdir . '/' . $patient_id . '.png';
+        $legacy_candidates = array(
+            rtrim(FCPATH, '/\\') . '/' . $legacy_rel,
+            $this->getFolderPath() . $legacy_rel,
+            $this->getFolderPath() . './' . $legacy_rel,
+        );
+
+        $legacy_abs = null;
+        foreach ($legacy_candidates as $candidate) {
+            if (is_file($candidate)) {
+                $legacy_abs = $candidate;
+                break;
+            }
+        }
+
+        if ($legacy_abs === null) {
+            return null;
+        }
+
+        // Copy legacy shared file into the tenant tree when multi-tenant is active.
+        $tenant_id = $this->CI->tenant_uploads->currentTenantId();
+        if ($tenant_id !== '' && $this->CI->config->item('tenancy_enabled')) {
+            $this->CI->tenant_uploads->ensureDir($subdir);
+            if (@copy($legacy_abs, $abs)) {
+                @chmod($abs, 0666);
+                return $rel;
+            }
+        }
+
+        return $legacy_rel;
+    }
+
     public function generatebarcode($admission_no, $default_return_code = 'barcode')
     {
-        $barcode = 'uploads/patient_id_card/barcodes/' . $admission_no . '.png';
-        $qrcode  = 'uploads/patient_id_card/qrcode/' . $admission_no . '.png';
-        $code    = (string) $admission_no;
+        $this->CI->load->library('tenant_uploads');
+        $barcode_rel_dir = $this->CI->tenant_uploads->ensureDir('patient_id_card/barcodes');
+        $qr_rel_dir      = $this->CI->tenant_uploads->ensureDir('patient_id_card/qrcode');
+        $barcode         = $barcode_rel_dir . '/' . $admission_no . '.png';
+        $qrcode          = $qr_rel_dir . '/' . $admission_no . '.png';
+        $code            = (string) $admission_no;
 
         if ($code === '') {
             return ($default_return_code == 'qrcode') ? $qrcode : $barcode;
         }
 
-        $barcode_dir  = $this->CI->customlib->getFolderPath() . 'uploads/patient_id_card/barcodes/';
-        $qr_dir       = $this->CI->customlib->getFolderPath() . 'uploads/patient_id_card/qrcode/';
+        $barcode_dir  = rtrim(FCPATH, '/\\') . '/' . $barcode_rel_dir . '/';
+        $qr_dir       = rtrim(FCPATH, '/\\') . '/' . $qr_rel_dir . '/';
         $barcode_file = $barcode_dir . $admission_no . '.png';
         $qr_file      = $qr_dir . $admission_no . '.png';
 
         try {
-            if (!is_dir($barcode_dir)) {
-                @mkdir($barcode_dir, 0777, true);
-            }
-            if (!is_dir($qr_dir)) {
-                @mkdir($qr_dir, 0777, true);
-            }
-
-            // Reuse existing files when Apache cannot overwrite user-owned PNGs.
+            // Reuse existing files when the web user cannot overwrite them.
             if (!is_file($barcode_file) || is_writable($barcode_file)) {
                 $this->CI->load->library('zend');
                 $this->CI->zend->load('Zend/Barcode');
@@ -2004,28 +2057,24 @@ class Customlib
 
     public function generatestaffbarcode($employee_id, $staff_id, $default_return_code = 'barcode')
     {
-        $barcode = 'uploads/staff_id_card/barcodes/' . $staff_id . '.png';
-        $qrcode  = 'uploads/staff_id_card/qrcode/' . $staff_id . '.png';
-        $code    = (string) $employee_id;
+        $this->CI->load->library('tenant_uploads');
+        $barcode_rel_dir = $this->CI->tenant_uploads->ensureDir('staff_id_card/barcodes');
+        $qr_rel_dir      = $this->CI->tenant_uploads->ensureDir('staff_id_card/qrcode');
+        $barcode         = $barcode_rel_dir . '/' . $staff_id . '.png';
+        $qrcode          = $qr_rel_dir . '/' . $staff_id . '.png';
+        $code            = (string) $employee_id;
 
         if ($code === '') {
             return ($default_return_code == 'qrcode') ? $qrcode : $barcode;
         }
 
-        $barcode_dir  = $this->CI->customlib->getFolderPath() . 'uploads/staff_id_card/barcodes/';
-        $qr_dir       = $this->CI->customlib->getFolderPath() . 'uploads/staff_id_card/qrcode/';
+        $barcode_dir  = rtrim(FCPATH, '/\\') . '/' . $barcode_rel_dir . '/';
+        $qr_dir       = rtrim(FCPATH, '/\\') . '/' . $qr_rel_dir . '/';
         $barcode_file = $barcode_dir . $staff_id . '.png';
         $qr_file      = $qr_dir . $staff_id . '.png';
 
         try {
-            if (!is_dir($barcode_dir)) {
-                @mkdir($barcode_dir, 0777, true);
-            }
-            if (!is_dir($qr_dir)) {
-                @mkdir($qr_dir, 0777, true);
-            }
-
-            // Reuse existing files when Apache cannot overwrite user-owned PNGs.
+            // Reuse existing files when the web user cannot overwrite them.
             if (!is_file($barcode_file) || is_writable($barcode_file)) {
                 $this->CI->load->library('zend');
                 $this->CI->zend->load('Zend/Barcode');

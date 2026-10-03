@@ -3959,7 +3959,7 @@ This Function is used to Import Multiple Patient Records
     }
 
     /**
-     * Ensure patient barcode/QR PNGs exist, then return public image URLs.
+     * Ensure patient barcode/QR PNGs exist (tenant-scoped), then return public image URLs.
      */
     private function patientBarcodeQrUrls($patient_id)
     {
@@ -3971,14 +3971,13 @@ This Function is used to Import Multiple Patient Records
 
         $this->customlib->generatebarcode($patient_id, 'barcode');
 
-        $barcode_rel = 'uploads/patient_id_card/barcodes/' . $patient_id . '.png';
-        $qr_rel      = 'uploads/patient_id_card/qrcode/' . $patient_id . '.png';
-        $base        = $this->customlib->getFolderPath();
+        $barcode_rel = $this->customlib->getPatientIdCardAsset($patient_id, 'barcode');
+        $qr_rel      = $this->customlib->getPatientIdCardAsset($patient_id, 'qrcode');
 
-        if (is_file($base . $barcode_rel)) {
+        if ($barcode_rel) {
             $out['getbarcode'] = $this->media_storage->getImageURL($barcode_rel);
         }
-        if (is_file($base . $qr_rel)) {
+        if ($qr_rel) {
             $out['getqrcode'] = $this->media_storage->getImageURL($qr_rel);
         }
 

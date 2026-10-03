@@ -55,11 +55,13 @@ if (!empty($payment_details)) {
             <div class="field"><div class="l"><?php echo $this->lang->line('phone'); ?></div><div class="v"><?php echo html_escape($result['mobileno']); ?></div></div>
             <div class="field"><div class="l"><?php echo $this->lang->line('case_id'); ?></div><div class="v"><?php echo html_escape($result['case_reference_id']); ?></div></div>
             <div class="field"><div class="l"><?php echo $this->lang->line('opd_no'); ?></div><div class="v"><?php echo $this->customlib->getPatientSessionPrefixByType('opd_no') . $opd_details_id; ?></div></div>
-            <?php if (file_exists("./uploads/patient_id_card/barcodes/" . $patient_id . ".png")) { ?>
-            <div class="field"><div class="l"><?php echo $this->lang->line('barcode'); ?></div><div class="v"><a href="<?php echo $this->media_storage->getImageURL("./uploads/patient_id_card/barcodes/" . $patient_id . ".png"); ?>" target="_blank"><img class="patient-id-img sh-qr-code" src="<?php echo $this->media_storage->getImageURL("./uploads/patient_id_card/barcodes/" . $patient_id . ".png"); ?>" width="90" height="24"></a></div></div>
-            <?php } ?>
-            <?php if (file_exists("./uploads/patient_id_card/qrcode/" . $patient_id . ".png")) { ?>
-            <div class="field"><div class="l"><?php echo $this->lang->line('qrcode'); ?></div><div class="v"><a href="<?php echo $this->media_storage->getImageURL("./uploads/patient_id_card/qrcode/" . $patient_id . ".png"); ?>" target="_blank"><img class="patient-id-img sh-qr-code" src="<?php echo $this->media_storage->getImageURL("./uploads/patient_id_card/qrcode/" . $patient_id . ".png"); ?>" width="40" height="40"></a></div></div>
+            <?php
+            $sh_barcode = $this->customlib->getPatientIdCardAsset($patient_id, 'barcode');
+            $sh_qrcode  = $this->customlib->getPatientIdCardAsset($patient_id, 'qrcode');
+            if ($sh_barcode) { ?>
+            <div class="field"><div class="l"><?php echo $this->lang->line('barcode'); ?></div><div class="v"><a href="<?php echo $this->media_storage->getImageURL($sh_barcode); ?>" target="_blank"><img class="patient-id-img sh-qr-code" src="<?php echo $this->media_storage->getImageURL($sh_barcode); ?>" width="90" height="24" alt=""></a></div></div>
+            <?php } if ($sh_qrcode) { ?>
+            <div class="field"><div class="l"><?php echo $this->lang->line('qrcode'); ?></div><div class="v"><a href="<?php echo $this->media_storage->getImageURL($sh_qrcode); ?>" target="_blank"><img class="patient-id-img sh-qr-code" src="<?php echo $this->media_storage->getImageURL($sh_qrcode); ?>" width="40" height="40" alt=""></a></div></div>
             <?php } ?>
         </div>
 

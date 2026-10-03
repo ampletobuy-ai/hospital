@@ -79,23 +79,26 @@ $_initials = mb_strtoupper($_initials);
                                     <div class="bii-value"><?php echo $result['address'] ?: '—'; ?></div>
                                 </div>
 
-                                <?php if (file_exists("./uploads/patient_id_card/barcodes/$id.png")): ?>
+                                <?php
+                                $sh_barcode = $this->customlib->getPatientIdCardAsset($id, 'barcode');
+                                $sh_qrcode  = $this->customlib->getPatientIdCardAsset($id, 'qrcode');
+                                if ($sh_barcode): ?>
                                 <div class="bii">
                                     <div class="bii-label"><?php echo $this->lang->line('barcode'); ?></div>
                                     <div class="bii-value">
-                                        <a href="<?php echo $this->media_storage->getImageURL("./uploads/patient_id_card/barcodes/$id.png"); ?>" target="_blank">
-                                            <img  class="sh-qr-code" src="<?php echo $this->media_storage->getImageURL("./uploads/patient_id_card/barcodes/$id.png"); ?>" width="80" height="26">
+                                        <a href="<?php echo $this->media_storage->getImageURL($sh_barcode); ?>" target="_blank">
+                                            <img  class="sh-qr-code" src="<?php echo $this->media_storage->getImageURL($sh_barcode); ?>" width="80" height="26" alt="">
                                         </a>
                                     </div>
                                 </div>
                                 <?php endif; ?>
 
-                                <?php if (file_exists("./uploads/patient_id_card/qrcode/$id.png")): ?>
+                                <?php if ($sh_qrcode): ?>
                                 <div class="bii">
                                     <div class="bii-label"><?php echo $this->lang->line('qrcode'); ?></div>
                                     <div class="bii-value">
-                                        <a href="<?php echo $this->media_storage->getImageURL("./uploads/patient_id_card/qrcode/$id.png"); ?>" target="_blank">
-                                            <img  class="sh-qr-code" src="<?php echo $this->media_storage->getImageURL("./uploads/patient_id_card/qrcode/$id.png"); ?>" width="34" height="34">
+                                        <a href="<?php echo $this->media_storage->getImageURL($sh_qrcode); ?>" target="_blank">
+                                            <img  class="sh-qr-code" src="<?php echo $this->media_storage->getImageURL($sh_qrcode); ?>" width="34" height="34" alt="">
                                         </a>
                                     </div>
                                 </div>

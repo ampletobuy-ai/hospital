@@ -116,23 +116,26 @@ if (!empty($result)) {
                 </div>
                 <?php endif; ?>
 
-                <?php if (file_exists("./uploads/patient_id_card/barcodes/$patient_id.png")): ?>
+                <?php
+                $sh_barcode = $this->customlib->getPatientIdCardAsset($patient_id, 'barcode');
+                $sh_qrcode  = $this->customlib->getPatientIdCardAsset($patient_id, 'qrcode');
+                if ($sh_barcode): ?>
                 <div class="bii">
                     <div class="bii-label"><?php echo $this->lang->line('barcode'); ?></div>
                     <div class="bii-value">
-                        <a href="<?php echo $this->media_storage->getImageURL("./uploads/patient_id_card/barcodes/$patient_id.png"); ?>" target="_blank">
-                            <img class="sh-qr-code" src="<?php echo $this->media_storage->getImageURL("./uploads/patient_id_card/barcodes/$patient_id.png"); ?>" width="100" height="32">
+                        <a href="<?php echo $this->media_storage->getImageURL($sh_barcode); ?>" target="_blank">
+                            <img class="sh-qr-code" src="<?php echo $this->media_storage->getImageURL($sh_barcode); ?>" width="100" height="32" alt="">
                         </a>
                     </div>
                 </div>
                 <?php endif; ?>
 
-                <?php if (file_exists("./uploads/patient_id_card/qrcode/$patient_id.png")): ?>
+                <?php if ($sh_qrcode): ?>
                 <div class="bii">
                     <div class="bii-label"><?php echo $this->lang->line('qrcode'); ?></div>
                     <div class="bii-value">
-                        <a href="<?php echo $this->media_storage->getImageURL("./uploads/patient_id_card/qrcode/$patient_id.png"); ?>" target="_blank">
-                            <img class="sh-qr-code" src="<?php echo $this->media_storage->getImageURL("./uploads/patient_id_card/qrcode/$patient_id.png"); ?>" width="44" height="44">
+                        <a href="<?php echo $this->media_storage->getImageURL($sh_qrcode); ?>" target="_blank">
+                            <img class="sh-qr-code" src="<?php echo $this->media_storage->getImageURL($sh_qrcode); ?>" width="44" height="44" alt="">
                         </a>
                     </div>
                 </div>
