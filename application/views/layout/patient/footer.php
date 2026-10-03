@@ -396,7 +396,8 @@ function popup(data, winload) {
     winload = winload || false;
     var newWin = window.open('', 'Print-Window');
     newWin.document.open();
-    newWin.document.write('<html><head><title></title>');
+    newWin.document.write('<html><head><title>\u00A0</title>');
+    newWin.document.write('<style>@page{margin:0!important}html,body{margin:0!important;padding:10mm 12mm!important}</style>');
     newWin.document.write('<link rel="preconnect" href="https://fonts.googleapis.com">');
     newWin.document.write('<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">');
     newWin.document.write('<link rel="stylesheet" href="' + baseurl + 'backend/bootstrap5/css/bootstrap.min.css">');
