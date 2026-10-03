@@ -157,13 +157,13 @@ $marital_status = $this->config->item('marital_status');
                                         <div class="bii-label"><?php echo $this->lang->line('national_identification_number'); ?></div>
                                         <div class="bii-value"><span id="identification_number"></span></div>
                                     </div>
-                                    <div class="bii" id="show_barcode">
+                                    <div class="bii d-none" id="show_barcode">
                                         <div class="bii-label"><?php echo $this->lang->line('barcode'); ?></div>
-                                        <div class="bii-value"><a href="" id="getbarcode_link" target="_blank"><img class="sh-qr-code" src="" id="getbarcode" width="100" height="32"></a></div>
+                                        <div class="bii-value"><a href="#" id="getbarcode_link" target="_blank"><img class="sh-qr-code" src="" id="getbarcode" width="100" height="32" alt=""></a></div>
                                     </div>
-                                    <div class="bii" id="show_qrcode">
+                                    <div class="bii d-none" id="show_qrcode">
                                         <div class="bii-label"><?php echo $this->lang->line('qrcode'); ?></div>
-                                        <div class="bii-value"><a href="" id="getqrcode_link" target="_blank"><img class="sh-qr-code" src="" id="getqrcode" width="44" height="44"></a></div>
+                                        <div class="bii-value"><a href="#" id="getqrcode_link" target="_blank"><img class="sh-qr-code" src="" id="getqrcode" width="44" height="44" alt=""></a></div>
                                     </div>
                                     <!-- Custom fields render here as additional .bii grid cells (see JS) -->
                                     <div id="field_data"></div>
@@ -468,21 +468,21 @@ $marital_status = $this->config->item('marital_status');
 
                 renderPatientAvatar(data.image, data.patient_name);
 
-                if (data.getbarcode == null) {
-                    $("#show_barcode").addClass('hide');
-                    $("#getbarcode").attr("src", '');
-                    $("#getbarcode_link").attr("href", '');
+                if (!data.getbarcode) {
+                    $("#show_barcode").addClass('d-none');
+                    $("#getbarcode").removeAttr("src");
+                    $("#getbarcode_link").attr("href", '#');
                 } else {
-                    $("#show_barcode").removeClass('hide');
+                    $("#show_barcode").removeClass('d-none');
                     $("#getbarcode").attr("src", data.getbarcode);
                     $("#getbarcode_link").attr("href", data.getbarcode);
                 }
-                if (data.getqrcode == null) {
-                    $("#show_qrcode").addClass('hide');
-                    $("#getqrcode").attr("src", '');
-                    $("#getqrcode_link").attr("href", '');
+                if (!data.getqrcode) {
+                    $("#show_qrcode").addClass('d-none');
+                    $("#getqrcode").removeAttr("src");
+                    $("#getqrcode_link").attr("href", '#');
                 } else {
-                    $("#show_qrcode").removeClass('hide');
+                    $("#show_qrcode").removeClass('d-none');
                     $("#getqrcode").attr("src", data.getqrcode);
                     $("#getqrcode_link").attr("href", data.getqrcode);
                 }

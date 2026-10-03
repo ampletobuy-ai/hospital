@@ -3893,21 +3893,10 @@ This Function is used to Import Multiple Patient Records
         
         $result['custom_fields_value'] = display_custom_fields('patient', $id);
         $cutom_fields_data             = get_custom_table_values($id, 'patient');
-        $result['field_data']          = $cutom_fields_data;   
-        
-        $file_exists  = FCPATH . "uploads/patient_id_card/barcodes/$id.png";
-        $file_exists2 = FCPATH . "uploads/patient_id_card/qrcode/$id.png";
+        $result['field_data']          = $cutom_fields_data;
 
-        if(file_exists($file_exists)){
-            $result['getbarcode'] = base_url("uploads/patient_id_card/barcodes/$id.png") . img_time();
-        }else{
-            $result['getbarcode'] = null;
-        }
-        if(file_exists($file_exists2)){
-            $result['getqrcode'] = base_url("uploads/patient_id_card/qrcode/$id.png") . img_time();
-        }else{
-            $result['getqrcode'] = null;
-        }       
+        // Create missing barcode/QR PNGs (common on fresh VPS / imported patients).
+        $result = array_merge($result, $this->patientBarcodeQrUrls($id));
         
         if(!empty($result['image'])){        
             $result['image']          = $this->media_storage->getImageURL($result['image']);
@@ -3958,29 +3947,42 @@ This Function is used to Import Multiple Patient Records
         $cutom_fields_data             = get_custom_table_values($id, 'patient');
         $result['field_data']          = $cutom_fields_data;
 
-        $path1= $this->customlib->getFolderPath()."./uploads/patient_id_card/barcodes/$id.png";
-        $path2= $this->customlib->getFolderPath()."./uploads/patient_id_card/qrcode/$id.png";
+        $result = array_merge($result, $this->patientBarcodeQrUrls($id));
 
-        if(file_exists("$path1")){
-            $getbarcode=$this->media_storage->getImageURL("./uploads/patient_id_card/barcodes/$id.png");
-        }else{
-            $getbarcode=null;
-        }
-        if(file_exists("$path2")){
-            $getqrcode=$this->media_storage->getImageURL("./uploads/patient_id_card/qrcode/$id.png");
-        }else{
-            $getqrcode=null;
-        }
         if(!empty($result['image'])){        
             $result['image']          = $this->media_storage->getImageURL($result['image']);
         }else{
             $result['image']          = $this->media_storage->getImageURL("./uploads/patient_images/no_image.png") ;
         }
 
-        $result['getbarcode']          =       $getbarcode;
-        $result['getqrcode']           =       $getqrcode;
-
         echo json_encode($result);
+    }
+
+    /**
+     * Ensure patient barcode/QR PNGs exist, then return public image URLs.
+     */
+    private function patientBarcodeQrUrls($patient_id)
+    {
+        $patient_id = (int) $patient_id;
+        $out = array('getbarcode' => null, 'getqrcode' => null);
+        if ($patient_id <= 0) {
+            return $out;
+        }
+
+        $this->customlib->generatebarcode($patient_id, 'barcode');
+
+        $barcode_rel = 'uploads/patient_id_card/barcodes/' . $patient_id . '.png';
+        $qr_rel      = 'uploads/patient_id_card/qrcode/' . $patient_id . '.png';
+        $base        = $this->customlib->getFolderPath();
+
+        if (is_file($base . $barcode_rel)) {
+            $out['getbarcode'] = $this->media_storage->getImageURL($barcode_rel);
+        }
+        if (is_file($base . $qr_rel)) {
+            $out['getqrcode'] = $this->media_storage->getImageURL($qr_rel);
+        }
+
+        return $out;
     }
 
     public function getIpdDetails()
