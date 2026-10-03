@@ -86,7 +86,7 @@
   }
   html, body {
     margin: 0 !important;
-    padding: 8mm 0 !important;
+    padding: 8mm 0.5cm !important;
   }
   .col-md-12 { width: 100%; }
   .col-md-11 { width: 91.66666667%; }
