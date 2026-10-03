@@ -61,8 +61,9 @@ class Hospital_signup_quote
             throw new InvalidArgumentException('Invalid coupon code.');
         }
 
-        if (!$this->couponIsActive($coupon)) {
-            throw new InvalidArgumentException('Coupon is inactive.');
+        $inactiveReason = $this->couponInactiveReason($coupon);
+        if ($inactiveReason !== null) {
+            throw new InvalidArgumentException($inactiveReason);
         }
 
         $discount = $this->discountPaiseFor($coupon, $listSplit['exclusive']);
@@ -154,23 +155,31 @@ class Hospital_signup_quote
 
     private function couponIsActive(array $coupon)
     {
+        return $this->couponInactiveReason($coupon) === null;
+    }
+
+    /**
+     * @return string|null Human-readable reason, or null when the coupon can be applied.
+     */
+    private function couponInactiveReason(array $coupon)
+    {
         if (isset($coupon['is_active']) && !(int) $coupon['is_active']) {
-            return false;
+            return 'Coupon is inactive.';
         }
         if (!empty($coupon['starts_at']) && strtotime($coupon['starts_at']) > time()) {
-            return false;
+            return 'Coupon is not valid yet.';
         }
         if (!empty($coupon['ends_at']) && strtotime($coupon['ends_at']) < time()) {
-            return false;
+            return 'Coupon has expired.';
         }
-        if (isset($coupon['max_redemptions']) && $coupon['max_redemptions'] !== null) {
+        if (isset($coupon['max_redemptions']) && $coupon['max_redemptions'] !== null && $coupon['max_redemptions'] !== '') {
             $used = (int) ($coupon['redemption_count'] ?? $coupon['redeemed_count'] ?? 0);
             if ($used >= (int) $coupon['max_redemptions']) {
-                return false;
+                return 'This coupon has already been fully used.';
             }
         }
 
-        return true;
+        return null;
     }
 
     private function discountPaiseFor(array $coupon, $listAmountPaise)
