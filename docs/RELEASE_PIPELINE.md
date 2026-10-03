@@ -36,7 +36,7 @@ Shared platform on each VPS: Traefik (`edge`), `platform-mysql` (`shared_db`).
 |--|--|
 | `VPS_HOST` | `129.121.125.118` |
 | `VPS_USER` | `deploy` |
-| `VPS_SSH_KEY` | Deploy private key for production VPS |
+| `VPS_SSH_KEY` | Same private key as retail-pos / hotel production (`retail-pos/.deploy-keys/github-actions-retail-pos-production`) |
 | `DEPLOY_HEALTHCHECK_URL` | `https://hospital.qubextrack.com/` |
 
 CI excludes legacy `application/libraries/Zend*` from PHP lint (PHP 8 incompatible).
@@ -67,19 +67,15 @@ Manual (Actions → **Deploy Production VPS** → Run workflow):
 ### First-time production VPS bootstrap
 
 1. DNS: `hospital.qubextrack.com` → `129.121.125.118` (already set).
-2. Install the hospital production deploy **public** key into `deploy` user’s `~/.ssh/authorized_keys` on that VPS (or reuse the same deploy key already used for `retail-pos` / `hotel-app` production).
-3. SSH in and run:
+2. SSH as `deploy` using the **same** production key as retail/hotel (`github-actions-retail-pos-production`).
+3. Create `/opt/hospital` (if missing), clone `main`, copy `deploy/vps/hospital.production.env.example` → `.env`, align DB password with hotel/retail `platform` user, import `deploy/vps/hospital-schema.sql.gz`, then:
 
 ```bash
-# as deploy@129.121.125.118
-curl -fsSL https://raw.githubusercontent.com/ampletobuy-ai/hospital/main/deploy/vps/bootstrap-production.sh \
-  | bash
-# or, after clone:
-cd /opt/hospital && ./deploy/vps/bootstrap-production.sh
+cd /opt/hospital
+HOSPITAL_BUILD_ON_VPS=1 ./scripts/deploy.sh
 ```
 
-4. Edit `/opt/hospital/.env` passwords to match `/opt/platform-mysql/.env`, import schema if needed (`deploy/vps/hospital-schema.sql.gz`), then re-run `HOSPITAL_BUILD_ON_VPS=1 ./scripts/deploy.sh`.
-5. Confirm GitHub Environment **production** secrets are set, then run **Deploy Production VPS**.
+4. Confirm GitHub Environment **production** secrets use that same SSH key, then push `main` or run **Deploy Production VPS** (`confirm=deploy-production`).
 
 ## Staging VPS notes (already done)
 
