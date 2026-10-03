@@ -36,7 +36,7 @@ body {
 .footer-space  { height: 70px; }
 .table-print-full { width: 100%; border-collapse: collapse; }
 .print-area { padding: 0; }
-.content-body { padding: <?php echo (int) $__content_pad_top; ?>px 12px 0 !important; }
+.content-body { padding: <?php echo (int) $__content_pad_top; ?>px 0 0 !important; }
 
 .footer-fixed {
   position: fixed; bottom: 0; width: 100%;
@@ -120,7 +120,7 @@ body {
   width: auto;
 }
 .sh-print-info-table.w-50 { width: 50%; }
-.sh-px-12 { padding-left: 12px; padding-right: 12px; }
+.sh-px-12 { padding-left: 0; padding-right: 0; }
 .sh-col-22 { width: 22%; }
 .sh-text-right { text-align: right; }
 .sh-section-divider {
@@ -237,7 +237,7 @@ body {
   @page { margin: 0 !important; }
   html, body {
     margin: 0 !important;
-    padding: 10mm 12mm !important;
+    padding: 8mm 0 !important;
   }
   .fixed-print-header { position: fixed; top: 0; left: 0; right: 0; width: 100%; z-index: 10; }
   .footer-fixed { position: fixed; bottom: 0; width: 100%; background: #fff; }

@@ -853,7 +853,7 @@ if (typeof popup === 'undefined') {
             : (frame1[0].contentDocument.document ? frame1[0].contentDocument.document : frame1[0].contentDocument);
         frameDoc.document.open();
         frameDoc.document.write('<html><head><title>\u00A0</title>');
-        frameDoc.document.write('<style>@page{margin:0!important}html,body{margin:0!important;padding:10mm 12mm!important}</style>');
+        frameDoc.document.write('<style>@page{margin:0!important}html,body{margin:0!important;padding:8mm 0!important}</style>');
         frameDoc.document.write('<link rel="preconnect" href="https://fonts.googleapis.com">');
         frameDoc.document.write('<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">');
         frameDoc.document.write('<link rel="stylesheet" href="' + base_url + 'backend/bootstrap5/css/bootstrap.min.css">');
