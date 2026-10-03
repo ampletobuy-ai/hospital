@@ -7,7 +7,6 @@ if (!defined('BASEPATH')) {
 class Printing_model extends MY_Model
 {
     private $visibility_filtering = true;
-    private $hidden_header_placeholder = 'backend/images/print-header-placeholder.svg';
 
     /**
      * The settings screen must display saved content even when it is hidden
@@ -25,8 +24,11 @@ class Printing_model extends MY_Model
             return $record;
         }
 
+        // Clear content so print templates' !empty(print_header/print_footer)
+        // checks hide the blocks. (A transparent placeholder still rendered an
+        // <img>, so "hide header" appeared not to work.)
         if (isset($record['show_header']) && !(int) $record['show_header']) {
-            $record['print_header'] = $this->hidden_header_placeholder;
+            $record['print_header'] = '';
         }
 
         if (isset($record['show_footer']) && !(int) $record['show_footer']) {
