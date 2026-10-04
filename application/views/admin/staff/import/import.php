@@ -53,6 +53,11 @@ $currency_symbol = $this->customlib->getHospitalCurrencyFormat();
                     <form action="<?php echo site_url('admin/staff/import') ?>" id="employeeform" name="employeeform" method="post" enctype="multipart/form-data">
                         <div class="card-body">
                             <?php echo $this->customlib->getCSRF(); ?>
+                            <?php
+                            $saas_quota_error = form_error('validate_resource');
+                            if (!empty($saas_quota_error)) { ?>
+                                <div class="alert alert-danger"><?php echo $saas_quota_error; ?></div>
+                            <?php } ?>
                             <div class="row">                                     
                                 <div class="col-md-3">
                                     <div class="mb-3">
