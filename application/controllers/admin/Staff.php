@@ -14,6 +14,7 @@ class Staff extends Admin_Controller
 	public $payroll_status;
 	public $sch_setting_detail;
 	public $staff_attendance;
+	public $staff_edit_id;
 	public $status;
 
 
@@ -457,7 +458,74 @@ class Staff extends Admin_Controller
     {
         list($resource_name, $quantity) = explode(',', $resource_name);
 
+        // Doctors do not consume staff seats — skip the plan seat check for that role.
+        if ($resource_name === 'no_of_staff' && !$this->staffRoleCountsTowardSeats($this->input->post('role'))) {
+            return true;
+        }
+
         return $this->saasvalidation->validateCanAddNewResource($input, $resource_name, $quantity);
+    }
+
+    /**
+     * Whether a staff role consumes paid plan seats (non-Doctor roles).
+     */
+    private function staffRoleCountsTowardSeats($roleId)
+    {
+        if (!$this->config->item('saas_enabled')) {
+            return true;
+        }
+
+        $this->load->library('ResourceQuota');
+
+        return $this->resourcequota->countsTowardStaffSeats($roleId);
+    }
+
+    /**
+     * True when SaaS is off, seats are unlimited, or one more non-Doctor seat fits.
+     */
+    private function canAddStaffSeat()
+    {
+        if (!$this->config->item('saas_enabled')) {
+            return true;
+        }
+
+        $this->load->library('ResourceQuota');
+        $limit = $this->resourcequota->getLimit('no_of_staff');
+        if ($limit === null || $limit <= 0) {
+            return true;
+        }
+
+        return ($this->resourcequota->getUsage('no_of_staff') + 1) <= $limit;
+    }
+
+    /**
+     * On edit: block Doctor → seat-consuming role when the plan has no free seats.
+     */
+    public function validateStaffSeatOnRoleChange($roleId)
+    {
+        if (!$this->config->item('saas_enabled')) {
+            return true;
+        }
+
+        $staffId = !empty($this->staff_edit_id) ? (int) $this->staff_edit_id : (int) $this->uri->segment(4);
+        if ($staffId <= 0 || !$this->staffRoleCountsTowardSeats($roleId)) {
+            return true;
+        }
+
+        $existing = $this->staff_model->get($staffId);
+        $oldRoleId = (!empty($existing) && !empty($existing['role_id'])) ? $existing['role_id'] : 0;
+        if ($this->staffRoleCountsTowardSeats($oldRoleId)) {
+            // Already consuming a seat — role swap among seat roles does not add usage.
+            return true;
+        }
+
+        if (!$this->canAddStaffSeat()) {
+            $this->form_validation->set_message('validateStaffSeatOnRoleChange', 'Plan limit reached for no_of_staff. Please upgrade your subscription.');
+
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -772,15 +840,14 @@ class Staff extends Admin_Controller
                 log_message('error', 'SaaS storage quota update failed (staff create): ' . $e->getMessage());
             }
 
-            // SaaS: increment the staff count usage by 1 (count-based resource:
-            // no_of_staff). The pre-check (callback_validateCanAddNewResource[no_of_staff,1])
-            // only blocks when over limit; this is what actually raises the usage so the
-            // limit stays meaningful. Own try/catch so a quota-API hiccup does not abort
-            // the already-created staff's flow (updateResouceQuota throws on failure).
-            try {
-                $this->saasvalidation->updateResouceQuota('no_of_staff', 1);
-            } catch (Exception $e) {
-                log_message('error', 'SaaS no_of_staff quota increment failed (staff create): ' . $e->getMessage());
+            // SaaS: increment staff seat usage for non-Doctor roles only.
+            // Doctors are clinical profiles and do not consume paid seats.
+            if ($this->staffRoleCountsTowardSeats($this->input->post('role', true))) {
+                try {
+                    $this->saasvalidation->updateResouceQuota('no_of_staff', 1);
+                } catch (Exception $e) {
+                    log_message('error', 'SaaS no_of_staff quota increment failed (staff create): ' . $e->getMessage());
+                }
             }
 
             //===================
@@ -864,6 +931,7 @@ class Staff extends Admin_Controller
         if (!$this->rbac->hasPrivilege('staff', 'can_edit')) {
             access_denied();
         }
+        $this->staff_edit_id       = (int) $id;
         $data['title']             = $this->lang->line('edit_staff');
         $data['id']                = $id;
         $genderList                = $this->customlib->getGender();
@@ -907,7 +975,7 @@ class Staff extends Admin_Controller
         }
 
         $this->form_validation->set_rules('name', $this->lang->line('name'), 'trim|required|xss_clean');
-        $this->form_validation->set_rules('role', $this->lang->line('role'), 'trim|required|xss_clean|callback_validatePlanRole');
+        $this->form_validation->set_rules('role', $this->lang->line('role'), 'trim|required|xss_clean|callback_validatePlanRole|callback_validateStaffSeatOnRoleChange');
         $this->form_validation->set_rules('gender', $this->lang->line('gender'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('dob', $this->lang->line('date_of_birth'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('file', $this->lang->line('image'), 'callback_handle_image_upload[file]|callback_validateCanUploadFile[file,first_doc,second_doc,third_doc,fourth_doc]');
@@ -1196,16 +1264,16 @@ class Staff extends Admin_Controller
             }
         }
 
+        $deleted_role_id = (!empty($staff) && !empty($staff['role_id'])) ? $staff['role_id'] : 0;
         $this->staff_model->remove($id);
 
-        // SaaS: decrement the staff count usage by 1 (count-based resource: no_of_staff),
-        // mirroring the +1 increment done on create — so the API usage tracks the actual
-        // staff count. deleteResouceQuota throws on failure; own try/catch keeps the
-        // delete flow intact if the quota API is momentarily unavailable.
-        try {
-            $this->saasvalidation->deleteResouceQuota('no_of_staff', 1);
-        } catch (Exception $e) {
-            log_message('error', 'SaaS no_of_staff quota decrement failed (staff delete): ' . $e->getMessage());
+        // SaaS: decrement seat usage only for non-Doctor roles (mirrors create).
+        if ($this->staffRoleCountsTowardSeats($deleted_role_id)) {
+            try {
+                $this->saasvalidation->deleteResouceQuota('no_of_staff', 1);
+            } catch (Exception $e) {
+                log_message('error', 'SaaS no_of_staff quota decrement failed (staff delete): ' . $e->getMessage());
+            }
         }
 
         $this->session->set_flashdata('message', $this->lang->line('delete_message'));
@@ -1496,6 +1564,8 @@ class Staff extends Admin_Controller
 
         $this->form_validation->set_rules('file', $this->lang->line('file'), 'callback_handle_csv_upload');
         $this->form_validation->set_rules('role', $this->lang->line('role'), 'required|xss_clean|callback_validatePlanRole');
+        // Seat check for non-Doctor import roles (Doctor does not consume seats).
+        $this->form_validation->set_rules('validate_resource', $this->lang->line('staff'), 'callback_validateCanAddNewResource[no_of_staff,1]');
 
         if ($this->form_validation->run() == false) {
             $data['module'] = 'human_resource';
@@ -1514,6 +1584,9 @@ class Staff extends Admin_Controller
                     $result = $this->csvreader->parse_file($file);
 
                     $rowcount = 0;
+                    $import_role = $this->input->post('role');
+                    $counts_toward_seats = $this->staffRoleCountsTowardSeats($import_role);
+                    $seat_limit_hit = false;
 
                     if (!empty($result)) {
 
@@ -1523,6 +1596,12 @@ class Staff extends Admin_Controller
                             $check_emailexists = $this->staff_model->import_check_email_exists($result[$r_key]['name'], $result[$r_key]['employee_id']);
 
                             if ($check_exists == 0 && $check_emailexists == 0) {
+
+                                // Stop importing further seat-consuming rows once the plan limit is reached.
+                                if ($counts_toward_seats && !$this->canAddStaffSeat()) {
+                                    $seat_limit_hit = true;
+                                    break;
+                                }
 
                                 $result[$r_key]['employee_id']          = $this->encoding_lib->toUTF8($result[$r_key]['employee_id']);
                                 $result[$r_key]['qualification']        = $this->encoding_lib->toUTF8($result[$r_key]['qualification']);
@@ -1559,7 +1638,7 @@ class Staff extends Admin_Controller
                                 $result[$r_key]['resume']               = $this->encoding_lib->toUTF8($result[$r_key]['resume']);
                                 $result[$r_key]['joining_letter']       = $this->encoding_lib->toUTF8($result[$r_key]['joining_letter']);
                                 $result[$r_key]['resignation_letter']   = $this->encoding_lib->toUTF8($result[$r_key]['resignation_letter']);
-                                $result[$r_key]['user_id']              = $this->input->post('role');
+                                $result[$r_key]['user_id']              = $import_role;
                                 $result[$r_key]['staff_designation_id'] = $this->input->post('designation');
                                 $result[$r_key]['department_id']        = $this->input->post('department');
                                 $result[$r_key]['is_active']            = 1;
@@ -1568,7 +1647,7 @@ class Staff extends Admin_Controller
 
                                 $result[$r_key]['password'] = $this->enc_lib->passHashEnc($password);
 
-                                $role_array = array('role_id' => $this->input->post('role'), 'staff_id' => 0);
+                                $role_array = array('role_id' => $import_role, 'staff_id' => 0);
 
                                 $insert_id = $this->staff_model->batchInsert($result[$r_key], $role_array);
                                 $staff_id  = $insert_id;
@@ -1577,6 +1656,14 @@ class Staff extends Admin_Controller
                                     $teacher_login_detail = array('id' => $staff_id, 'credential_for' => 'staff', 'username' => $result[$r_key]['email'], 'password' => $password, 'contact_no' => $result[$r_key]['contact_no'], 'email' => $result[$r_key]['email']);
 
                                     $this->mailsmsconf->mailsms('login_credential', $teacher_login_detail);
+
+                                    if ($counts_toward_seats) {
+                                        try {
+                                            $this->saasvalidation->updateResouceQuota('no_of_staff', 1);
+                                        } catch (Exception $e) {
+                                            log_message('error', 'SaaS no_of_staff quota increment failed (staff import): ' . $e->getMessage());
+                                        }
+                                    }
                                 }
                                 $rowcount++;
                             }
@@ -1592,7 +1679,11 @@ class Staff extends Admin_Controller
                 $array = array('status' => 'fail', 'error' => $msg, 'message' => '');
             }
 
-            $this->session->set_flashdata('msg', '<div class="alert alert-success text-center">' . $this->lang->line('total') . ' ' . count($result) . " " . $this->lang->line('records_found_in_CSV_file_total') . ' ' . $rowcount . ' ' . $this->lang->line('records_imported_successfully') . '</div>');
+            $flash = '<div class="alert alert-success text-center">' . $this->lang->line('total') . ' ' . count($result) . " " . $this->lang->line('records_found_in_CSV_file_total') . ' ' . $rowcount . ' ' . $this->lang->line('records_imported_successfully') . '</div>';
+            if (!empty($seat_limit_hit)) {
+                $flash .= '<div class="alert alert-warning text-center">Plan staff seat limit reached. Remaining rows were not imported. Doctors do not consume seats.</div>';
+            }
+            $this->session->set_flashdata('msg', $flash);
             redirect('admin/staff/import');
         }
     }

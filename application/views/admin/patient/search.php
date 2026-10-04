@@ -1108,6 +1108,9 @@ $genderList      = $this->customlib->getGender_Patient();
             $sel.select2('destroy');
         }
         $sel.select2({
+            width: '100%',
+            placeholder: "<?php echo $this->lang->line('enter_patient_name'); ?> or Id...",
+            allowClear: true,
             ajax: {
                 url: "<?= base_url(); ?>admin/patient/getPatientListAjax",
                 type: "post",

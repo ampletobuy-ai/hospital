@@ -733,6 +733,19 @@ class Site extends Public_Controller
         }
 
         if (empty($candidates)) {
+            // Local/template installs: allow classic staff login when the email
+            // is not mapped to any hospital tenant in the central DB.
+            $login_post = array(
+                'email'    => $email,
+                'password' => $password,
+            );
+            $result = $this->staff_model->checkLogin($login_post);
+            if ($result && (int) $result->is_active) {
+                $this->finalizeClassicAdminLogin($result, $data);
+
+                return;
+            }
+
             $data['error_message'] = $this->lang->line('invalid_username_or_password');
             $this->load->view('admin/login', $data);
 
@@ -768,6 +781,74 @@ class Site extends Public_Controller
         }
 
         $this->finalizeMultiTenantAdminLogin($chosen, $email);
+    }
+
+    /**
+     * Classic single-DB admin session (template / non-tenant local installs).
+     */
+    private function finalizeClassicAdminLogin($result, $data = array())
+    {
+        $setting_result = $this->setting_model->get();
+        if (empty($setting_result)) {
+            $data['title'] = 'Login';
+            $data['error_message'] = 'Hospital settings are missing. Please contact support.';
+            $this->load->view('admin/login', $data);
+
+            return;
+        }
+
+        if (!empty($result->language_id)) {
+            $lang_array = array('lang_id' => $result->language_id, 'language' => $result->language);
+            $lang_data = $this->language_model->get($result->lang_id);
+        } else {
+            $lang_array = array('lang_id' => $setting_result[0]['lang_id'], 'language' => $setting_result[0]['language']);
+            $lang_data = $this->language_model->get(4);
+        }
+
+        $prefix_array = $this->prefix_model->getPrefixArray();
+        $check_time_format = ($setting_result[0]['time_format'] !== '12-hour');
+
+        $session_data = array(
+            'id' => $result->id,
+            'username' => $result->name . ' ' . $result->surname,
+            'email' => $result->email,
+            'roles' => $result->roles,
+            'date_format' => $setting_result[0]['date_format'],
+            'currency_symbol' => $setting_result[0]['currency_symbol'],
+            'start_month' => $setting_result[0]['start_month'],
+            'timezone' => $setting_result[0]['timezone'],
+            'sch_name' => $setting_result[0]['name'],
+            'language' => $lang_array,
+            'is_rtl' => $lang_data['is_rtl'],
+            'doctor_restriction' => $setting_result[0]['doctor_restriction'],
+            'superadmin_restriction' => $setting_result[0]['superadmin_restriction'],
+            'theme' => $setting_result[0]['theme'],
+            'sh_variant' => (isset($result->sh_variant) && in_array($result->sh_variant, array('a', 'b', 'c'), true))
+                ? $result->sh_variant
+                : (in_array($setting_result[0]['theme'], array('a', 'b', 'c'), true) ? $setting_result[0]['theme'] : 'a'),
+            'base_url' => $setting_result[0]['base_url'],
+            'folder_path' => $setting_result[0]['folder_path'],
+            'time_format' => $check_time_format,
+            'prefix' => $prefix_array,
+            'message_mode' => isset($setting_result[0]['message_mode']) ? (int) $setting_result[0]['message_mode'] : 0,
+            'db_array' => array(
+                'base_url' => $setting_result[0]['base_url'],
+                'folder_path' => $setting_result[0]['folder_path'],
+                'db_group' => 'default',
+            ),
+            'saas_key' => isset($setting_result[0]['saas_key']) ? $setting_result[0]['saas_key'] : '',
+        );
+
+        $this->session->set_userdata('hospitaladmin', $session_data);
+        $role = $this->customlib->getStaffRole();
+        $role_name = json_decode($role)->name;
+        $this->customlib->setUserLog($this->input->post('username'), $role_name);
+
+        if (isset($_SESSION['redirect_to'])) {
+            redirect($_SESSION['redirect_to']);
+        }
+
+        redirect('admin/admin/dashboard');
     }
 
     private function finalizeMultiTenantAdminLogin($candidate, $email)

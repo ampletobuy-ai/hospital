@@ -7436,6 +7436,54 @@ a.sh-newpatient-btn:active,
 .modal-header .patient_list_ajax + .select2-container .select2-selection--single { height: 37px !important; }
 .modal-header .patient_list_ajax + .select2-container .select2-selection__rendered { line-height: 37px; }
 .modal-header .patient_list_ajax + .select2-container .select2-selection__arrow { height: 37px; }
+/* Keep the patient picker from collapsing when the title (flex:1) + New Patient
+   + close compete for space on desktop/tablet. */
+.modal-header > .patient_list_ajax + .select2-container {
+  flex: 0 1 200px;
+  min-width: 160px;
+  max-width: 280px;
+}
+/* Mobile: title/actions stay on row 1; patient search gets a full-width row so
+   it remains tappable (was clipped by .sh-modal-nospace overflow:hidden). */
+@media (max-width: 767px) {
+  .modal-header:has(> .patient_list_ajax) {
+    flex-wrap: wrap;
+    row-gap: .5rem;
+  }
+  .modal-header:has(> .patient_list_ajax) > .modal-title,
+  .modal-header:has(> .patient_list_ajax) > h5 {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .modal-header > .patient_list_ajax,
+  .modal-header > .patient_list_ajax + .select2-container {
+    order: 20;
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+  }
+  .modal-header > .patient_list_ajax + .select2-container .select2-selection--single {
+    width: 100%;
+  }
+  /* Accent/nospace headers: readable white field on teal bar */
+  .sh-modal-nospace .modal-header > .patient_list_ajax + .select2-container .select2-selection--single,
+  .sh-modal-accent .modal-header > .patient_list_ajax + .select2-container .select2-selection--single,
+  .sh-modal-fullpage .modal-header > .patient_list_ajax + .select2-container .select2-selection--single {
+    background: rgba(255, 255, 255, .95) !important;
+    border: 0 !important;
+  }
+  .sh-modal-nospace .modal-header > .patient_list_ajax + .select2-container .select2-selection__rendered,
+  .sh-modal-accent .modal-header > .patient_list_ajax + .select2-container .select2-selection__rendered,
+  .sh-modal-fullpage .modal-header > .patient_list_ajax + .select2-container .select2-selection__rendered {
+    color: var(--ink, #0f172a) !important;
+  }
+  .sh-modal-nospace .modal-header > .patient_list_ajax + .select2-container .select2-selection__placeholder,
+  .sh-modal-accent .modal-header > .patient_list_ajax + .select2-container .select2-selection__placeholder,
+  .sh-modal-fullpage .modal-header > .patient_list_ajax + .select2-container .select2-selection__placeholder {
+    color: var(--muted, #64748b) !important;
+  }
+}
 .sh-modal-branded .modal-header .btn-close {
   filter: brightness(0) invert(1);
   opacity: .85;
