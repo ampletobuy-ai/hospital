@@ -74,9 +74,18 @@ jobs:
           command_timeout: 20m
           envs: TENANT_ID
           script: |
-            set -euo pipefail
+            set -euxo pipefail
             cd /opt/hospital
             COMPOSE="docker compose -f docker-compose.prod.yml -f docker-compose.vps.yml"
+            echo "==> Waiting for hospital-app"
+            for i in $(seq 1 60); do
+              if $COMPOSE exec -T app php -v >/dev/null 2>&1; then
+                break
+              fi
+              sleep 2
+            done
+            $COMPOSE ps
+            test -f cli/sync_tenant_plan_permissions.php
             if [ -n "${TENANT_ID:-}" ]; then
               echo "==> Syncing tenant ${TENANT_ID}"
               $COMPOSE exec -T app php cli/sync_tenant_plan_permissions.php --tenant="${TENANT_ID}"
