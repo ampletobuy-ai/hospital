@@ -1,0 +1,89 @@
+name: Sync Plan Permissions
+
+# Align tenant modules / roles_permissions with each hospital subscription plan.
+# Run after plan changes or to fix existing tenants that still show locked modules.
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Which environment to sync
+        required: true
+        default: production
+        type: choice
+        options:
+          - production
+          - features
+      tenant_id:
+        description: Optional tenant UUID (leave empty to sync all hospital subscriptions)
+        required: false
+        default: ""
+        type: string
+
+concurrency:
+  group: sync-plan-permissions-${{ inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Sync on ${{ inputs.target }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.target }}
+    steps:
+      - name: Resolve SSH host
+        id: ssh
+        env:
+          HOST_SECRET: ${{ secrets.VPS_HOST }}
+          HOST_VAR: ${{ vars.VPS_HOST }}
+          USER_SECRET: ${{ secrets.VPS_USER }}
+          USER_VAR: ${{ vars.VPS_USER }}
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          HOST="$(printf '%s' "${HOST_SECRET:-${HOST_VAR:-}}" | tr -d '\r' | xargs)"
+          USER="$(printf '%s' "${USER_SECRET:-${USER_VAR:-}}" | tr -d '\r' | xargs)"
+          USER="${USER:-deploy}"
+          if [ -z "$HOST" ]; then
+            echo "::error::VPS_HOST missing on Environment '${{ inputs.target }}'."
+            exit 1
+          fi
+          if [ -z "${SSH_KEY:-}" ]; then
+            echo "::error::VPS_SSH_KEY missing on Environment '${{ inputs.target }}'."
+            exit 1
+          fi
+          HOST="${HOST#ssh://}"
+          HOST="${HOST#https://}"
+          HOST="${HOST#http://}"
+          if [[ "$HOST" == *@* ]]; then
+            USER="${HOST%%@*}"
+            HOST="${HOST#*@}"
+          fi
+          HOST="${HOST%%/*}"
+          HOST="${HOST%%:*}"
+          echo "host=${HOST}" >> "$GITHUB_OUTPUT"
+          echo "user=${USER}" >> "$GITHUB_OUTPUT"
+
+      - name: Run plan permission sync over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ steps.ssh.outputs.host }}
+          username: ${{ steps.ssh.outputs.user }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script_stop: true
+          command_timeout: 20m
+          envs: TENANT_ID
+          script: |
+            set -euo pipefail
+            cd /opt/hospital
+            COMPOSE="docker compose -f docker-compose.prod.yml -f docker-compose.vps.yml"
+            if [ -n "${TENANT_ID:-}" ]; then
+              echo "==> Syncing tenant ${TENANT_ID}"
+              $COMPOSE exec -T app php cli/sync_tenant_plan_permissions.php --tenant="${TENANT_ID}"
+            else
+              echo "==> Syncing all hospital tenants"
+              $COMPOSE exec -T app php cli/sync_tenant_plan_permissions.php --all
+            fi
+            echo "==> Done"
+        env:
+          TENANT_ID: ${{ inputs.tenant_id }}
