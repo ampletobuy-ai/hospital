@@ -78,21 +78,19 @@ jobs:
             cd /opt/hospital
             COMPOSE="docker compose -f docker-compose.prod.yml -f docker-compose.vps.yml"
             echo "==> Waiting for hospital-app"
+            ready=0
             for i in $(seq 1 60); do
-              if $COMPOSE exec -T app php -v >/dev/null 2>&1; then
-                break
-              fi
+              $COMPOSE exec -T app php -v >/dev/null 2>&1 && ready=1 && break
               sleep 2
             done
+            test "$ready" = "1"
             $COMPOSE ps
             test -f cli/sync_tenant_plan_permissions.php
-            if [ -n "${TENANT_ID:-}" ]; then
-              echo "==> Syncing tenant ${TENANT_ID}"
-              $COMPOSE exec -T app php cli/sync_tenant_plan_permissions.php --tenant="${TENANT_ID}"
-            else
-              echo "==> Syncing all hospital tenants"
-              $COMPOSE exec -T app php cli/sync_tenant_plan_permissions.php --all
-            fi
+            # Avoid `if [ -n ... ]` under appleboy script_stop (empty test exits 1).
+            SYNC_CMD="php cli/sync_tenant_plan_permissions.php --all"
+            [ -z "${TENANT_ID:-}" ] || SYNC_CMD="php cli/sync_tenant_plan_permissions.php --tenant=${TENANT_ID}"
+            echo "==> Running: ${SYNC_CMD}"
+            $COMPOSE exec -T app sh -c "${SYNC_CMD}"
             echo "==> Done"
         env:
           TENANT_ID: ${{ inputs.tenant_id }}
