@@ -65,7 +65,7 @@ $genderList = $this->customlib->getGender();
                 <input type="hidden" id="password" name="password">
                 <div class="modal-header">
                     <h5 class="modal-title" id="myModalLabel"><?php echo $this->lang->line('add_patient'); ?></h5>
-                    <select onchange="get_PatientDetails(this.value)" class="form-control patient_list_ajax sh-inp-200" id="addpatient_id" name=''>
+                    <select onchange="get_PatientDetails(this.value)" class="form-control patient_list_ajax sh-inp-360" id="addpatient_id" name=''>
                     </select>
                     <?php if ($this->rbac->hasPrivilege('patient', 'can_add')) { ?>
                         <a data-bs-toggle="modal" id="addpip" onclick="holdModal('myModalpa')" class="modalbtnpatient btn btn-light btn-sm text-nowrap"><i class="fa fa-plus"></i> <?php echo $this->lang->line('new_patient'); ?></a>
@@ -1367,7 +1367,7 @@ $genderList = $this->customlib->getGender();
         }
         $sel.select2({
             width: '100%',
-            placeholder: "<?php echo $this->lang->line('enter_patient_name'); ?> or Id...",
+            placeholder: "<?php echo $this->lang->line('enter_patient_name'); ?>, Id or Phone...",
             allowClear: true,
             ajax: {
                 url: "<?= base_url(); ?>admin/patient/getPatientListAjax",

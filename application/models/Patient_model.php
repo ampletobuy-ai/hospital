@@ -3864,16 +3864,29 @@ class Patient_model extends MY_Model
   
     public function getPatientListfilter($search_term)
     {
-        $result = $this->db
-            ->select("id,patient_name")
+        $search_term = trim((string) $search_term);
+        // Digits-only term: also match phone numbers that may contain spaces/dashes.
+        $phone_digits = preg_replace('/\D+/', '', $search_term);
+
+        $this->db
+            ->select("id, patient_name, mobileno")
             ->group_start()
             ->where("id", $search_term)
             ->or_like("patient_name", $search_term)
+            ->or_like("mobileno", $search_term);
+
+        if ($phone_digits !== '' && $phone_digits !== $search_term) {
+            $this->db->or_like("mobileno", $phone_digits);
+        }
+
+        $result = $this->db
             ->group_end()
-            ->where("is_active","yes")
-            ->where("is_dead!=","yes")
+            ->where("is_active", "yes")
+            ->where("is_dead!=", "yes")
+            ->limit(50)
             ->get("patients")
             ->result();
+
         return $result;
     }
 
