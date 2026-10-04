@@ -90,7 +90,7 @@ $genderList      = $this->customlib->getGender_Patient();
             <form id="formadd" accept-charset="utf-8" action="<?php echo base_url() . "admin/patient" ?>" enctype="multipart/form-data" method="post">
                 <div class="modal-header">
                     <h5 class="modal-title" id="myModalLabel"><?php echo $this->lang->line('new_visit'); ?></h5>
-                    <select onchange="get_PatientDetails(this.value)" class="form-control patient_list_ajax sh-inp-200" <?php
+                    <select onchange="get_PatientDetails(this.value)" class="form-control patient_list_ajax sh-inp-360" <?php
                             if ($disable_option == true) { echo "disabled"; }
                             ?> name='' id="addpatient_id">
                     </select>
@@ -1109,7 +1109,7 @@ $genderList      = $this->customlib->getGender_Patient();
         }
         $sel.select2({
             width: '100%',
-            placeholder: "<?php echo $this->lang->line('enter_patient_name'); ?> or Id...",
+            placeholder: "<?php echo $this->lang->line('enter_patient_name'); ?>, Id or Phone...",
             allowClear: true,
             ajax: {
                 url: "<?= base_url(); ?>admin/patient/getPatientListAjax",

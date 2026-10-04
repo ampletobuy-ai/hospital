@@ -8088,7 +8088,11 @@ This Function is used to Import Multiple Patient Records
             if (!empty($result)) {
 
                 foreach ($result as $value) {
-                    $data[] = array("id" => $value->id, "text" => $value->patient_name . " (" . $value->id . ")");
+                    $label = $value->patient_name . " (" . $value->id . ")";
+                    if (!empty($value->mobileno)) {
+                        $label .= " · " . $value->mobileno;
+                    }
+                    $data[] = array("id" => $value->id, "text" => $label);
                 }
             }
             echo json_encode($data);

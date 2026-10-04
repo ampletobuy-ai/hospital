@@ -6119,8 +6119,8 @@ ul.stepradiolist {
 /* Compact patient/search select inside sh-modal-accent header */
 .sh-modal-accent .modal-header .patient_list_ajax,
 .sh-modal-accent .modal-header .patient_list_ajax + .select2-container {
-  max-width: 240px;
-  flex: 0 1 240px;
+  max-width: 420px;
+  flex: 0 1 360px;
 }
 
 /* â”€â”€ Report link cards (all _*_bs5.php report partials) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -7439,9 +7439,9 @@ a.sh-newpatient-btn:active,
 /* Keep the patient picker from collapsing when the title (flex:1) + New Patient
    + close compete for space on desktop/tablet. */
 .modal-header > .patient_list_ajax + .select2-container {
-  flex: 0 1 200px;
-  min-width: 160px;
-  max-width: 280px;
+  flex: 0 1 360px;
+  min-width: 260px;
+  max-width: 420px;
 }
 /* Mobile: title/actions stay on row 1; patient search gets a full-width row so
    it remains tappable (was clipped by .sh-modal-nospace overflow:hidden). */
@@ -8956,6 +8956,7 @@ body.variant-b .sh-section-divider { border-bottom-color:var(--border); }
 .sh-inp-130 { max-width:130px; }
 .sh-inp-180 { max-width:180px; }
 .sh-inp-200 { max-width:200px; }
+.sh-inp-360 { max-width:360px; min-width:260px; }
 
 /* ══ Summary card inputs — compact right-aligned inputs ═══════
    Used inside sh-summary-row rows                              */
