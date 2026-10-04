@@ -17,6 +17,8 @@ class Expmedicine extends Admin_Controller
         $this->search_type = $this->config->item('search_type_expiry');
         $this->load->library('datatables');
         $this->time_format = $this->customlib->getHospitalTimeFormat();
+        $this->load->library('plan_feature_gate');
+        $this->plan_feature_gate->denyUnless('pharmacy');
     }
 
     public function search()

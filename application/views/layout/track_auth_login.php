@@ -28,9 +28,6 @@ if ($auth_portal === 'patient') {
     $promo_subtext     = 'Manage OPD, IPD, billing, pharmacy, and patient workflows from one unified platform.';
     $promo_trust       = 'Trusted by <strong>healthcare teams</strong> across India';
     $forgot_url        = site_url('site/forgotpassword');
-    $switch_text       = 'Patient?';
-    $switch_link_text  = $this->lang->line('user_login') ?: 'Patient sign in';
-    $switch_link_url   = site_url('site/userlogin');
     $field_prefix      = 'al';
 }
 
@@ -155,10 +152,12 @@ try {
         </p>
         <?php endif; ?>
 
+        <?php if ($auth_portal === 'patient'): ?>
         <p class="portal-auth-switch">
           <?php echo html_escape($switch_text); ?>
           <a href="<?php echo $switch_link_url; ?>"><?php echo html_escape($switch_link_text); ?></a>
         </p>
+        <?php endif; ?>
 
         <?php if (!empty($app_version)): ?>
         <p class="app-auth-version portal-muted-note text-center mb-0">

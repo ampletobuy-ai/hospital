@@ -14,7 +14,9 @@ class Bulkmessage extends Admin_Controller
         $this->load->library('mailgateway');
         $this->load->library('Customlib');
         $this->load->library('datatables');
-        $this->load->model("patient_model");       
+        $this->load->model("patient_model");
+        $this->load->library('plan_feature_gate');
+        $this->plan_feature_gate->denyUnless('whatsapp_sms');
     }
 
     public function index()

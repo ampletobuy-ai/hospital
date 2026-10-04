@@ -6,12 +6,23 @@ if($uri){
 }
 ?>
 <?php  if ($this->session->flashdata('msg')) { ?> <div>  <?php echo $this->session->flashdata('msg') ?> </div> <?php $this->session->unset_userdata('msg'); }   ?>
+        <?php if (!empty($plan_enforcing)) { ?>
+        <div class="alert alert-info mb-3">
+            Permissions shown here are limited to your current subscription plan.
+            Modules outside the plan are hidden and cannot be granted.
+            <a href="<?php echo html_escape(!empty($plan_upgrade_url) ? $plan_upgrade_url : site_url('site/subscription')); ?>">Upgrade plan</a>
+            · <a href="<?php echo site_url('admin/planlimits'); ?>">View plan &amp; limits</a>
+        </div>
+        <?php } ?>
         <div class="row">
             <div class="col-md-3">
                 <div class="card border0">
                     <ul class="tablists nav flex-column" role="tablist">
                     <?php
                         $count_tab = 0;
+                        if (empty($role_permission)) {
+                            echo '<li class="px-3 py-2 text-muted">No plan-allowed modules for this role.</li>';
+                        }
                         foreach ($role_permission as $key => $value) {
                             $isActive = ($count_tab == $open_tab);
                     ?>

@@ -110,6 +110,15 @@ class Hospital_tenant_bootstrap
         if ($db->table_exists('print_setting')) {
             $db->update('print_setting', array('print_header' => ''));
         }
+
+        // Align modules / role permissions with the subscription plan (Starter hides Pharmacy etc.).
+        try {
+            $this->CI =& get_instance();
+            $this->CI->load->library('plan_permission_sync');
+            $this->CI->plan_permission_sync->syncOnDb($db, $tenantId);
+        } catch (Throwable $e) {
+            log_message('error', 'Plan permission sync skipped during bootstrap: ' . $e->getMessage());
+        }
     }
 
     /**

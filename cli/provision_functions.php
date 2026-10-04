@@ -238,7 +238,167 @@ function hospital_cli_bootstrap_tenant(array $defaultCfg, $tenantDatabase, $tena
         @chmod($dir, 0777);
     }
 
+    hospital_cli_sync_plan_permissions($mysqli, $payload, $tenantId);
     $mysqli->close();
+}
+
+/**
+ * Disable plan-locked modules and clear matching roles_permissions after clone/bootstrap.
+ *
+ * @param array<string, mixed> $payload
+ */
+function hospital_cli_sync_plan_permissions(mysqli $mysqli, array $payload, $tenantId)
+{
+    $features = hospital_cli_resolve_plan_features($payload);
+    if ($features === null) {
+        return;
+    }
+
+    $moduleMap = array(
+        'opd' => 'opd',
+        'patient' => 'patient_registration',
+        'appointment' => 'appointment',
+        'bill' => 'billing',
+        'ipd' => 'ipd',
+        'pharmacy' => 'pharmacy',
+        'pathology' => 'laboratory',
+        'radiology' => 'laboratory',
+        'blood_bank' => 'ipd',
+        'ambulance' => 'ipd',
+        'live_consultation' => 'ipd',
+        'inventory' => 'inventory',
+        'tpa_management' => 'tpa_insurance',
+        'referral' => 'doctor_commission',
+        'whatsapp_messaging' => 'whatsapp_sms',
+        'communicate' => 'whatsapp_sms',
+        'duty_roster' => 'duty_roster',
+        'front_cms' => 'customization',
+    );
+
+    $can = function ($key) use ($features) {
+        if (!array_key_exists($key, $features)) {
+            return true;
+        }
+        $value = $features[$key];
+
+        return !($value === false || $value === null || $value === 0 || $value === '0');
+    };
+
+    if (hospital_cli_table_exists($mysqli, 'permission_group')) {
+        $result = $mysqli->query('SELECT id, short_code, is_active FROM permission_group');
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $short = (string) ($row['short_code'] ?? '');
+                if ($short === '' || !isset($moduleMap[$short])) {
+                    continue;
+                }
+                $allowed = $can($moduleMap[$short]);
+                if ($short === 'front_cms') {
+                    $allowed = $can('customization') && !in_array((string) ($features['customization'] ?? ''), array('limited', '0', ''), true);
+                }
+                $active = $allowed ? 1 : 0;
+                $id = (int) $row['id'];
+                $mysqli->query("UPDATE permission_group SET is_active = {$active} WHERE id = {$id}");
+            }
+            $result->free();
+        }
+    }
+
+    if (hospital_cli_table_exists($mysqli, 'permission_patient')) {
+        $result = $mysqli->query('SELECT id, permission_group_short_code FROM permission_patient');
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $short = (string) ($row['permission_group_short_code'] ?? '');
+                if ($short === '' || !isset($moduleMap[$short])) {
+                    continue;
+                }
+                $allowed = $can($moduleMap[$short]) ? 1 : 0;
+                $id = (int) $row['id'];
+                $mysqli->query("UPDATE permission_patient SET is_active = {$allowed} WHERE id = {$id}");
+            }
+            $result->free();
+        }
+    }
+
+    // Clear role grants for categories that belong to disabled modules (prefix / exact map subset).
+    if (hospital_cli_table_exists($mysqli, 'permission_category') && hospital_cli_table_exists($mysqli, 'roles_permissions')) {
+        $lockedPrefixes = array();
+        if (!$can('pharmacy')) {
+            $lockedPrefixes = array_merge($lockedPrefixes, array('pharmacy_', 'medicine', 'import_medicine', 'dosage_', 'stock_report', 'expiry_medicine'));
+        }
+        if (!$can('ipd')) {
+            $lockedPrefixes = array_merge($lockedPrefixes, array('ipd', 'bed', 'floor', 'nurse_note', 'consultant_register', 'discharged_patients', 'blood_', 'ambulance', 'live_consult', 'live_meeting'));
+        }
+        if (!$can('laboratory')) {
+            $lockedPrefixes = array_merge($lockedPrefixes, array('pathology_', 'radiology_'));
+        }
+        if (!$can('tpa_insurance')) {
+            $lockedPrefixes = array_merge($lockedPrefixes, array('tpa_', 'organisation'));
+        }
+        if (!$can('doctor_commission')) {
+            $lockedPrefixes = array_merge($lockedPrefixes, array('referral_'));
+        }
+        if (!$can('whatsapp_sms')) {
+            $lockedPrefixes = array_merge($lockedPrefixes, array('email_sms', 'sms_setting', 'send_credential'));
+        }
+        if (!$can('duty_roster')) {
+            $lockedPrefixes = array_merge($lockedPrefixes, array('duty_roster', 'roster_'));
+        }
+
+        if (!empty($lockedPrefixes)) {
+            $result = $mysqli->query('SELECT id, short_code FROM permission_category');
+            if ($result) {
+                while ($row = $result->fetch_assoc()) {
+                    $code = (string) ($row['short_code'] ?? '');
+                    if ($code === '') {
+                        continue;
+                    }
+                    $locked = false;
+                    foreach ($lockedPrefixes as $prefix) {
+                        if ($code === $prefix || strpos($code, $prefix) === 0) {
+                            $locked = true;
+                            break;
+                        }
+                    }
+                    if (!$locked) {
+                        continue;
+                    }
+                    $catId = (int) $row['id'];
+                    $mysqli->query(
+                        "UPDATE roles_permissions SET can_view = 0, can_add = 0, can_edit = 0, can_delete = 0 WHERE perm_cat_id = {$catId}"
+                    );
+                }
+                $result->free();
+            }
+        }
+    }
+}
+
+/**
+ * @param array<string, mixed> $payload
+ * @return array<string, mixed>|null null = do not enforce
+ */
+function hospital_cli_resolve_plan_features(array $payload)
+{
+    if (isset($payload['features']) && is_array($payload['features'])) {
+        return $payload['features'];
+    }
+
+    include APPPATH . 'config/hospital_portal.php';
+    $plans = isset($config['hospital_plans']) && is_array($config['hospital_plans'])
+        ? $config['hospital_plans']
+        : array();
+
+    $planCode = (string) ($payload['plan_code'] ?? '');
+    if ($planCode === '' || $planCode === 'trial') {
+        $planCode = isset($config['default_plan_code']) ? (string) $config['default_plan_code'] : 'hospital_business';
+    }
+
+    if ($planCode !== '' && isset($plans[$planCode]['features']) && is_array($plans[$planCode]['features'])) {
+        return $plans[$planCode]['features'];
+    }
+
+    return null;
 }
 
 function hospital_cli_mark_tenant_ready(mysqli $central, $tenantId)

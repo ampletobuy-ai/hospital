@@ -11,7 +11,9 @@ class Medicineunit extends Admin_Controller
     {
         parent::__construct();
         $this->load->library('datatables');
-        $this->load->model('pharmacy_model');       
+        $this->load->model('pharmacy_model');
+        $this->load->library('plan_feature_gate');
+        $this->plan_feature_gate->denyUnless('pharmacy');
     }
 
     public function index()

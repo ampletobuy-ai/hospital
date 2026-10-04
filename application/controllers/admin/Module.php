@@ -21,10 +21,22 @@ class Module extends Admin_Controller
         $this->session->set_userdata('top_menu', 'setup');
         $this->session->set_userdata('sub_menu', 'schsettings/index');
         $this->session->set_userdata('inner_menu', 'admin/module');
+        $this->load->library('plan_feature_gate');
         $permissionlist                = $this->module_model->getPermission();
         $patientPermissionList         = $this->module_model->getPatientPermission();
+        foreach ($permissionlist as &$permission) {
+            $permission['plan_allowed'] = $this->plan_feature_gate->moduleAllowed($permission['short_code'] ?? '');
+        }
+        unset($permission);
+        foreach ($patientPermissionList as &$permission) {
+            $code = $permission['permission_group_short_code'] ?? ($permission['short_code'] ?? '');
+            $permission['plan_allowed'] = $this->plan_feature_gate->moduleAllowed($code);
+        }
+        unset($permission);
         $data["permissionList"]        = $permissionlist;
         $data['patientPermissionList'] = $patientPermissionList;
+        $data['plan_enforcing'] = $this->plan_feature_gate->isEnforcing();
+        $data['plan_upgrade_url'] = site_url('site/subscription');
         $this->load->view("layout/header");
         $this->load->view("setting/permission", $data);
         $this->load->view("layout/footer");

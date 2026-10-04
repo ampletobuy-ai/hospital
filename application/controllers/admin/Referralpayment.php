@@ -14,6 +14,8 @@ class Referralpayment extends Admin_Controller
         $this->load->model("referral_person_model");
         $this->load->library("form_validation");
         $this->load->library('system_notification');
+        $this->load->library('plan_feature_gate');
+        $this->plan_feature_gate->denyUnless('doctor_commission');
     }
 
     public function add()

@@ -12,6 +12,8 @@ class Itemsupplier extends Admin_Controller
         parent::__construct();
 
         $this->load->helper('url');
+        $this->load->library('plan_feature_gate');
+        $this->plan_feature_gate->denyUnlessAtLeast('inventory', 'advanced');
     }
 
     public function index()

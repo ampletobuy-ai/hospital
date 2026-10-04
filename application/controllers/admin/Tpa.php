@@ -15,6 +15,8 @@ class Tpa extends Admin_Controller
         $this->config->load("payroll");
         $this->load->library("datatables");
         $this->charge_type = $this->customlib->getChargeMaster();
+        $this->load->library('plan_feature_gate');
+        $this->plan_feature_gate->denyUnless('tpa_insurance');
     }
 
     public function master($id)

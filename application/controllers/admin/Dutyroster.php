@@ -22,6 +22,8 @@ class Dutyroster extends Admin_Controller
 		$this->config->load("payroll");
 		$this->search_type = $this->config->item('search_type');
 		$this->time_format = $this->customlib->getHospitalTimeFormat();
+        $this->load->library('plan_feature_gate');
+        $this->plan_feature_gate->denyUnless('duty_roster');
     }
 
 	//----------------------- Duty Roster Shift Start -------------------

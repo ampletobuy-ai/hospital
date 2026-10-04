@@ -14,6 +14,8 @@ class Medicinedosage extends Admin_Controller
         $this->load->model('unittype_model');
         $this->load->helper('file');
         $this->load->model('pharmacy_model');
+        $this->load->library('plan_feature_gate');
+        $this->plan_feature_gate->denyUnless('pharmacy');
     }
 
     public function index()
