@@ -6,6 +6,12 @@ if (!defined('BASEPATH')) {
 
 class Pathologycategory extends Admin_Controller
 {
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->library('plan_feature_gate');
+        $this->plan_feature_gate->denyUnless('laboratory');
+    }
 
     public function addcategory()
     {

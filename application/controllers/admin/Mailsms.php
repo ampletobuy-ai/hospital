@@ -21,6 +21,8 @@ class Mailsms extends Admin_Controller
         $this->search_type = $this->config->item('search_type');
         $this->mailer;
         $this->time_format = $this->customlib->getHospitalTimeFormat();
+        $this->load->library('plan_feature_gate');
+        $this->plan_feature_gate->denyUnless('whatsapp_sms');
     }
 
     public function index()

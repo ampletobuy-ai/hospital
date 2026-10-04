@@ -56,6 +56,9 @@ class Roles extends Admin_Controller
         $role_permission         = $this->role_model->find($role['id']);
         $data['role_permission'] = $role_permission;
         $data['module'] = 'setup';
+        $this->load->library('plan_feature_gate');
+        $data['plan_enforcing'] = $this->plan_feature_gate->isEnforcing();
+        $data['plan_upgrade_url'] = site_url('site/subscription');
         $this->load->view('layout/header', $data);
         $this->load->view('admin/roles/allotmodule', $data);
         $this->load->view('layout/footer', $data);
@@ -79,14 +82,36 @@ class Roles extends Admin_Controller
             $array = array('status' => 0, 'error' => $data);
             echo json_encode($array);
         } else {
+            $addRemove = (int) $this->input->post('add_remove', TRUE);
+            $action = (string) $this->input->post('action', TRUE);
+            $permCatId = (int) $this->input->post('per_cat', TRUE);
 
-                $update_array=[
-                    'action'=>$this->input->post('action', TRUE),
-                    'perm_cat_id'=>$this->input->post('per_cat', TRUE),
-                    'role_id'=>$this->input->post('role_id', TRUE),
-                    'value'=>$this->input->post('add_remove', TRUE)
-                ];
- 
+            // Plan gate: refuse enabling permissions outside the subscription.
+            if ($addRemove === 1) {
+                $this->load->library('plan_feature_gate');
+                $cat = $this->db->select('short_code')
+                    ->where('id', $permCatId)
+                    ->get('permission_category')
+                    ->row_array();
+                $shortCode = !empty($cat['short_code']) ? (string) $cat['short_code'] : '';
+                if ($shortCode !== '' && !$this->plan_feature_gate->permissionAllowed($shortCode, $action)) {
+                    $msg = $this->plan_feature_gate->upgradeMessage();
+                    echo json_encode(array(
+                        'status' => 0,
+                        'error' => array('plan' => '<p>' . $msg . '</p>'),
+                        'message' => $msg,
+                    ));
+                    return;
+                }
+            }
+
+            $update_array = array(
+                'action' => $action,
+                'perm_cat_id' => $permCatId,
+                'role_id' => $this->input->post('role_id', TRUE),
+                'value' => $addRemove,
+            );
+
             $this->role_model->updatePermission($update_array);
             $array = array('status' => 1, 'error' => '', 'message' => $this->lang->line('permission_updated_successfully'));
             echo json_encode($array);

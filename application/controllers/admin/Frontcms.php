@@ -16,6 +16,8 @@ class Frontcms extends Admin_Controller
         $this->load->config('ci-blog');
         $this->front_themes = $this->config->item('ci_front_themes');
         $this->load->model('cms_page_model');
+        $this->load->library('plan_feature_gate');
+        $this->plan_feature_gate->denyUnlessAtLeast('customization', 'standard');
     }
 
     public function index()

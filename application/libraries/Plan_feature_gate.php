@@ -19,6 +19,12 @@ class Plan_feature_gate
     /** @var bool */
     private $enforce = false;
 
+    /** @var array<string, mixed>|null */
+    private $subscription = null;
+
+    /** @var string */
+    private $plan_code = '';
+
     /** Module short_code => plan feature key (or special token). */
     private $moduleFeatureMap = array(
         'opd' => 'opd',
@@ -37,6 +43,8 @@ class Plan_feature_gate
         'referral' => 'doctor_commission',
         'whatsapp_messaging' => 'whatsapp_sms',
         'communicate' => 'whatsapp_sms',
+        'duty_roster' => 'duty_roster',
+        'front_cms' => '__front_cms__',
     );
 
     /** Exact permission_category.short_code => plan feature key. */
@@ -177,6 +185,9 @@ class Plan_feature_gate
 
     private function bootstrap()
     {
+        $this->subscription = null;
+        $this->plan_code = '';
+
         if (!$this->CI->config->item('tenancy_enabled')) {
             $this->enforce = false;
             $this->features = array();
@@ -190,32 +201,7 @@ class Plan_feature_gate
             return;
         }
 
-        $subscription = $this->CI->subscription_resolver->latestForTenant($tenantId);
-        if (!$subscription) {
-            // Legacy tenant without subscription row: do not lock features.
-            $this->enforce = false;
-            $this->features = array();
-            return;
-        }
-
-        $this->enforce = true;
-        $metadata = $subscription['metadata'] ?? array();
-        if (!is_array($metadata)) {
-            $metadata = array();
-        }
-
-        $planCode = (string) ($subscription['plan_code'] ?? '');
-        $plans = (array) $this->CI->config->item('hospital_plans');
-        $defaults = array();
-        if ($planCode !== '' && isset($plans[$planCode]['features']) && is_array($plans[$planCode]['features'])) {
-            $defaults = $plans[$planCode]['features'];
-        }
-
-        $stored = isset($metadata['features']) && is_array($metadata['features'])
-            ? $metadata['features']
-            : array();
-
-        $this->features = array_merge($defaults, $stored);
+        $this->loadForTenantId($tenantId);
     }
 
     /**
@@ -324,7 +310,97 @@ class Plan_feature_gate
             return true;
         }
 
-        return $this->can($this->moduleFeatureMap[$moduleShortCode]);
+        $featureKey = $this->moduleFeatureMap[$moduleShortCode];
+        if ($featureKey === '__front_cms__') {
+            return $this->canAtLeast('customization', 'standard');
+        }
+
+        return $this->can($featureKey);
+    }
+
+    /**
+     * Load / re-load gate for an explicit tenant (CLI, provision, plan sync).
+     *
+     * @param string $tenantId
+     */
+    public function loadForTenantId($tenantId)
+    {
+        $tenantId = trim((string) $tenantId);
+        $this->enforce = false;
+        $this->features = array();
+
+        if ($tenantId === '' || !$this->CI->config->item('tenancy_enabled')) {
+            return;
+        }
+
+        $subscription = $this->CI->subscription_resolver->latestForTenant($tenantId);
+        if (!$subscription) {
+            return;
+        }
+
+        $this->enforce = true;
+        $metadata = $subscription['metadata'] ?? array();
+        if (!is_array($metadata)) {
+            $metadata = array();
+        }
+
+        $planCode = (string) ($subscription['plan_code'] ?? '');
+        $plans = (array) $this->CI->config->item('hospital_plans');
+        $defaults = array();
+        if ($planCode !== '' && isset($plans[$planCode]['features']) && is_array($plans[$planCode]['features'])) {
+            $defaults = $plans[$planCode]['features'];
+        }
+
+        $stored = isset($metadata['features']) && is_array($metadata['features'])
+            ? $metadata['features']
+            : array();
+
+        $this->features = array_merge($defaults, $stored);
+        $this->plan_code = $planCode;
+        $this->subscription = $subscription;
+    }
+
+    /**
+     * @param array<string, mixed> $features
+     */
+    public function enforceWithFeatures(array $features)
+    {
+        $this->enforce = true;
+        $this->features = $features;
+    }
+
+    /**
+     * @return string
+     */
+    public function upgradeMessage()
+    {
+        return 'This feature is not available on your current plan. Please upgrade your subscription.';
+    }
+
+    /**
+     * Module short_codes that are plan-gated (for sync / UI).
+     *
+     * @return array<string, string>
+     */
+    public function gatedModuleMap()
+    {
+        return $this->moduleFeatureMap;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function subscription()
+    {
+        return isset($this->subscription) ? $this->subscription : null;
+    }
+
+    /**
+     * @return string
+     */
+    public function planCode()
+    {
+        return isset($this->plan_code) ? (string) $this->plan_code : '';
     }
 
     /**
@@ -556,8 +632,27 @@ class Plan_feature_gate
             return;
         }
 
-        $message = 'This feature is not available on your current plan. Please upgrade your subscription.';
+        $this->denyWithMessage($this->upgradeMessage());
+    }
 
+    /**
+     * @param string $featureKey
+     * @param string $minLevel
+     */
+    public function denyUnlessAtLeast($featureKey, $minLevel)
+    {
+        if ($this->canAtLeast($featureKey, $minLevel)) {
+            return;
+        }
+
+        $this->denyWithMessage($this->upgradeMessage());
+    }
+
+    /**
+     * @param string $message
+     */
+    private function denyWithMessage($message)
+    {
         $isAjax = $this->CI->input->is_ajax_request()
             || strtolower((string) $this->CI->input->server('HTTP_X_REQUESTED_WITH')) === 'xmlhttprequest';
 

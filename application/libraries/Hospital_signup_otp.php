@@ -64,10 +64,17 @@ class Hospital_signup_otp
         $exposeOtp = !empty($razorpay['allow_local_orders']);
 
         if ($channel === 'email') {
-            $this->sendOtpEmail($rawIdentifier, $otp, $ttlMinutes);
+            // Local/dev: mailer often has no SMTP — still return debug OTP so signup works.
             if ($exposeOtp) {
+                try {
+                    $this->sendOtpEmail($rawIdentifier, $otp, $ttlMinutes);
+                } catch (Exception $e) {
+                    log_message('error', 'Hospital signup OTP email skipped (local debug): ' . $e->getMessage());
+                }
                 $response['debug_otp'] = $otp;
                 $response['message'] = 'Verification code sent (local debug).';
+            } else {
+                $this->sendOtpEmail($rawIdentifier, $otp, $ttlMinutes);
             }
         } else {
             // SMS provider not wired; expose OTP when local orders allowed.

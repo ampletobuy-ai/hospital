@@ -15,6 +15,8 @@ class Bloodbankstatus extends Admin_Controller
         $this->payment_mode = $this->config->item('payment_mode');
         $this->load->model("unittype_model");
         $this->load->helper('customfield_helper');
+        $this->load->library('plan_feature_gate');
+        $this->plan_feature_gate->denyUnless('ipd');
     }    
     
     public function getBloodBankChargeById()

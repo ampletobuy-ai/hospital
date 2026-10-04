@@ -14,6 +14,13 @@
                 </ul>
             </div>
             <div class="card-body">
+                <?php if (!empty($plan_enforcing)) { ?>
+                <div class="alert alert-info">
+                    Modules outside your subscription cannot be enabled.
+                    <a href="<?php echo html_escape(!empty($plan_upgrade_url) ? $plan_upgrade_url : site_url('site/subscription')); ?>">Upgrade plan</a>
+                    · <a href="<?php echo site_url('admin/planlimits'); ?>">View plan &amp; limits</a>
+                </div>
+                <?php } ?>
                 <div class="tab-content">
                     <div class="tab-pane fade show active" id="tab_system" role="tabpanel">
                         <div class="table-responsive">
@@ -29,15 +36,22 @@
                                     <?php
                                     if (!empty($permissionList)) {
                                         foreach ($permissionList as $permission) {
+                                            $planAllowed = !isset($permission['plan_allowed']) || $permission['plan_allowed'];
                                             ?>
                                             <tr>
-                                                <td><?php echo $permission['name']; ?></td>
+                                                <td>
+                                                    <?php echo $permission['name']; ?>
+                                                    <?php if (!$planAllowed) { ?>
+                                                        <span class="badge text-bg-secondary ms-1">Not on plan</span>
+                                                    <?php } ?>
+                                                </td>
                                                 <td class="text-end noExport">
                                                     <div class="form-check form-switch d-inline-flex m-0">
                                                         <input class="form-check-input chk" type="checkbox" role="switch"
                                                                id="student<?php echo $permission['id'] ?>"
                                                                data-role="student"
                                                                data-rowid="<?php echo $permission['short_code'] ?>"
+                                                               <?php echo !$planAllowed ? 'disabled title="Upgrade required"' : ''; ?>
                                                                <?php if ($permission['is_active'] == 1) echo 'checked'; ?> />
                                                     </div>
                                                 </td>
@@ -65,15 +79,22 @@
                                     <?php
                                     if (!empty($patientPermissionList)) {
                                         foreach ($patientPermissionList as $permission) {
+                                            $planAllowed = !isset($permission['plan_allowed']) || $permission['plan_allowed'];
                                             ?>
                                             <tr>
-                                                <td><?php echo $permission['name']; ?></td>
+                                                <td>
+                                                    <?php echo $permission['name']; ?>
+                                                    <?php if (!$planAllowed) { ?>
+                                                        <span class="badge text-bg-secondary ms-1">Not on plan</span>
+                                                    <?php } ?>
+                                                </td>
                                                 <td class="text-end">
                                                     <div class="form-check form-switch d-inline-flex m-0">
                                                         <input class="form-check-input chk_patient" type="checkbox" role="switch"
                                                                id="patient<?php echo $permission['id'] ?>"
                                                                data-role="patient"
                                                                data-rowid="<?php echo $permission['id'] ?>"
+                                                               <?php echo !$planAllowed ? 'disabled title="Upgrade required"' : ''; ?>
                                                                <?php if ($permission['is_active'] == 1) echo 'checked'; ?> />
                                                     </div>
                                                 </td>

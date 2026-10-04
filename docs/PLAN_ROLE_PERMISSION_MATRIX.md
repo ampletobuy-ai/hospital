@@ -307,9 +307,10 @@ After cloning `roles_permissions`, strip permissions for plan-disabled groups so
 - [x] Role assignment UI: hide Pharmacist/Pathologist/Radiologist on Starter (§4.1)  
 - [x] Settings customization tiers (§7)  
 - [x] Multi-branch + API as Enterprise-only custom gates *(API: gate plumbing only — `api_keys`/`webhooks` mapped; no admin UI yet; multi-branch via `max_warehouses` + Itemstore)*  
-- [ ] Plan change job to recompute allowed permissions  
-- [ ] Admin “Plan & limits” page showing current features + quotas  
-- [ ] Provision-time `roles_permissions` strip  
+- [x] Plan change sync (`cli/sync_tenant_plan_permissions.php` + `admin/planlimits/sync`)  
+- [x] Admin “Plan & limits” page showing current features + quotas  
+- [x] Provision-time `roles_permissions` strip (`Plan_permission_sync` / CLI bootstrap)  
+- [x] Roles UI filtered + `savecheck` rejects plan-locked grants  
 - [ ] Tests: Starter cannot open IPD create; Business can; Enterprise can set multi-branch  
 
 ---

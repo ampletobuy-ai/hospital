@@ -60,6 +60,10 @@
                 <li><a class="<?php echo set_Innermenu('admin/roles'); ?>" href="<?php echo base_url(); ?>admin/roles"><?php echo $this->lang->line('roles_permissions'); ?></a></li>
             <?php } ?>
 
+            <?php if ($this->rbac->hasPrivilege('superadmin', 'can_view') || $this->rbac->hasPrivilege('general_setting', 'can_view')) { ?>
+                <li><a class="<?php echo set_Innermenu('admin/planlimits'); ?>" href="<?php echo base_url(); ?>admin/planlimits">Plan &amp; limits</a></li>
+            <?php } ?>
+
             <?php if ($this->rbac->hasPrivilege('backup', 'can_view')) { ?>
 				<li><a class="<?php echo set_Innermenu('admin/backup'); ?>" href="<?php echo base_url(); ?>admin/admin/backup"><?php echo $this->lang->line('backup_restore'); ?></a></li>
 			<?php } ?>

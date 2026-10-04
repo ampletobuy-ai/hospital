@@ -184,10 +184,39 @@ class Role_model extends MY_Model
         $this->db->order_by('permission_group.sort_order');
         $query  = $this->db->get();
         $result = $query->result();
-        foreach ($result as $key => $value) {
-            $value->permission_category = $this->getPermissions($value->id, $role_id);
+
+        $CI =& get_instance();
+        if (!isset($CI->plan_feature_gate)) {
+            $CI->load->library('plan_feature_gate');
         }
-        return $result;
+
+        $filtered = array();
+        foreach ($result as $key => $value) {
+            $groupCode = isset($value->short_code) ? (string) $value->short_code : '';
+            if ($groupCode !== '' && !$CI->plan_feature_gate->moduleAllowed($groupCode)) {
+                continue;
+            }
+
+            $categories = $this->getPermissions($value->id, $role_id);
+            $allowedCategories = array();
+            if (!empty($categories)) {
+                foreach ($categories as $cat) {
+                    $catCode = isset($cat->short_code) ? (string) $cat->short_code : '';
+                    if ($catCode === '' || $CI->plan_feature_gate->permissionAllowed($catCode, 'can_view')) {
+                        $allowedCategories[] = $cat;
+                    }
+                }
+            }
+
+            if (empty($allowedCategories)) {
+                continue;
+            }
+
+            $value->permission_category = $allowedCategories;
+            $filtered[] = $value;
+        }
+
+        return $filtered;
     }
 
     public function getPermissions($group_id, $role_id)

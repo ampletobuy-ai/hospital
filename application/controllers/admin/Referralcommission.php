@@ -12,6 +12,8 @@ class Referralcommission extends Admin_Controller
         parent::__construct();
         $this->load->model("referral_commission_model");
         $this->load->library("form_validation");
+        $this->load->library('plan_feature_gate');
+        $this->plan_feature_gate->denyUnless('doctor_commission');
     }
 
     public function add()

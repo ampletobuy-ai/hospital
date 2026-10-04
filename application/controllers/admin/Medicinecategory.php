@@ -6,6 +6,12 @@ if (!defined('BASEPATH')) {
 
 class Medicinecategory extends Admin_Controller
 {
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->library('plan_feature_gate');
+        $this->plan_feature_gate->denyUnless('pharmacy');
+    }
 
     public function medicine()
     {        
