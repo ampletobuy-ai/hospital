@@ -46,8 +46,17 @@ $currency_symbol = $this->customlib->getHospitalCurrencyFormat();
                         <tr>
                             <th width="20%"><?php echo $this->lang->line('patient') . " " . $this->lang->line('name'); ?></th>
                             <td width="25%"><?php echo $result["patient_name"]; ?></td>
-                            <th width="25%"><?php echo $this->lang->line('operation') . " " . $this->lang->line('name'); ?></th>
-                            <td width="30%"><?php echo $result["operation_name"]; ?></td>
+                            <th width="25%"><?php echo $this->lang->line('case_id'); ?></th>
+                            <td width="30%"><?php
+                                $ot_case_id = !empty($result['case_reference_id']) ? $result['case_reference_id'] : (!empty($result['opd_case_id']) ? $result['opd_case_id'] : (!empty($result['ipd_case_id']) ? $result['ipd_case_id'] : ''));
+                                echo $ot_case_id !== '' ? html_escape($ot_case_id) : '-';
+                            ?></td>
+                        </tr>
+                        <tr>
+                            <th width="20%"><?php echo $this->lang->line('operation') . " " . $this->lang->line('name'); ?></th>
+                            <td width="25%"><?php echo $result["operation_name"]; ?></td>
+                            <th></th>
+                            <td></td>
                         </tr>
                         <tr>
                             <th width="20%"><?php echo $this->lang->line('operation') . " " . $this->lang->line('type'); ?></th>

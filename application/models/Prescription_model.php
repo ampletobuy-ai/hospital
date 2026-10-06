@@ -48,7 +48,7 @@ class Prescription_model extends MY_Model
 
     public function getmanual($visitid)
     {
-        $query  = $this->db->select("visit_details.*,opd_details.id as opdid,patients.id as patientid ,patients.patient_name,patients.id as patient_unique_id,patients.age,patients.month,patients.day,patients.gender,patients.address,patients.blood_group,staff.name,staff.surname,staff.employee_id,staff.local_address,patients.as_of_date")->join("opd_details", "opd_details.id = visit_details.opd_details_id", "left")->join("patients", "patients.id = opd_details.patient_id", 'left')->join("staff", "staff.id = visit_details.cons_doctor")->where("visit_details.id", $visitid)->get("visit_details");
+        $query  = $this->db->select("visit_details.*,opd_details.id as opdid,opd_details.id as opd_details_id,opd_details.case_reference_id,patients.id as patientid ,patients.patient_name,patients.id as patient_unique_id,patients.age,patients.month,patients.day,patients.gender,patients.address,patients.blood_group,staff.name,staff.surname,staff.employee_id,staff.local_address,patients.as_of_date")->join("opd_details", "opd_details.id = visit_details.opd_details_id", "left")->join("patients", "patients.id = opd_details.patient_id", 'left')->join("staff", "staff.id = visit_details.cons_doctor")->where("visit_details.id", $visitid)->get("visit_details");
         $result = $query->row_array();
         return $result;
     }

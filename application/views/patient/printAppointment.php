@@ -84,6 +84,10 @@ include(APPPATH . 'views/admin/shared/_print_css.php');
                                     <td><span id="appointmentno"><?php echo html_escape($result['appointment_no'] ?: '-') ?></span></td>
                                 </tr>
                                 <tr>
+                                    <th><?php echo $this->lang->line('case_id'); ?></th>
+                                    <td><?php echo !empty($result['case_reference_id']) ? html_escape($result['case_reference_id']) : '-'; ?></td>
+                                </tr>
+                                <tr>
                                     <th><?php echo $this->lang->line("appointment_s_no"); ?></th>
                                     <td><?php echo html_escape($result['appointment_serial_no'] ?: '-') ?></td>
                                 </tr>

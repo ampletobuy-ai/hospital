@@ -32,14 +32,18 @@ include(APPPATH . 'views/admin/shared/_print_css.php');
                         <tr>
                             <th><?php echo $this->lang->line('opd_id'); ?></th>
                             <td><?php echo $this->customlib->getPatientSessionPrefixByType('opd_no') . ($result['opd_details_id'] ?: '-'); ?></td>
-                            <th><?php echo $this->lang->line('appointment_date'); ?></th>
-                            <td><?php echo ($result['appointment_date'] ? $this->customlib->YYYYMMDDHisTodateFormat($result['appointment_date']) : '-'); ?></td>
+                            <th><?php echo $this->lang->line('case_id'); ?></th>
+                            <td><?php echo !empty($result['case_reference_id']) ? html_escape($result['case_reference_id']) : '-'; ?></td>
                         </tr>
                         <tr>
                             <th><?php echo $this->lang->line('checkup_id'); ?></th>
                             <td><?php echo $this->customlib->getPatientSessionPrefixByType('checkup_id') . ($result['id'] ?: '-'); ?></td>
+                            <th><?php echo $this->lang->line('appointment_date'); ?></th>
+                            <td><?php echo ($result['appointment_date'] ? $this->customlib->YYYYMMDDHisTodateFormat($result['appointment_date']) : '-'); ?></td>
+                        </tr>
+                        <tr>
                             <th><?php echo $this->lang->line('known_allergies'); ?></th>
-                            <td><?php echo ($result['known_allergies'] ?: '-'); ?></td>
+                            <td colspan="3"><?php echo ($result['known_allergies'] ?: '-'); ?></td>
                         </tr>
                         <?php if ($result['appointment_no'] != '' || $result['appointment_serial_no']) { ?>
                         <tr>

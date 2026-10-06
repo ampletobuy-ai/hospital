@@ -42,12 +42,20 @@ include(APPPATH . 'views/admin/shared/_print_css.php');
                                     <th><?php echo $this->lang->line('prescription'); ?></th>
                                     <td><?php echo $this->customlib->getSessionPrefixByType('ipd_prescription') . ($result->prescription_id ?: '-'); ?>
                                     </td>
-                                    <th><?php echo $this->lang->line('date'); ?></th>
-                                    <td><?php echo !empty($result->pres_created_at) ? $this->customlib->YYYYMMDDHisTodateFormat($result->pres_created_at) : '-'; ?>
-                                    </td>
+                                    <th><?php echo $this->lang->line('case_id'); ?></th>
+                                    <td><?php echo !empty($result->case_reference_id) ? html_escape($result->case_reference_id) : '-'; ?></td>
                                     <th><?php echo $this->lang->line('patient_name'); ?></th>
                                     <td><?php echo ($result->patient_name ? composePatientName($result->patient_name, $result->id) : '-'); ?>
                                     </td>
+                                </tr>
+                                <tr>
+                                    <th><?php echo $this->lang->line('date'); ?></th>
+                                    <td><?php echo !empty($result->pres_created_at) ? $this->customlib->YYYYMMDDHisTodateFormat($result->pres_created_at) : '-'; ?>
+                                    </td>
+                                    <th><?php echo $this->lang->line('ipd_no'); ?></th>
+                                    <td><?php echo !empty($result->ipd_id) ? $this->customlib->getSessionPrefixByType('ipd_no') . $result->ipd_id : '-'; ?></td>
+                                    <th></th>
+                                    <td></td>
                                 </tr>
                                 <tr>
                                     <th><?php echo $this->lang->line('age'); ?></th>

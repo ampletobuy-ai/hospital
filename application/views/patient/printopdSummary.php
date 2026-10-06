@@ -38,6 +38,12 @@ $currency_symbol = $this->customlib->getHospitalCurrencyFormat();
                         <tr>
                             <th width="15%"><?php echo $this->lang->line('name'); ?></th>
                             <td width="20%"><?php echo $result["patient_name"]; ?></td>
+                            <th width="15%"><?php echo $this->lang->line('case_id'); ?></th>
+                            <td width="20%" class="text-left"><?php echo !empty($result['case_reference_id']) ? html_escape($result['case_reference_id']) : '-'; ?></td>
+                            <th width="10%"><?php echo $this->lang->line('gender'); ?></th>
+                            <td width="20%" class="text-left"><?php echo $result["gender"]; ?></td>
+                        </tr>
+                        <tr>
                             <th width="15%"><?php echo $this->lang->line('age'); ?></th>
                             <td width="20%" class="text-left"><?php
 if (!empty($result["age"])) {
@@ -48,8 +54,10 @@ if (!empty($result['month'])) {
 }?>
 
                             </td>
-                            <th width="10%"><?php echo $this->lang->line('gender'); ?></th>
-                            <td width="20%" class="text-left"><?php echo $result["gender"]; ?></td>
+                            <th></th>
+                            <td></td>
+                            <th></th>
+                            <td></td>
                         </tr>
                          <tr>
                             <th width="20%"><?php echo $this->lang->line('admission_date') ; ?></th>

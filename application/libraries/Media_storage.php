@@ -53,11 +53,16 @@ class Media_storage
     public function getImageURL($file_name)
     {
         if (!IsNullOrEmptyString($file_name)) {
+            $file_name = (string) $file_name;
             if (strpos($file_name, 'http') === 0) {
-                return $file_name . img_time();
+                return (strpos($file_name, '?') === false) ? ($file_name . img_time()) : $file_name;
             }
-            $download_file_name = $this->_CI->customlib->getBaseUrl() . $file_name . img_time();
-            return $download_file_name;
+            // Normalize "./uploads/..." and leading slashes from legacy DB/settings paths.
+            $file_name = ltrim(str_replace('\\', '/', $file_name), '/');
+            if (strpos($file_name, './') === 0) {
+                $file_name = substr($file_name, 2);
+            }
+            return $this->_CI->customlib->getBaseUrl() . $file_name . img_time();
         }
         return null;
     }
