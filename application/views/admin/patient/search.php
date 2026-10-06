@@ -1200,7 +1200,8 @@ $genderList      = $this->customlib->getGender_Patient();
                     $("#blood_group").text(res.blood_group_name);
                     $("#allergies").text(res.known_allergies);
                     
-                    $("#image").attr("src",res.image+ '<?php echo img_time(); ?>');
+                    // res.image already includes cache-buster from media_storage->getImageURL()
+                    $("#image").attr("src", res.image);
 
                     if(!res.getbarcode){
                         $("#show_barcode").addClass('d-none');

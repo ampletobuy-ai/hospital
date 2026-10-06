@@ -128,7 +128,7 @@ class Antenatal_model extends MY_Model
         $field_variable = (empty($field_var_array))? "": ",".implode(',', $field_var_array);
         $custom_field_column = (empty($custom_field_column_array))? "": ",".implode(',', $custom_field_column_array);
 
-        $this->db->select("patients.*,primary_examine.*,antenatal_examine.*,blood_bank_products.name as blood_group ,primary_examine.date as antenatal_date,primary_examine.weight as antenatal_weight,primary_examine.height as antenatal_height, visit_details.*,primary_examine.id as antenatal_id,antenatal_examine.id as anteexam_id ".$field_variable);
+        $this->db->select("patients.*,primary_examine.*,antenatal_examine.*,blood_bank_products.name as blood_group ,primary_examine.date as antenatal_date,primary_examine.weight as antenatal_weight,primary_examine.height as antenatal_height, visit_details.*,opd_details.case_reference_id,primary_examine.id as antenatal_id,antenatal_examine.id as anteexam_id ".$field_variable);
         $this->db->from("antenatal_examine");
           $this->db->join("primary_examine", "primary_examine.id = antenatal_examine.primary_examine_id","inner");
            $this->db->join("visit_details", "visit_details.id = primary_examine.visit_details_id","left");

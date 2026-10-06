@@ -240,9 +240,11 @@ class Operationtheatre_model extends MY_Model {
     }
 
     public function getBillDetails($id) {
-        $this->db->select('operation_theatre.*,patients.patient_name,staff.name as doctorname,staff.surname as doctorsurname');
+        $this->db->select('operation_theatre.*,patients.patient_name,staff.name as doctorname,staff.surname as doctorsurname,IFNULL(opd_details.case_reference_id, ipd_details.case_reference_id) as case_reference_id,opd_details.case_reference_id as opd_case_id,ipd_details.case_reference_id as ipd_case_id');
         $this->db->join('patients', 'patients.id = operation_theatre.patient_id');
         $this->db->join('staff', 'staff.id = operation_theatre.consultant_doctor', "inner");
+        $this->db->join('opd_details', 'opd_details.id = operation_theatre.opd_details_id', 'left');
+        $this->db->join('ipd_details', 'ipd_details.id = operation_theatre.ipd_details_id', 'left');
         $this->db->where('operation_theatre.id', $id);
         $query = $this->db->get('operation_theatre');
         $result = $query->row_array();

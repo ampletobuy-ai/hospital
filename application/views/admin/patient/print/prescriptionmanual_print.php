@@ -39,10 +39,16 @@ $print_date = date($this->customlib->getHospitalDateFormat(true, false));
                     <tr>
                         <th><?php echo $this->lang->line('opd_no'); ?></th>
                         <td><?php echo ($result['opd_details_id'] ? $opd_prefix . $result['opd_details_id'] : '-'); ?></td>
+                        <th><?php echo $this->lang->line('case_id'); ?></th>
+                        <td><?php echo !empty($result['case_reference_id']) ? html_escape($result['case_reference_id']) : '-'; ?></td>
                         <th><?php echo $this->lang->line('checkup_id'); ?></th>
                         <td><?php echo ($visitid ? $this->customlib->getSessionPrefixByType('checkup_id') . $visitid : '-'); ?></td>
+                    </tr>
+                    <tr>
                         <th><?php echo $this->lang->line('date'); ?></th>
                         <td><?php echo date($this->customlib->getHospitalDateFormat(true, true)); ?></td>
+                        <th></th><td></td>
+                        <th></th><td></td>
                     </tr>
                     <tr>
                         <th><?php echo $this->lang->line('patient_name'); ?></th>

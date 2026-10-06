@@ -42,32 +42,40 @@ include(APPPATH . 'views/admin/shared/_print_css.php');
                                     <th><?php echo $this->lang->line('prescription'); ?></th>
                                     <td><?php echo $this->customlib->getSessionPrefixByType('opd_prescription') . ($result->prescription_id ?: '-'); ?>
                                     </td>
-                                    <th><?php echo $this->lang->line('date'); ?></th>
-                                    <td><?php echo !empty($result->pres_created_at) ? $this->customlib->YYYYMMDDHisTodateFormat($result->pres_created_at) : '-'; ?>
-                                    </td>
                                     <th><?php echo $this->lang->line('opd_id'); ?></th>
                                     <td><?php echo $this->customlib->getSessionPrefixByType('opd_no') . ($result->opd_detail_id ?: '-'); ?>
                                     </td>
+                                    <th><?php echo $this->lang->line('case_id'); ?></th>
+                                    <td><?php echo !empty($result->case_reference_id) ? html_escape($result->case_reference_id) : '-'; ?></td>
                                 </tr>
                                 <tr>
                                     <th><?php echo $this->lang->line('checkup_id'); ?></th>
                                     <td><?php echo $this->customlib->getSessionPrefixByType('checkup_id') . ($result->visitid ?: '-'); ?>
                                     </td>
+                                    <th><?php echo $this->lang->line('date'); ?></th>
+                                    <td><?php echo !empty($result->pres_created_at) ? $this->customlib->YYYYMMDDHisTodateFormat($result->pres_created_at) : '-'; ?>
+                                    </td>
                                     <th><?php echo $this->lang->line('patient_name'); ?></th>
                                     <td><?php echo ($result->patient_name ?: '-') . ' (' . ($result->id ?: '-') . ')'; ?>
                                     </td>
+                                </tr>
+                                <tr>
                                     <th><?php echo $this->lang->line('age'); ?></th>
                                     <td><?php echo $this->customlib->get_patient_current_age($result->id) ?: '-'; ?>
                                     </td>
-                                </tr>
-                                <tr>
                                     <th><?php echo $this->lang->line('gender'); ?></th>
                                     <td><?php echo isset($result->gender) ? $this->lang->line(strtolower($result->gender)) : '-'; ?>
                                     </td>
                                     <th><?php echo $this->lang->line('blood_group'); ?></th>
                                     <td><?php echo ($result->blood_group_name ?: '-'); ?></td>
+                                </tr>
+                                <tr>
                                     <th><?php echo $this->lang->line('phone'); ?></th>
                                     <td><?php echo ($result->mobileno ?: '-'); ?></td>
+                                    <th></th>
+                                    <td></td>
+                                    <th></th>
+                                    <td></td>
                                 </tr>
                                 
                                 <tr>

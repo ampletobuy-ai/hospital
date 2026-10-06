@@ -31,30 +31,32 @@ include(APPPATH . 'views/admin/shared/_print_css.php');
                         <tr>
                             <th><?php echo $this->lang->line('opd_id'); ?></th>
                             <td><?php echo $this->customlib->getSessionPrefixByType('opd_no') . ($result->opd_details_id ?: '-'); ?></td>
+                            <th><?php echo $this->lang->line('case_id'); ?></th>
+                            <td><?php echo !empty($result->case_reference_id) ? html_escape($result->case_reference_id) : '-'; ?></td>
+                        </tr>
+                        <tr>
                             <th><?php echo $this->lang->line('checkup_id'); ?></th>
                             <td><?php echo $this->customlib->getSessionPrefixByType('checkup_id') . ($result->visit_details_id ?: '-'); ?></td>
-                        </tr>
-                        <tr>
                             <th><?php echo $this->lang->line('patient_name'); ?></th>
                             <td><?php echo ($result->patient_name ?: '-') . ($result->id ? ' (' . $result->id . ')' : ''); ?></td>
+                        </tr>
+                        <tr>
                             <th><?php echo $this->lang->line('gender'); ?></th>
                             <td><?php echo ($result->gender ? $this->lang->line(strtolower($result->gender)) : '-'); ?></td>
-                        </tr>
-                        <tr>
                             <th><?php echo $this->lang->line('age'); ?></th>
                             <td><?php echo ($this->customlib->getPatientAge($result->age, $result->month, $result->day) ?: '-'); ?></td>
+                        </tr>
+                        <tr>
                             <th><?php echo $this->lang->line('blood_group'); ?></th>
                             <td><?php echo ($result->blood_group ?: '-'); ?></td>
-                        </tr>
-                        <tr>
                             <th><?php echo $this->lang->line('phone'); ?></th>
                             <td><?php echo ($result->mobileno ?: '-'); ?></td>
-                            <th><?php echo $this->lang->line('email'); ?></th>
-                            <td><?php echo ($result->email ?: '-'); ?></td>
                         </tr>
                         <tr>
+                            <th><?php echo $this->lang->line('email'); ?></th>
+                            <td><?php echo ($result->email ?: '-'); ?></td>
                             <th><?php echo $this->lang->line('known_allergies'); ?></th>
-                            <td colspan="3"><?php echo ($result->known_allergies ?: '-'); ?></td>
+                            <td><?php echo ($result->known_allergies ?: '-'); ?></td>
                         </tr>
                         <?php if (!empty($result->antenatal_date)) { ?>
                         <tr>

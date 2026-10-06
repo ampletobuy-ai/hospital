@@ -33,20 +33,24 @@ $currency_symbol = $this->customlib->getHospitalCurrencyFormat();
                         <tr>
                             <th width="25%"><?php echo $this->lang->line("patient_name"); ?></th>
                             <td width="25%"><?php echo $result['patient_name'] ?> (<?php echo $result['patient_unique_id'] ?>)</td>
-                            <th width="25%"><?php echo $this->lang->line("age"); ?></th>
-                            <td><?php  echo $this->customlib->getPatientAge($result['age'],$result['month'],$result['day']); ?></td>
-                        </tr>
-                        <tr>                            
-                            <th width="25%"><?php echo $this->lang->line("gender"); ?></th>
-                            <td><?php echo $this->lang->line(strtolower($result['gender'])) ?></td>
-                            <th width="25%"><?php echo $this->lang->line("blood_group"); ?></th>
-                            <td><?php echo $result['blood_group']; ?></td>
+                            <th width="25%"><?php echo $this->lang->line("case_id"); ?></th>
+                            <td width="25%"><?php echo !empty($result['case_reference_id']) ? html_escape($result['case_reference_id']) : '-'; ?></td>
                         </tr>
                         <tr>
+                            <th width="25%"><?php echo $this->lang->line("age"); ?></th>
+                            <td><?php  echo $this->customlib->getPatientAge($result['age'],$result['month'],$result['day']); ?></td>
+                            <th width="25%"><?php echo $this->lang->line("gender"); ?></th>
+                            <td><?php echo $this->lang->line(strtolower($result['gender'])) ?></td>
+                        </tr>
+                        <tr>
+                            <th width="25%"><?php echo $this->lang->line("blood_group"); ?></th>
+                            <td><?php echo $result['blood_group']; ?></td>
                             <th width="25%"><?php echo $this->lang->line("phone"); ?></th>
-                            <td width="25%"><?php echo $result['mobileno']; ?></td>   
+                            <td width="25%"><?php echo $result['mobileno']; ?></td>
+                        </tr>
+                        <tr>
                             <th width="25%"><?php echo $this->lang->line("email"); ?></th>
-                            <td width="25%"><?php echo $result['email'] ?></td>
+                            <td width="25%" colspan="3"><?php echo $result['email'] ?></td>
                         </tr> 
                     </table>
                     <hr>                   

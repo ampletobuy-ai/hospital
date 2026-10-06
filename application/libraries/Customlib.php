@@ -22,18 +22,39 @@ class Customlib
 
     public function getBaseUrl()
     {
-        if($this->CI->session->has_userdata('hospitaladmin')){
+        // Always keep a trailing slash so relative upload paths concatenate cleanly.
+        $live = rtrim((string) base_url(), '/') . '/';
+        $stored = '';
 
-            $admin    = $this->CI->session->userdata('hospitaladmin');
-    
-            $base_url = $admin['db_array']['base_url'];
-            if ($base_url == "") {
-                $base_url = base_url();
+        if ($this->CI->session->has_userdata('hospitaladmin')) {
+            $admin = $this->CI->session->userdata('hospitaladmin');
+            if (!empty($admin['db_array']['base_url'])) {
+                $stored = trim((string) $admin['db_array']['base_url']);
             }
-        }else{
-            $base_url = base_url();
         }
-        return $base_url;
+
+        if ($stored === '') {
+            return $live;
+        }
+
+        $stored = rtrim($stored, '/') . '/';
+        $storedHost = parse_url($stored, PHP_URL_HOST);
+        $liveHost   = parse_url($live, PHP_URL_HOST);
+
+        // Stale sch_settings.base_url (e.g. http://localhost/hospital/ after migrate/clone)
+        // breaks patient photos, barcode/QR, and print headers on the live host.
+        if ($storedHost === null || $liveHost === null
+            || strcasecmp((string) $storedHost, (string) $liveHost) !== 0) {
+            return $live;
+        }
+
+        $storedScheme = parse_url($stored, PHP_URL_SCHEME);
+        $liveScheme   = parse_url($live, PHP_URL_SCHEME);
+        if ($liveScheme === 'https' && $storedScheme === 'http') {
+            return $live;
+        }
+
+        return $stored;
     }
 
     public function getSessionPrefixByType($type = "")

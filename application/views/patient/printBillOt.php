@@ -37,6 +37,13 @@ include(APPPATH . 'views/admin/shared/_print_css.php');
                                 <th><?php echo $this->lang->line('patient') . ' ' . $this->lang->line('name'); ?></th>
                                 <td><?php echo ($result['patient_name'] ?: '-'); ?></td>
                             </tr>
+                            <tr>
+                                <th><?php echo $this->lang->line('case_id'); ?></th>
+                                <td><?php
+                                    $ot_case_id = !empty($result['case_reference_id']) ? $result['case_reference_id'] : (!empty($result['opd_case_id']) ? $result['opd_case_id'] : (!empty($result['ipd_case_id']) ? $result['ipd_case_id'] : ''));
+                                    echo $ot_case_id !== '' ? html_escape($ot_case_id) : '-';
+                                ?></td>
+                            </tr>
                         </table>
 
                         <table class="sh-print-info-table w-50" >
