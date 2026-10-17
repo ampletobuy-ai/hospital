@@ -8234,6 +8234,25 @@ This Function is used to Import Multiple Patient Records
         echo json_encode($agr_array);
     }
 
+    public function getpatientdob()
+    {
+        $year  = (int) $this->input->post('year');
+        $month = (int) $this->input->post('month');
+        $day   = (int) $this->input->post('day');
+
+        $result = array('dob' => '', 'dob_ymd' => '');
+
+        if ($year > 0 || $month > 0 || $day > 0) {
+            $today = new DateTime('today');
+            $today->sub(new DateInterval('P' . $year . 'Y' . $month . 'M' . $day . 'D'));
+            $dob_ymd           = $today->format('Y-m-d');
+            $result['dob']     = $this->customlib->YYYYMMDDTodateFormat($dob_ymd);
+            $result['dob_ymd'] = $dob_ymd;
+        }
+
+        echo json_encode($result);
+    }
+
     public function findingbycategory()
     {       
         $id                   = $_REQUEST['finding_id'];       

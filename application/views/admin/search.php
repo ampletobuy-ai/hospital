@@ -1044,8 +1044,15 @@ $marital_status = $this->config->item('marital_status');
     }
 </script>
 <script type="text/javascript">
-    $(".patient_dob").on('changeDate', function(event, date) {
-        var birth_date = $(".patient_dob").val();
+    var updatingPatientDobFromAge = false;
+    var patientAgeDobTimer = null;
+
+    $("#formaddpa .patient_dob").on('changeDate', function(event, date) {
+        if (updatingPatientDobFromAge) {
+            return;
+        }
+
+        var birth_date = $("#formaddpa .patient_dob").val();
         $.ajax({
             url: '<?php echo base_url(); ?>admin/patient/getpatientage',
             type: "POST",
@@ -1054,11 +1061,39 @@ $marital_status = $this->config->item('marital_status');
                 birth_date: birth_date
             },
             success: function(data) {
-                $('.patient_age_year').val(data.year);
-                $('.patient_age_month').val(data.month);
-                $('.patient_age_day').val(data.day);
+                $('#formaddpa .patient_age_year').val(data.year);
+                $('#formaddpa .patient_age_month').val(data.month);
+                $('#formaddpa .patient_age_day').val(data.day);
             }
         });
+    });
+
+    $(document).on('input', '#formaddpa .patient_age_year, #formaddpa .patient_age_month, #formaddpa .patient_age_day', function () {
+        clearTimeout(patientAgeDobTimer);
+        patientAgeDobTimer = setTimeout(function () {
+            var year  = $('#formaddpa .patient_age_year').val() || 0;
+            var month = $('#formaddpa .patient_age_month').val() || 0;
+            var day   = $('#formaddpa .patient_age_day').val() || 0;
+
+            $.ajax({
+                url: '<?php echo base_url(); ?>admin/patient/getpatientdob',
+                type: "POST",
+                dataType: "json",
+                data: {year: year, month: month, day: day},
+                success: function (data) {
+                    updatingPatientDobFromAge = true;
+                    $('#formaddpa .patient_dob').val(data.dob || '');
+                    if (typeof SHPicker !== 'undefined' && data.dob_ymd) {
+                        var parts = data.dob_ymd.split('-');
+                        var localDob = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+                        SHPicker.setDate('#formaddpa .patient_dob', localDob);
+                    }
+                    setTimeout(function () {
+                        updatingPatientDobFromAge = false;
+                    }, 50);
+                }
+            });
+        }, 250);
     });
 </script>
 <script>
