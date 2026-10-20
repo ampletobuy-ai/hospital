@@ -64,13 +64,9 @@ try {
     foreach ($tenants as $sub) {
         $tid = (string) $sub['tenant_id'];
         $dbName = $prefix . $tid;
+        // Always resolve from hospital_portal.php for plan_code (not stale signup snapshot).
         $payload = array('plan_code' => (string) ($sub['plan_code'] ?? ''));
-        if (!empty($sub['metadata'])) {
-            $meta = json_decode((string) $sub['metadata'], true);
-            if (is_array($meta) && isset($meta['features']) && is_array($meta['features'])) {
-                $payload['features'] = $meta['features'];
-            }
-        }
+        $features = hospital_cli_resolve_plan_features($payload);
 
         $mysqli = @new mysqli($defaultCfg['hostname'], $defaultCfg['username'], $defaultCfg['password'], $dbName);
         if ($mysqli->connect_error) {
@@ -80,6 +76,26 @@ try {
 
         hospital_cli_sync_plan_permissions($mysqli, $payload, $tid);
         $mysqli->close();
+
+        if (is_array($features)) {
+            $meta = array();
+            if (!empty($sub['metadata'])) {
+                $decoded = json_decode((string) $sub['metadata'], true);
+                if (is_array($decoded)) {
+                    $meta = $decoded;
+                }
+            }
+            $meta['features'] = $features;
+            $metaJson = json_encode($meta);
+            $now = date('Y-m-d H:i:s');
+            $upd = $central->prepare('UPDATE tenant_subscriptions SET metadata = ?, updated_at = ? WHERE product_code = ? AND tenant_id = ?');
+            if ($upd) {
+                $upd->bind_param('ssss', $metaJson, $now, $productCode, $tid);
+                $upd->execute();
+                $upd->close();
+            }
+        }
+
         echo "synced {$tid} ({$payload['plan_code']})\n";
         $ok++;
     }
