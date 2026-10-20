@@ -104,7 +104,13 @@ $feature_cell = function ($value) {
             <li>Multi-branch</li>
           <?php elseif (!empty($plan['features']['pharmacy'])): ?>
             <li>Pharmacy + laboratory</li>
+            <?php if (!empty($plan['features']['tpa_insurance'])): ?>
+            <li>TPA / insurance &amp; advanced reports</li>
+            <?php endif; ?>
           <?php else: ?>
+            <?php if (!empty($plan['features']['doctor_commission']) || !empty($plan['features']['whatsapp_sms'])): ?>
+            <li>Doctor commission &amp; WhatsApp/SMS</li>
+            <?php endif; ?>
             <li>Basic inventory &amp; reports</li>
           <?php endif; ?>
         </ul>
