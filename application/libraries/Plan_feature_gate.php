@@ -114,6 +114,8 @@ class Plan_feature_gate
         'income_report',
         'expense_report',
         'staff_attendance_report',
+        // Starter includes doctor_commission → referral report must be allowlisted.
+        'referral_report',
     );
 
     /** Report-like short_codes that do not end with _report. */
@@ -500,11 +502,10 @@ class Plan_feature_gate
             'tpa_report' => 'tpa_insurance',
             'referral_report' => 'doctor_commission',
         );
+        // Feature-owned reports follow their feature flag (e.g. referral_report on
+        // Starter when doctor_commission is on), not the basic/advanced reports tier.
         if (isset($reportMap[$code])) {
-            if (!$this->can($reportMap[$code])) {
-                return false;
-            }
-            return $this->reportAllowed($code);
+            return $this->can($reportMap[$code]);
         }
 
         if (!$this->inventoryPermissionAllowed($code)) {
