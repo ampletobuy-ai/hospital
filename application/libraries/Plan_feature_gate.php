@@ -5,8 +5,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 /**
  * Runtime plan feature gate for SaaS tenants.
  *
- * Effective features come from tenant_subscriptions.metadata.features when present,
- * otherwise from hospital_plans[plan_code].features. Non-tenant / no subscription = allow all.
+ * Effective features come from hospital_plans[plan_code].features, merged over any
+ * tenant_subscriptions.metadata.features snapshot (plan catalog wins on shared keys).
+ * Non-tenant / no subscription = allow all.
  */
 class Plan_feature_gate
 {
@@ -355,7 +356,9 @@ class Plan_feature_gate
             ? $metadata['features']
             : array();
 
-        $this->features = array_merge($defaults, $stored);
+        // Plan catalog overrides signup snapshot so expanding a plan (e.g. Starter)
+        // takes effect without rewriting every subscription row.
+        $this->features = array_merge($stored, $defaults);
         $this->plan_code = $planCode;
         $this->subscription = $subscription;
     }

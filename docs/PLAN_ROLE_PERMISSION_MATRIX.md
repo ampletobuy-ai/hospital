@@ -45,9 +45,9 @@ Legend: ✓ enabled · — disabled · text = tiered capability
 | `laboratory` | — | ✓ | ✓ |
 | `inventory` | basic | advanced | advanced |
 | `tpa_insurance` | — | ✓ | ✓ |
-| `doctor_commission` | — | ✓ | ✓ |
+| `doctor_commission` | ✓ | ✓ | ✓ |
 | `reports` | basic | advanced | advanced |
-| `whatsapp_sms` | — | ✓ | ✓ |
+| `whatsapp_sms` | ✓ | ✓ | ✓ |
 | `multi_branch` | — | — | ✓ |
 | `api_integration` | — | — | ✓ |
 | `customization` | limited | standard | advanced |
@@ -261,7 +261,7 @@ into `tenant_subscriptions.metadata` (and/or a dedicated JSON column).
 Add something like `Plan_feature_gate`:
 
 1. Load subscription for `session.tenant_id`  
-2. Merge `metadata.features` with `hospital_portal.php` defaults for `plan_code`  
+2. Merge signup `metadata.features` under `hospital_portal.php` defaults for `plan_code` (catalog wins)  
 3. Expose helpers: `can('ipd')`, `can('pharmacy')`, `reportAllowed('ipd_report')`
 
 ### 9.3 Apply at three layers
