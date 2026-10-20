@@ -3688,37 +3688,47 @@ class Patient_model extends MY_Model
         return $query->row_array();
     }
 
-    public function checkmobileemail($mobileno, $email)
+    public function checkmobileemail($mobileno, $email, $exclude_id = null)
     {
-        $query = $this->db->query('select * from patients where mobileno= "' . $mobileno . '" and  email="' . $email . '"');
-        $result = $query->result_array();
-        if (!empty($result)) {
-            return 1;
-        } else {
-            return 0;
+        $this->db->from('patients');
+        $this->db->where('mobileno', $mobileno);
+        $this->db->where('email', $email);
+        if (!empty($exclude_id)) {
+            $this->db->where('id !=', $exclude_id);
         }
+        return ($this->db->count_all_results() > 0) ? 1 : 0;
     }
 
-    public function checkmobilenumber($mobileno)
+    public function checkmobilenumber($mobileno, $exclude_id = null)
     {
-        $query  = $this->db->query('select * from patients where mobileno= "' . $mobileno . '" ');
-        $result = $query->result_array();
-        if (!empty($result)) {
-            return 1;
-        } else {
-            return 0;
+        $this->db->from('patients');
+        $this->db->where('mobileno', $mobileno);
+        if (!empty($exclude_id)) {
+            $this->db->where('id !=', $exclude_id);
         }
+        return ($this->db->count_all_results() > 0) ? 1 : 0;
     }
 
-    public function checkemail($email)
+    public function getPatientsByMobile($mobileno, $exclude_id = null)
     {
-        $query  = $this->db->query('select * from patients where email= "' . $email . '"');
-        $result = $query->result_array();
-        if (!empty($result)) {
-            return 1;
-        } else {
-            return 0;
+        $this->db->select('id, patient_name, mobileno');
+        $this->db->from('patients');
+        $this->db->where('mobileno', $mobileno);
+        if (!empty($exclude_id)) {
+            $this->db->where('id !=', $exclude_id);
         }
+        $this->db->order_by('id', 'asc');
+        return $this->db->get()->result_array();
+    }
+
+    public function checkemail($email, $exclude_id = null)
+    {
+        $this->db->from('patients');
+        $this->db->where('email', $email);
+        if (!empty($exclude_id)) {
+            $this->db->where('id !=', $exclude_id);
+        }
+        return ($this->db->count_all_results() > 0) ? 1 : 0;
     }
 
     public function delete_ipddoctor($ipdid)

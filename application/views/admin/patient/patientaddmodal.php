@@ -186,42 +186,18 @@ $marital_status = $this->config->item('marital_status');
 <script type="text/javascript">
     $(document).ready(function (e) {
         $("#formaddpa").on('submit', (function (e) {
-        let clicked_submit_btn= $(this).closest('form').find(':submit');
             e.preventDefault();
-            $.ajax({
+            var clicked_submit_btn = $(this).closest('form').find(':submit');
+            submitPatientFormWithDuplicateConfirm({
                 url: '<?php echo base_url(); ?>admin/patient/addpatient',
-                type: "POST",
-                data: new FormData(this),
-                dataType: 'json',
-                contentType: false,
-                cache: false,
-                processData: false,
-                 beforeSend: function() {
-                 clicked_submit_btn.btnLoading() ;
-
-                },
-                success: function (data) {
-                    if (data.status == "fail") {
-                        var message = "";
-                        $.each(data.error, function (index, value) {
-                            message += value;
-                        });
-                        errorMsg(message);
-                    } else {
-                        successMsg(data.message);
-
-                        shModal("myModalpa").toggle();
-                        addappointmentModal(data.id, (typeof patientParentModal !== 'undefined' ? patientParentModal : 'myModal'));
-                    }
-                        clicked_submit_btn.btnReset();
-                },
-                 error: function(xhr) {
-        alert('<?php echo $this->lang->line("error_occurred_please_try_again"); ?>');
-         clicked_submit_btn.btnReset() ;
-             },
-    complete: function() {
-     clicked_submit_btn.btnReset() ;
-    }
+                form: this,
+                $btn: clicked_submit_btn,
+                errorMessage: '<?php echo $this->lang->line("error_occurred_please_try_again"); ?>',
+                onSuccess: function (data) {
+                    successMsg(data.message);
+                    shModal("myModalpa").toggle();
+                    addappointmentModal(data.id, (typeof patientParentModal !== 'undefined' ? patientParentModal : 'myModal'));
+                }
             });
         }));
     });

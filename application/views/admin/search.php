@@ -557,38 +557,35 @@ $marital_status = $this->config->item('marital_status');
 
     $(document).ready(function(e) {
         $("#formeditpa").on('submit', (function(e) {
-            $("#formeditpabtn").btnLoading();
             e.preventDefault();
-            $.ajax({
+            submitPatientFormWithDuplicateConfirm({
                 url: '<?php echo base_url(); ?>admin/patient/update',
-                type: "POST",
-                data: new FormData(this),
-                dataType: 'json',
-                contentType: false,
-                cache: false,
-                processData: false,
-                success: function(data) {
-                    if (data.status == "fail") {
-                        var message = "";
-                        $.each(data.error, function(index, value) {
-                            message += value;
-                        });
-                        errorMsg(message);
-                    } else {
-                        successMsg(data.message);
-                        window.location.reload(true);
-                    }
-                    $("#formeditpabtn").btnReset();
-                },
-                error: function() {
-
+                form: this,
+                $btn: $("#formeditpabtn"),
+                errorMessage: '<?php echo $this->lang->line("error_occurred_please_try_again"); ?>',
+                onSuccess: function(data) {
+                    successMsg(data.message);
+                    window.location.reload(true);
                 }
             });
         }));
     });
 
     function delete_record(id) {
-        if (confirm(<?php echo "'" . $this->lang->line('patient_delete_alert_message') . "'"; ?>)) {
+        Swal.fire({
+            title: '<?php echo $this->lang->line('delete_confirm'); ?>',
+            text: '<?php echo $this->lang->line('patient_delete_alert_message'); ?>',
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<?php echo $this->lang->line('delete'); ?>',
+            cancelButtonText: '<?php echo $this->lang->line('cancel'); ?>',
+            heightAuto: false
+        }).then(function(result) {
+            if (!result.value) {
+                return;
+            }
             $.ajax({
                 url: '<?php echo base_url(); ?>admin/patient/deletePatient',
                 type: "POST",
@@ -601,8 +598,8 @@ $marital_status = $this->config->item('marital_status');
                     shModal("myModal").hide();
                     table.ajax.reload();
                 }
-            })
-        }
+            });
+        });
     }
 
     function patient_deactive(id) {
@@ -679,7 +676,24 @@ $marital_status = $this->config->item('marital_status');
         $('input:checkbox.enable_delete').each(function() {
             (this.checked ? obj.push($(this).val()) : "");
         });
-        if (confirm('<?php echo $this->lang->line('patient_delete_alert_message'); ?>')) {
+        if (!obj.length) {
+            errorMsg('<?php echo $this->lang->line('no_record_selected'); ?>');
+            return;
+        }
+        Swal.fire({
+            title: '<?php echo $this->lang->line('delete_confirm'); ?>',
+            text: '<?php echo $this->lang->line('patient_delete_alert_message'); ?>',
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<?php echo $this->lang->line('delete'); ?>',
+            cancelButtonText: '<?php echo $this->lang->line('cancel'); ?>',
+            heightAuto: false
+        }).then(function(result) {
+            if (!result.value) {
+                return;
+            }
             $.ajax({
                 url: base_url + 'admin/patient/bulk_delete',
                 type: "POST",
@@ -709,10 +723,9 @@ $marital_status = $this->config->item('marital_status');
                 },
                 complete: function() {
                     $this.btnReset();
-
                 }
             });
-        }
+        });
     });
 </script>
 <script type="text/javascript">
@@ -988,38 +1001,16 @@ $marital_status = $this->config->item('marital_status');
 <script type="text/javascript">
     $(document).ready(function(e) {
         $("#formaddpa").on('submit', (function(e) {
-            let clicked_submit_btn = $(this).closest('form').find(':submit');
             e.preventDefault();
-            $.ajax({
+            var clicked_submit_btn = $(this).closest('form').find(':submit');
+            submitPatientFormWithDuplicateConfirm({
                 url: '<?php echo base_url(); ?>admin/patient/addpatient',
-                type: "POST",
-                data: new FormData(this),
-                dataType: 'json',
-                contentType: false,
-                cache: false,
-                processData: false,
-                beforeSend: function() {
-                    clicked_submit_btn.btnLoading();
-                },
-                success: function(data) {
-                    if (data.status == "fail") {
-                        var message = "";
-                        $.each(data.error, function(index, value) {
-                            message += value;
-                        });
-                        errorMsg(message);
-                    } else {
-                        successMsg(data.message);
-                        window.location.reload(true);
-                    }
-                    clicked_submit_btn.btnReset();
-                },
-                error: function(xhr) { // if error occured
-                    alert("Error occured.please try again");
-                    clicked_submit_btn.btnReset();
-                },
-                complete: function() {
-                    clicked_submit_btn.btnReset();
+                form: this,
+                $btn: clicked_submit_btn,
+                errorMessage: '<?php echo $this->lang->line("error_occurred_please_try_again"); ?>',
+                onSuccess: function(data) {
+                    successMsg(data.message);
+                    window.location.reload(true);
                 }
             });
         }));

@@ -44,6 +44,110 @@
 }(jQuery));
 </script>
 
+<!-- Patient save: soft-confirm when mobile number already belongs to another patient -->
+<script>
+window.submitPatientFormWithDuplicateConfirm = function(options) {
+    var formEl = options.form;
+    var $btn = options.$btn;
+    var url = options.url;
+    var onSuccess = options.onSuccess;
+    var onFail = options.onFail;
+    var errorFallback = options.errorMessage || 'Error occurred, please try again';
+    var continueLabel = <?php echo json_encode($this->lang->line('continue')); ?>;
+    var cancelLabel = <?php echo json_encode($this->lang->line('cancel')); ?>;
+    var defaultTitle = <?php echo json_encode($this->lang->line('mobile_number_duplicate_confirm')); ?>;
+
+    function askDuplicateConfirm(data, onConfirm) {
+        var title = data.title || defaultTitle;
+        var text = data.message || '';
+        if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+            Swal.fire({
+                title: title,
+                text: text,
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: continueLabel,
+                cancelButtonText: cancelLabel,
+                heightAuto: false
+            }).then(function(result) {
+                if (result.value) {
+                    onConfirm();
+                }
+            });
+            return;
+        }
+        if (window.confirm(title + "\n\n" + text)) {
+            onConfirm();
+        }
+    }
+
+    function doSubmit(confirmed) {
+        var fd = new FormData(formEl);
+        if (confirmed) {
+            fd.append('confirm_duplicate_phone', '1');
+        }
+        if ($btn && $btn.btnLoading) {
+            $btn.btnLoading();
+        }
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: fd,
+            dataType: 'json',
+            contentType: false,
+            cache: false,
+            processData: false,
+            success: function(data) {
+                if (data && data.status === 'confirm_duplicate') {
+                    if ($btn && $btn.btnReset) {
+                        $btn.btnReset();
+                    }
+                    askDuplicateConfirm(data, function() {
+                        doSubmit(true);
+                    });
+                    return;
+                }
+                if (data && data.status === 'fail') {
+                    if (typeof onFail === 'function') {
+                        onFail(data);
+                    } else {
+                        var message = '';
+                        if (data.error) {
+                            $.each(data.error, function(index, value) {
+                                message += value;
+                            });
+                        }
+                        if (typeof errorMsg === 'function') {
+                            errorMsg(message || (data.message || ''));
+                        }
+                    }
+                    if ($btn && $btn.btnReset) {
+                        $btn.btnReset();
+                    }
+                    return;
+                }
+                if (typeof onSuccess === 'function') {
+                    onSuccess(data);
+                }
+                if ($btn && $btn.btnReset) {
+                    $btn.btnReset();
+                }
+            },
+            error: function() {
+                alert(errorFallback);
+                if ($btn && $btn.btnReset) {
+                    $btn.btnReset();
+                }
+            }
+        });
+    }
+
+    doSubmit(false);
+};
+</script>
+
 <!-- Sidebar toggle (collapse/expand) — persists state in localStorage -->
 <script>
 (function() {
