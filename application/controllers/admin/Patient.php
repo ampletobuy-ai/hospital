@@ -1117,14 +1117,8 @@ This Function is used to Add Patient
                 }
             }
 
-            if ($mobileno != "") {
-                $result = $this->patient_model->checkmobilenumber($mobileno);
-                if ($result == 1) {
-                    $msg   = array('number' => $this->lang->line('mobile_number_already_exist'));
-                    $array = array('status' => 'fail', 'error' => $msg, 'message' => '');
-                    echo json_encode($array);
-                    die;
-                }
+            if ($this->respondDuplicateMobileConfirm($mobileno)) {
+                return;
             }
 
             if ($email != "") {
@@ -4126,13 +4120,39 @@ This Function is used to Import Multiple Patient Records
             $dob               = $this->customlib->dateFormatToYYYYMMDD($dobdate);
             $blood_group       = $this->input->post('blood_group', TRUE);
             $as_of_date        = $this->patient_model->patientDetails($id);
+            $mobileno          = $this->input->post('contact', TRUE);
+            $email             = $this->input->post('email', TRUE);
+
+            if (($mobileno != "") && ($email != "")) {
+                $result = $this->patient_model->checkmobileemail($mobileno, $email, $id);
+                if ($result == 1) {
+                    $msg   = array('numberemail' => $this->lang->line('mobile_number_and_email_already_exist'));
+                    $array = array('status' => 'fail', 'error' => $msg, 'message' => '');
+                    echo json_encode($array);
+                    die;
+                }
+            }
+
+            if ($this->respondDuplicateMobileConfirm($mobileno, $id)) {
+                return;
+            }
+
+            if ($email != "") {
+                $result = $this->patient_model->checkemail($email, $id);
+                if ($result == 1) {
+                    $msg   = array('email' => $this->lang->line('email_already_exist'));
+                    $array = array('status' => 'fail', 'error' => $msg, 'message' => '');
+                    echo json_encode($array);
+                    die;
+                }
+            }
            
             $patient_data      = array(
                 'id'                    => $id,
                 'patient_name'          => $this->input->post('name', TRUE),
-                'mobileno'              => $this->input->post('contact', TRUE),
+                'mobileno'              => $mobileno,
                 'marital_status'        => $this->input->post('marital_status', TRUE),
-                'email'                 => $this->input->post('email', TRUE),
+                'email'                 => $email,
                 'dob'                   => $dob,
                 'gender'                => $this->input->post('gender', TRUE),
                 'guardian_name'         => $this->input->post('guardian_name', TRUE),
@@ -8214,6 +8234,46 @@ This Function is used to Import Multiple Patient Records
         $data['charge_payment_data']  = array_merge($opd_data, $ipd_data, $pharmacy_data, $pathology_data, $radiology_data, $ambulance_data, $bloodbank_data);
         $data['case_reference_id']    = $case_reference_id;
         $this->load->view('admin/patient/print/patientBillReport_print', $data);
+    }
+
+    /**
+     * Soft-warn when mobile already belongs to another patient.
+     * Returns true and echoes JSON if the client must confirm before continuing.
+     * Pass confirm_duplicate_phone=1 after reception confirms (e.g. relative visit).
+     */
+    private function respondDuplicateMobileConfirm($mobileno, $exclude_id = null)
+    {
+        if ($mobileno === "" || $mobileno === null) {
+            return false;
+        }
+
+        if ($this->input->post('confirm_duplicate_phone') == '1') {
+            return false;
+        }
+
+        $existing = $this->patient_model->getPatientsByMobile($mobileno, $exclude_id);
+        if (empty($existing)) {
+            return false;
+        }
+
+        $labels = array();
+        foreach ($existing as $patient) {
+            $labels[] = $patient['patient_name'] . ' (ID: ' . $patient['id'] . ')';
+        }
+
+        $message = sprintf(
+            $this->lang->line('mobile_number_already_used_continue'),
+            implode(', ', $labels)
+        );
+
+        echo json_encode(array(
+            'status'   => 'confirm_duplicate',
+            'title'    => $this->lang->line('mobile_number_duplicate_confirm'),
+            'message'  => $message,
+            'patients' => $existing,
+        ));
+
+        return true;
     }
 
     public function getpatientage()

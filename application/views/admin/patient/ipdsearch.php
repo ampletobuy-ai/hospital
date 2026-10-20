@@ -1027,27 +1027,15 @@ $genderList = $this->customlib->getGender();
     $(document).ready(function (e) {
         $("#formedit").on('submit', (function (e) {
             e.preventDefault();
-            $.ajax({
+            var $btn = $(this).find(':submit');
+            submitPatientFormWithDuplicateConfirm({
                 url: '<?php echo base_url(); ?>admin/patient/update',
-                type: "POST",
-                data: new FormData(this),
-                dataType: 'json',
-                contentType: false,
-                cache: false,
-                processData: false,
-                success: function (data) {
-                    if (data.status == "fail") {
-                        var message = "";
-                        $.each(data.error, function (index, value) {
-                            message += value;
-                        });
-                        errorMsg(message);
-                    } else {
-                        successMsg(data.message);
-                        window.location.reload(true);
-                    }
-                },
-                error: function () {
+                form: this,
+                $btn: $btn,
+                errorMessage: '<?php echo $this->lang->line("error_occurred_please_try_again"); ?>',
+                onSuccess: function (data) {
+                    successMsg(data.message);
+                    window.location.reload(true);
                 }
             });
         }));
@@ -1056,30 +1044,15 @@ $genderList = $this->customlib->getGender();
     /**/
     $(document).ready(function (e) {
         $("#formaddip").on('submit', (function (e) {
-            $("#formaddipbtn").btnLoading();
             e.preventDefault();
-            $.ajax({
+            submitPatientFormWithDuplicateConfirm({
                 url: '<?php echo base_url(); ?>admin/patient/addpatient',
-                type: "POST",
-                data: new FormData(this),
-                dataType: 'json',
-                contentType: false,
-                cache: false,
-                processData: false,
-                success: function (data) {
-                    if (data.status == "fail") {
-                        var message = "";
-                        $.each(data.error, function (index, value) {
-                            message += value;
-                        });
-                        errorMsg(message);
-                    } else {
-                        successMsg(data.message);
-                        window.location.reload(true);
-                    }
-                    $("#formaddipbtn").btnReset();
-                },
-                error: function () {
+                form: this,
+                $btn: $("#formaddipbtn"),
+                errorMessage: '<?php echo $this->lang->line("error_occurred_please_try_again"); ?>',
+                onSuccess: function (data) {
+                    successMsg(data.message);
+                    window.location.reload(true);
                 }
             });
         }));

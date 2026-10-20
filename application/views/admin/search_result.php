@@ -538,37 +538,35 @@ $bloodgroup = $this->config->item('bloodgroup');
 
     $(document).ready(function (e) {
         $("#formeditpa").on('submit', (function (e) {
-            $("#formeditpabtn").btnLoading();
             e.preventDefault();
-            $.ajax({
+            submitPatientFormWithDuplicateConfirm({
                 url: '<?php echo base_url(); ?>admin/patient/update',
-                type: "POST",
-                data: new FormData(this),
-                dataType: 'json',
-                contentType: false,
-                cache: false,
-                processData: false,
-                success: function (data) {
-                    if (data.status == "fail") {
-                        var message = "";
-                        $.each(data.error, function (index, value) {
-                            message += value;
-                        });
-                        errorMsg(message);
-                    } else {
-                        successMsg(data.message);
-                        window.location.reload(true);
-                    }
-                    $("#formeditpabtn").btnReset();
-                },
-                error: function () {
+                form: this,
+                $btn: $("#formeditpabtn"),
+                errorMessage: '<?php echo $this->lang->line("error_occurred_please_try_again"); ?>',
+                onSuccess: function (data) {
+                    successMsg(data.message);
+                    window.location.reload(true);
                 }
             });
         }));
     });
 	
     function delete_record(id) {
-        if (confirm(<?php echo "'" . $this->lang->line('delete_confirm') . "'"; ?>)) {
+        Swal.fire({
+            title: '<?php echo $this->lang->line('delete_confirm'); ?>',
+            text: '<?php echo $this->lang->line('patient_delete_alert_message'); ?>',
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<?php echo $this->lang->line('delete'); ?>',
+            cancelButtonText: '<?php echo $this->lang->line('cancel'); ?>',
+            heightAuto: false
+        }).then(function(result) {
+            if (!result.value) {
+                return;
+            }
             $.ajax({
                 url: '<?php echo base_url(); ?>admin/patient/deletePatient',
                 type: "POST",
@@ -578,8 +576,8 @@ $bloodgroup = $this->config->item('bloodgroup');
                     successMsg(<?php echo "'" . $this->lang->line('delete_message') . "'"; ?>);
                     window.location.reload(true);
                 }
-            })
-        }
+            });
+        });
     }
 
     function patient_deactive(id) {

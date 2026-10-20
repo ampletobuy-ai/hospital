@@ -83,11 +83,6 @@
             <div class="tablists-divider"></div>
 
             <?php  if ($this->rbac->hasPrivilege('superadmin','')) { ?>
-                <li class="<?php echo set_Innermenu('admin/addons/index'); ?>"><a class="<?php echo set_Innermenu('admin/addons/index'); ?>"
-                	href="<?php echo base_url(); ?>admin/addons/index"><?php echo $this->lang->line('addons'); ?></a></li>
-            <?php } ?>
-
-            <?php  if ($this->rbac->hasPrivilege('superadmin','')) { ?>
                 <li class="<?php echo set_Innermenu('admin/module'); ?>"><a class="<?php echo set_Innermenu('admin/module'); ?>" href="<?php echo base_url(); ?>admin/module"><?php echo $this->lang->line('modules'); ?></a></li>
             <?php } ?>
 
