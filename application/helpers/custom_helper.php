@@ -10,6 +10,22 @@ function product_name()
     return $CI->config->item('product_name') ?: 'Qubex Track';
 }
 
+/**
+ * Title-case a person name (each word capitalized), e.g. "rajesh jena" → "Rajesh Jena".
+ */
+function format_person_name($name)
+{
+    $name = trim((string) $name);
+    if ($name === '') {
+        return '';
+    }
+    if (function_exists('mb_convert_case')) {
+        return mb_convert_case(mb_strtolower($name, 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
+    }
+
+    return ucwords(strtolower($name));
+}
+
 function generateRandomColors($num) {
     $colors_picker = ['#b0dd38','#e30e66','#febe10','#ff1253','#6780b2','#dda73b','#005976','#5db681','#8f44fc','#2d2d2d','#3b07f8','#140253','#beacfd','#c36a56','#5db681','#2c391c','#c26b3d','#412414','#710f58','#607d8b','#d1b303','#4d8878','#7f7d01','#2a2a00','#c36a56','#ee4b57','#85aa55'];
     $colors=[];

@@ -1154,12 +1154,12 @@ This Function is used to Add Patient
             }
 			
             $patient_data = array(
-                'patient_name'          => $this->input->post('name', TRUE),
+                'patient_name'          => format_person_name($this->input->post('name', TRUE)),
                 'mobileno'              => $mobileno,
                 'marital_status'        => $this->input->post('marital_status', TRUE),
                 'email'                 => $email,
                 'gender'                => $this->input->post('gender', TRUE),
-                'guardian_name'         => $this->input->post('guardian_name', TRUE),
+                'guardian_name'         => format_person_name($this->input->post('guardian_name', TRUE)),
                 'blood_bank_product_id' => $blood_group,
                 'address'               => $this->input->post('address', TRUE),
                 'known_allergies'       => $this->input->post('known_allergies', TRUE),
@@ -4150,13 +4150,13 @@ This Function is used to Import Multiple Patient Records
            
             $patient_data      = array(
                 'id'                    => $id,
-                'patient_name'          => $this->input->post('name', TRUE),
+                'patient_name'          => format_person_name($this->input->post('name', TRUE)),
                 'mobileno'              => $mobileno,
                 'marital_status'        => $this->input->post('marital_status', TRUE),
                 'email'                 => $email,
                 'dob'                   => $dob,
                 'gender'                => $this->input->post('gender', TRUE),
-                'guardian_name'         => $this->input->post('guardian_name', TRUE),
+                'guardian_name'         => format_person_name($this->input->post('guardian_name', TRUE)),
                 'address'               => $this->input->post('address', TRUE),
                 'note'                  => $this->input->post('note', TRUE),
                 'age'                   => $this->input->post('age[year]', TRUE),

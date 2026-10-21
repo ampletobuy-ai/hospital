@@ -558,7 +558,7 @@ $genderList = $this->customlib->getGender();
                                 <div class="col-md-3">
                                     <div class="mb-3">
                                         <label><?php echo $this->lang->line('name'); ?></label><small class="req red"> *</small> 
-                                        <input id="patient_name" name="name" placeholder="" type="text" class="form-control"  value="<?php echo set_value('name'); ?>" />
+                                        <input id="patient_name" name="name" placeholder="" type="text" class="form-control js-person-name"  value="<?php echo set_value('name'); ?>" />
                                         <input type="hidden" id="updateid" name="updateid">
                                         <input type="hidden" id="opdid" name="opdid">
                                         <span class="text-danger"><?php echo form_error('name'); ?></span>
@@ -567,7 +567,7 @@ $genderList = $this->customlib->getGender();
                                 <div class="col-sm-3">
                                     <div class="mb-3">
                                         <label><?php echo $this->lang->line('guardian_name'); ?></label>
-                                        <input type="text" id="guardian_name" name="guardian_name" value="" class="form-control">
+                                        <input type="text" id="guardian_name" name="guardian_name" value="" class="form-control js-person-name">
                                     </div>
                                 </div>
                                 <div class="col-md-3">

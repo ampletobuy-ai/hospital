@@ -148,6 +148,47 @@ window.submitPatientFormWithDuplicateConfirm = function(options) {
 };
 </script>
 
+<!-- Patient Name / Guardian Name: Title Case each word (e.g. rajesh jena → Rajesh Jena) -->
+<script>
+window.toPatientNameCase = function(value) {
+    if (value === null || value === undefined) {
+        return '';
+    }
+    return String(value).replace(/\S+/g, function(word) {
+        if (!word.length) {
+            return word;
+        }
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    });
+};
+(function($) {
+    var nameFieldSelector = [
+        '#formaddpa input[name="name"]',
+        '#formaddpa input[name="guardian_name"]',
+        'input.js-person-name',
+        'input[name="name"]#name',
+        'input[name="name"]#patient_name',
+        'input[name="name"]#ename',
+        'input[name="guardian_name"]',
+        'input[name="guardian_name"]#guardian_name',
+        'input[name="guardian_name"]#eguardian_name'
+    ].join(', ');
+
+    $(document).on('blur', nameFieldSelector, function() {
+        var formatted = window.toPatientNameCase(this.value);
+        if (this.value !== formatted) {
+            this.value = formatted;
+        }
+    });
+
+    $(document).on('submit', 'form', function() {
+        $(this).find(nameFieldSelector).each(function() {
+            this.value = window.toPatientNameCase(this.value);
+        });
+    });
+}(jQuery));
+</script>
+
 <!-- Sidebar toggle (collapse/expand) — persists state in localStorage -->
 <script>
 (function() {

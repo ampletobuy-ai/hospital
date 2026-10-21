@@ -1106,14 +1106,14 @@ $genderList = $this->customlib->getGender();
                                         <div class="col-md-6">
                                             <div class="mb-3">
                                                 <label><?php echo $this->lang->line('name'); ?></label><small class="req"> *</small> 
-                                                <input id="ename" name="name" placeholder="" type="text" class="form-control"  value="<?php echo set_value('name'); ?>" />
+                                                <input id="ename" name="name" placeholder="" type="text" class="form-control js-person-name"  value="<?php echo set_value('name'); ?>" />
                                                 <span class="text-danger"><?php echo form_error('name'); ?></span>
                                             </div>
                                         </div>
                                         <div class="col-sm-6">
                                             <div class="mb-3">
                                                 <label><?php echo $this->lang->line('guardian_name') ?></label>
-                                                <input type="text" name="guardian_name"  id="eguardian_name"placeholder="" value="" class="form-control">
+                                                <input type="text" name="guardian_name"  id="eguardian_name" placeholder="" value="" class="form-control js-person-name">
                                             </div>
                                         </div>
                                         <div class="col-md-6 col-sm-12">  
