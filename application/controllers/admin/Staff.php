@@ -768,7 +768,7 @@ class Staff extends Admin_Controller
 
             //new upload file function
             if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
-                $file_name = $this->media_storage->fileupload("file",'./uploads/staff_images/');
+                $file_name = $this->media_storage->fileupload("file", $this->media_storage->uploadPath('staff_images'));
                 $data_img = array('id' => $staff_id, 'image' => $file_name);
                 $this->staff_model->add($data_img);
             }
@@ -776,41 +776,25 @@ class Staff extends Admin_Controller
 
             //new upload file function
             if (isset($_FILES["first_doc"]) && !empty($_FILES['first_doc']['name'])) {
-                $uploaddir = $this->customlib->getFolderPath().'./uploads/staff_documents/' . $staff_id . '/';
-                if (!is_dir($uploaddir) && !mkdir($uploaddir, 0755, true)) {
-                    show_error("Could not create upload directory: $uploaddir");
-                }
-                $resume = $this->media_storage->fileupload("first_doc",'./uploads/staff_documents/' . $staff_id . '/');
+                $resume = $this->media_storage->fileupload("first_doc", $this->media_storage->uploadPath('staff_documents/' . $staff_id));
             }else{
                 $resume = "";
             }
 
             if (isset($_FILES["second_doc"]) && !empty($_FILES['second_doc']['name'])) {
-                $uploaddir = $this->customlib->getFolderPath().'./uploads/staff_documents/' . $staff_id . '/';
-                if (!is_dir($uploaddir) && !mkdir($uploaddir, 0755, true)) {
-                    show_error("Could not create upload directory: $uploaddir");
-                }
-                $joining_letter = $this->media_storage->fileupload("second_doc",'./uploads/staff_documents/' . $staff_id . '/');
+                $joining_letter = $this->media_storage->fileupload("second_doc", $this->media_storage->uploadPath('staff_documents/' . $staff_id));
             }else{
                 $joining_letter = "";
             }
 
             if (isset($_FILES["third_doc"]) && !empty($_FILES['third_doc']['name'])) {
-                $uploaddir = $this->customlib->getFolderPath().'./uploads/staff_documents/' . $staff_id . '/';
-                if (!is_dir($uploaddir) && !mkdir($uploaddir, 0755, true)) {
-                    show_error("Could not create upload directory: $uploaddir");
-                }
-                $resignation_letter = $this->media_storage->fileupload("third_doc",'./uploads/staff_documents/' . $staff_id . '/');
+                $resignation_letter = $this->media_storage->fileupload("third_doc", $this->media_storage->uploadPath('staff_documents/' . $staff_id));
             }else{
                 $resignation_letter = "";
             }
 
             if (isset($_FILES["fourth_doc"]) && !empty($_FILES['fourth_doc']['name'])) {
-                $uploaddir = $this->customlib->getFolderPath().'./uploads/staff_documents/' . $staff_id . '/';
-                if (!is_dir($uploaddir) && !mkdir($uploaddir, 0755, true)) {
-                    show_error("Could not create upload directory: $uploaddir");
-                }
-                $fourth_doc = $this->media_storage->fileupload("fourth_doc",'./uploads/staff_documents/' . $staff_id . '/');
+                $fourth_doc = $this->media_storage->fileupload("fourth_doc", $this->media_storage->uploadPath('staff_documents/' . $staff_id));
                 $fourth_title = 'Other Doucment';
             }else{
                 $fourth_doc   = "";
@@ -1153,11 +1137,7 @@ class Staff extends Admin_Controller
 			
 			//new upload file function
             if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
-                $uploaddir = $this->customlib->getFolderPath().'./uploads/staff_images/';
-                if (!is_dir($uploaddir) && !mkdir($uploaddir, 0755, true)) {
-                    show_error("Could not create upload directory: $uploaddir");
-                }
-                $file_name = $this->media_storage->fileupload("file",'./uploads/staff_images/');
+                $file_name = $this->media_storage->fileupload("file", $this->media_storage->uploadPath('staff_images'));
                 $data_img = array('id' => $id, 'image' => $file_name);
                 $this->staff_model->add($data_img);
                 $this->meterStaffFileReplace('file', isset($staff['image']) ? $staff['image'] : '', 'uploads/staff_images');
@@ -1166,33 +1146,21 @@ class Staff extends Admin_Controller
 
             //new upload file function
             if (isset($_FILES["first_doc"]) && !empty($_FILES['first_doc']['name'])) {
-                $uploaddir = $this->customlib->getFolderPath().'./uploads/staff_documents/' . $id . '/';
-                if (!is_dir($uploaddir) && !mkdir($uploaddir, 0755, true)) {
-                    show_error("Could not create upload directory: $uploaddir");
-                }
-                $resume_doc = $this->media_storage->fileupload("first_doc",'./uploads/staff_documents/' . $id . '/');
+                $resume_doc = $this->media_storage->fileupload("first_doc", $this->media_storage->uploadPath('staff_documents/' . $id));
                 $this->meterStaffFileReplace('first_doc', isset($staff['resume']) ? $staff['resume'] : '', 'uploads/staff_documents/' . $id);
             }else{
                 $resume_doc = $resume;
             }
 
             if (isset($_FILES["second_doc"]) && !empty($_FILES['second_doc']['name'])) {
-                $uploaddir = $this->customlib->getFolderPath().'./uploads/staff_documents/' . $id . '/';
-                if (!is_dir($uploaddir) && !mkdir($uploaddir, 0755, true)) {
-                    show_error("Could not create upload directory: $uploaddir");
-                }
-                $joining_letter_doc = $this->media_storage->fileupload("second_doc",'./uploads/staff_documents/' . $id . '/');
+                $joining_letter_doc = $this->media_storage->fileupload("second_doc", $this->media_storage->uploadPath('staff_documents/' . $id));
                 $this->meterStaffFileReplace('second_doc', isset($staff['joining_letter']) ? $staff['joining_letter'] : '', 'uploads/staff_documents/' . $id);
             }else{
                 $joining_letter_doc = $joining_letter;
             }
 
             if (isset($_FILES["third_doc"]) && !empty($_FILES['third_doc']['name'])) {
-                $uploaddir = $this->customlib->getFolderPath().'./uploads/staff_documents/' . $id . '/';
-                if (!is_dir($uploaddir) && !mkdir($uploaddir, 0755, true)) {
-                    show_error("Could not create upload directory: $uploaddir");
-                }
-                $resignation_letter_doc = $this->media_storage->fileupload("third_doc",'./uploads/staff_documents/' . $id . '/');
+                $resignation_letter_doc = $this->media_storage->fileupload("third_doc", $this->media_storage->uploadPath('staff_documents/' . $id));
                 $this->meterStaffFileReplace('third_doc', isset($staff['resignation_letter']) ? $staff['resignation_letter'] : '', 'uploads/staff_documents/' . $id);
             }else{
                 // Preserve the existing resignation_letter instead of wiping it (the
@@ -1202,11 +1170,7 @@ class Staff extends Admin_Controller
             }
 
             if (isset($_FILES["fourth_doc"]) && !empty($_FILES['fourth_doc']['name'])) {
-                $uploaddir = $this->customlib->getFolderPath().'./uploads/staff_documents/' . $id . '/';
-                if (!is_dir($uploaddir) && !mkdir($uploaddir, 0755, true)) {
-                    show_error("Could not create upload directory: $uploaddir");
-                }
-                $fourth_doc = $this->media_storage->fileupload("fourth_doc",'./uploads/staff_documents/' . $id . '/');
+                $fourth_doc = $this->media_storage->fileupload("fourth_doc", $this->media_storage->uploadPath('staff_documents/' . $id));
                 $fourth_title = 'Other Doucment';
                 $this->meterStaffFileReplace('fourth_doc', isset($staff['other_document_file']) ? $staff['other_document_file'] : '', 'uploads/staff_documents/' . $id);
             }else{

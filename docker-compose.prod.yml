@@ -42,6 +42,9 @@ services:
       - "${APP_PORT:-8088}:80"
     depends_on:
       - app
+    # Same uploads volume as app — PHP writes here; nginx must serve static files from it.
+    volumes:
+      - hospital-uploads:/var/www/html/uploads:ro
     networks:
       - hospital
 

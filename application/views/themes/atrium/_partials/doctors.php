@@ -19,7 +19,7 @@ $appt_url = site_url('form/appointment');
     </header>
     <div class="doc-grid">
       <?php foreach($docs_to_render as $doc):
-        $photo = !empty($doc['image']) ? base_url('uploads/staff_images/' . $doc['image']) : '';
+        $photo = !empty($doc['image']) ? $this->media_storage->getImageURL('uploads/staff_images/' . $doc['image']) : '';
         $name  = html_escape(trim($doc['name'] . ' ' . $doc['surname']));
         $sub   = !empty($doc['designation']) ? $doc['designation'] : ($doc['department_name'] ?? '');
         $fee   = isset($doc['consult_fee']) ? (float)$doc['consult_fee'] : 0;

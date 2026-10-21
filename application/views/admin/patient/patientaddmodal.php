@@ -23,14 +23,14 @@ $marital_status = $this->config->item('marital_status');
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label class="form-label"><?php echo $this->lang->line('name'); ?><small class="req"> *</small></label>
-                                            <input id="name" name="name" type="text" class="form-control" value="<?php echo set_value('name'); ?>">
+                                            <input id="name" name="name" type="text" class="form-control js-person-name" autocomplete="name" value="<?php echo set_value('name'); ?>">
                                             <span class="text-danger"><?php echo form_error('name'); ?></span>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label class="form-label"><?php echo $this->lang->line('guardian_name'); ?></label>
-                                            <input type="text" name="guardian_name" class="form-control">
+                                            <input type="text" name="guardian_name" class="form-control js-person-name" autocomplete="name">
                                         </div>
                                     </div>
                                     <div class="col-md-4">

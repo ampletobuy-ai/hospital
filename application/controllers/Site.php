@@ -674,10 +674,13 @@ class Site extends Public_Controller
         $currency_symbol           = $this->setting_model->get()[0]["currency_symbol"];
         $data["fees"]              = isset($charge_details->standard_charge) ? $currency_symbol . $charge_details->standard_charge : "";
         $data["duration"]          = $shift_details["consult_duration"];
+        if (!isset($this->media_storage)) {
+            $this->load->library('media_storage');
+        }
         if (!empty($doctor_data['image'])) {
-            $data['image'] = base_url("uploads/staff_images/" . $doctor_data['image']);
+            $data['image'] = $this->media_storage->getImageURL("uploads/staff_images/" . $doctor_data['image']);
         } else {
-            $data['image'] = base_url("uploads/staff_images/no_image.png");
+            $data['image'] = $this->media_storage->getImageURL("uploads/staff_images/no_image.png");
         }
 
         echo json_encode($data);

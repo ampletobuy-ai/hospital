@@ -22,6 +22,10 @@ class Media_storage
             $name        = $_FILES[$media_name]['name'];
             $file_name   = time() . "-" . uniqid(rand()) . "!" . $name;
             $destination = FCPATH . $upload_path . $file_name;
+            $destDir     = dirname($destination);
+            if (!is_dir($destDir)) {
+                @mkdir($destDir, 0755, true);
+            }
 
             if (move_uploaded_file($_FILES[$media_name]["tmp_name"], $destination)) {
                 return $file_name;
@@ -32,9 +36,60 @@ class Media_storage
         return null;
     }
 
+    /**
+     * Tenant-scoped upload directory (trailing slash) for Media_storage::fileupload.
+     */
+    public function uploadPath($subdir)
+    {
+        $this->_CI->load->library('tenant_uploads');
+
+        return $this->_CI->tenant_uploads->mediaUploadPath($subdir);
+    }
+
+    /**
+     * Move an already-named temp upload into the tenant (or shared) upload dir.
+     * Returns the relative stored path for DB, or null on failure.
+     */
+    public function moveNamedUpload($tmpName, $subdir, $fileName)
+    {
+        $this->_CI->load->library('tenant_uploads');
+        $dir  = $this->_CI->tenant_uploads->mediaUploadPath($subdir);
+        $dest = FCPATH . $dir . $fileName;
+        if (@move_uploaded_file($tmpName, $dest)) {
+            return $this->_CI->tenant_uploads->storedPath($subdir, $fileName);
+        }
+
+        return null;
+    }
+
+    /**
+     * fileupload() into a tenant dir; returns relative stored path (or null).
+     */
+    public function fileuploadStored($media_name, $subdir)
+    {
+        $this->_CI->load->library('tenant_uploads');
+        $file_name = $this->fileupload($media_name, $this->uploadPath($subdir));
+        if ($file_name === null || $file_name === '') {
+            return null;
+        }
+
+        return $this->_CI->tenant_uploads->storedPath($subdir, $file_name);
+    }
+
     public function filedownload($file_name, $download_path = "")
     {
-        $file_url           = FCPATH . $download_path . "/" . $file_name;
+        $this->_CI->load->library('tenant_uploads');
+        $dir = $this->_CI->tenant_uploads->normalizeRelative($download_path);
+        $file_url = '';
+        foreach ($this->_CI->tenant_uploads->candidateAbsolutePaths($file_name, $dir) as $candidate) {
+            if (is_file($candidate)) {
+                $file_url = $candidate;
+                break;
+            }
+        }
+        if ($file_url === '') {
+            $file_url = FCPATH . $download_path . "/" . $file_name;
+        }
         $download_file_name = substr($file_name, (strpos($file_name, '!') + 1));
         $this->_CI->load->helper('download');
         $data = file_get_contents($file_url);
@@ -62,6 +117,9 @@ class Media_storage
             if (strpos($file_name, './') === 0) {
                 $file_name = substr($file_name, 2);
             }
+            $this->_CI->load->library('tenant_uploads');
+            $file_name = $this->_CI->tenant_uploads->resolveReadableRelative($file_name);
+
             return $this->_CI->customlib->getBaseUrl() . $file_name . img_time();
         }
         return null;
@@ -70,9 +128,9 @@ class Media_storage
     public function filedelete($file_name, $path = "")
     {
         if (!IsNullOrEmptyString($file_name)) {
-            $url = FCPATH . $path . "/" . $file_name;
-            if (file_exists($url)) {
-                if (unlink($url)) {
+            $this->_CI->load->library('tenant_uploads');
+            foreach ($this->_CI->tenant_uploads->candidateAbsolutePaths($file_name, $path) as $url) {
+                if (is_file($url) && @unlink($url)) {
                     return true;
                 }
             }
@@ -128,18 +186,14 @@ class Media_storage
         return 0;
     }
 
-    // Size (KB) of a file already saved on disk. Mirrors fileupload()/filedelete()
-    // which resolve paths against FCPATH in this project.
+    // Size (KB) of a file already saved on disk. Checks tenant folder first, then shared.
     public function getUploadedFileSize($file_name, $file_path = "")
     {
-        if ($file_path == "") {
-            $file_url = FCPATH . $file_name;
-        } else {
-            $file_url = FCPATH . $file_path . "/" . $file_name;
-        }
-
-        if (file_exists($file_url)) {
-            return $this->convertBytesToKB(filesize($file_url));
+        $this->_CI->load->library('tenant_uploads');
+        foreach ($this->_CI->tenant_uploads->candidateAbsolutePaths($file_name, $file_path) as $file_url) {
+            if (is_file($file_url)) {
+                return $this->convertBytesToKB(filesize($file_url));
+            }
         }
 
         return 0;
