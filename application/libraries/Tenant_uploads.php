@@ -4,11 +4,22 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
  * Tenant-scoped upload directories under uploads/tenants/{tenant_id}/...
+ *
+ * When tenancy is off / no tenant session, paths fall back to shared uploads/{subdir}.
  */
 class Tenant_uploads
 {
     /** @var CI_Controller */
     public $CI;
+
+    /** Shared product assets that must never be remapped to a tenant folder. */
+    private $sharedAssetBasenames = array(
+        'no_image.png',
+        'pregnant.png',
+        'ultrasound-machine.png',
+        'qubex_track_logo.png',
+        'qubex_track_favicon.png',
+    );
 
     public function __construct()
     {
@@ -41,17 +52,27 @@ class Tenant_uploads
     }
 
     /**
+     * Whether tenant-scoped uploads are active for this request.
+     */
+    public function isScoped()
+    {
+        $this->CI->load->config('tenancy-config');
+        if (!$this->CI->config->item('tenancy_enabled')) {
+            return false;
+        }
+
+        return $this->currentTenantId() !== '';
+    }
+
+    /**
      * Relative web path (no leading slash), e.g. uploads/tenants/{id}/printing
      * Falls back to shared uploads/{subdir} when tenancy is off / no tenant.
      */
     public function relativeDir($subdir = 'printing')
     {
         $subdir = trim((string) $subdir, '/');
-        $tenantId = $this->currentTenantId();
-        $this->CI->load->config('tenancy-config');
-
-        if ($tenantId !== '' && $this->CI->config->item('tenancy_enabled')) {
-            return 'uploads/tenants/' . $tenantId . '/' . $subdir;
+        if ($this->isScoped()) {
+            return 'uploads/tenants/' . $this->currentTenantId() . '/' . $subdir;
         }
 
         return 'uploads/' . $subdir;
@@ -103,12 +124,126 @@ class Tenant_uploads
     }
 
     /**
+     * Normalize a relative path (strip ./ and leading slashes).
+     */
+    public function normalizeRelative($path)
+    {
+        $path = ltrim(str_replace('\\', '/', (string) $path), '/');
+        if (strpos($path, './') === 0) {
+            $path = substr($path, 2);
+        }
+
+        return $path;
+    }
+
+    /**
+     * Map a shared uploads/... relative path to the current tenant equivalent.
+     * Returns '' when scoping is off or path is not under uploads/.
+     */
+    public function tenantMirrorRelative($relative)
+    {
+        $relative = $this->normalizeRelative($relative);
+        if ($relative === '' || !$this->isScoped()) {
+            return '';
+        }
+        if (strpos($relative, 'uploads/tenants/') === 0) {
+            return $relative;
+        }
+        if (strpos($relative, 'uploads/') !== 0) {
+            return '';
+        }
+
+        $suffix = substr($relative, strlen('uploads/'));
+        $base = basename($relative);
+        if (in_array($base, $this->sharedAssetBasenames, true)) {
+            return '';
+        }
+
+        return 'uploads/tenants/' . $this->currentTenantId() . '/' . $suffix;
+    }
+
+    /**
+     * Resolve which relative path to use for reading/serving a file.
+     * Prefers tenant copy when it exists; falls back to shared/legacy path.
+     *
+     * @param string $relativeOrDir full relative path OR directory (uploads/staff_images)
+     * @param string|null $fileName bare filename when $relativeOrDir is a directory
+     */
+    public function resolveReadableRelative($relativeOrDir, $fileName = null)
+    {
+        if ($fileName !== null && $fileName !== '') {
+            $fileName = $this->normalizeRelative($fileName);
+            if (strpos($fileName, 'uploads/') === 0) {
+                $relative = $fileName;
+            } else {
+                $dir = rtrim($this->normalizeRelative($relativeOrDir), '/');
+                $relative = $dir . '/' . $fileName;
+            }
+        } else {
+            $relative = $this->normalizeRelative($relativeOrDir);
+        }
+
+        if ($relative === '') {
+            return '';
+        }
+
+        $base = basename($relative);
+        if (in_array($base, $this->sharedAssetBasenames, true)) {
+            return $relative;
+        }
+
+        $tenantRel = $this->tenantMirrorRelative($relative);
+        if ($tenantRel !== '' && is_file(rtrim(FCPATH, '/\\') . '/' . $tenantRel)) {
+            return $tenantRel;
+        }
+
+        return $relative;
+    }
+
+    /**
+     * Absolute paths to try for size/delete (tenant first, then shared).
+     *
+     * @return string[]
+     */
+    public function candidateAbsolutePaths($fileName, $filePath = '')
+    {
+        $fileName = $this->normalizeRelative($fileName);
+        $candidates = array();
+        $root = rtrim(FCPATH, '/\\') . '/';
+
+        if ($filePath === '' || $filePath === null) {
+            if ($fileName === '') {
+                return array();
+            }
+            $candidates[] = $root . $fileName;
+            $tenantRel = $this->tenantMirrorRelative($fileName);
+            if ($tenantRel !== '') {
+                array_unshift($candidates, $root . $tenantRel);
+            }
+        } else {
+            $dir = rtrim($this->normalizeRelative($filePath), '/');
+            $candidates[] = $root . $dir . '/' . $fileName;
+            $tenantDir = $this->tenantMirrorRelative($dir);
+            if ($tenantDir !== '') {
+                array_unshift($candidates, $root . $tenantDir . '/' . $fileName);
+            }
+            // Bare filename stored with logical shared dir, but file may only be under tenant.
+            if ($this->isScoped() && strpos($dir, 'uploads/') === 0) {
+                $suffix = substr($dir, strlen('uploads/'));
+                array_unshift($candidates, $root . 'uploads/tenants/' . $this->currentTenantId() . '/' . $suffix . '/' . $fileName);
+            }
+        }
+
+        return array_values(array_unique($candidates));
+    }
+
+    /**
      * Delete a stored relative file path if it belongs to the current tenant
      * (or shared uploads/printing when not multi-tenant).
      */
     public function deleteStoredFile($relativePath)
     {
-        $relativePath = ltrim(str_replace('\\', '/', (string) $relativePath), './');
+        $relativePath = $this->normalizeRelative($relativePath);
         if ($relativePath === '' || strpos($relativePath, '..') !== false) {
             return false;
         }
@@ -179,7 +314,7 @@ class Tenant_uploads
                 @mkdir($dir, 0777, true);
             }
             @chmod($dir, 0777);
-            $index = $dir . '/index.html';
+            $index = rtrim($dir, '/\\') . '/index.html';
             if (!is_file($index)) {
                 @file_put_contents($index, '');
             }

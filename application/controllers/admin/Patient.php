@@ -381,8 +381,9 @@ class patient extends Admin_Controller
             if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
                 $fileInfo = pathinfo($_FILES["file"]["name"]);
                 $img_name = $patient_id . '.' . $fileInfo['extension'];
-                if (move_uploaded_file($_FILES["file"]["tmp_name"], "./uploads/patient_images/" . $img_name)) {
-                    $data_img = array('id' => $patient_id, 'image' => 'uploads/patient_images/' . $img_name);
+                $stored_img = $this->media_storage->moveNamedUpload($_FILES["file"]["tmp_name"], 'patient_images', $img_name);
+                if ($stored_img) {
+                    $data_img = array('id' => $patient_id, 'image' => $stored_img);
                     $this->patient_model->add($data_img);
 
                     // SaaS: add the uploaded patient image size to the storage quota usage.
@@ -1224,9 +1225,9 @@ This Function is used to Add Patient
             $array = array('status' => 'success', 'error' => '', 'message' => $this->lang->line('success_message'), 'id' => $insert_id);
 
             if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
-                $file_name = $this->media_storage->fileupload("file", "./uploads/patient_images/");
-                if (!IsNullOrEmptyString($file_name)) {
-                    $data_img = array('id' => $insert_id, 'image' => './uploads/patient_images/' . $file_name);
+                $stored_img = $this->media_storage->fileuploadStored("file", 'patient_images');
+                if (!IsNullOrEmptyString($stored_img)) {
+                    $data_img = array('id' => $insert_id, 'image' => $stored_img);
 
                     // SaaS: add the uploaded patient image size to the storage quota usage.
                     try {
@@ -4206,12 +4207,12 @@ This Function is used to Import Multiple Patient Records
                 $saas_old_dir   = (strpos($saas_old_image, '/') !== false) ? '' : 'uploads/patient_images';
                 $saas_old_kb    = (!empty($saas_old_image)) ? $this->media_storage->getUploadedFileSize($saas_old_image, $saas_old_dir) : 0;
 
-                $img_name = $this->media_storage->fileupload("file", "./uploads/patient_images/");
-                if (!IsNullOrEmptyString($img_name)) {
+                $stored_img = $this->media_storage->fileuploadStored("file", 'patient_images');
+                if (!IsNullOrEmptyString($stored_img)) {
                     if (!empty($saas_old_image)) {
                         $this->media_storage->filedelete($saas_old_image, $saas_old_dir);
                     }
-                    $data_img = array('id' => $id, 'image' => 'uploads/patient_images/' . $img_name);
+                    $data_img = array('id' => $id, 'image' => $stored_img);
                     $this->patient_model->add($data_img);
 
                     // SaaS: adjust storage quota by the size difference (new vs replaced).
@@ -4438,9 +4439,8 @@ This Function is used to Import Multiple Patient Records
 
                 $fileInfo = pathinfo($_FILES["file"]["name"]);
                 $img_name = $id . '.' . $fileInfo['extension'];
-                if (move_uploaded_file($_FILES["file"]["tmp_name"], "./uploads/patient_images/" . $img_name)) {
-                    $new_img_path = 'uploads/patient_images/' . $img_name;
-
+                $new_img_path = $this->media_storage->moveNamedUpload($_FILES["file"]["tmp_name"], 'patient_images', $img_name);
+                if ($new_img_path) {
                     // If the new upload has a different extension, the old physical file is NOT
                     // overwritten by move_uploaded_file — remove it so it does not orphan/leak.
                     if (!empty($saas_old_image) && $saas_old_image !== $new_img_path) {
@@ -4950,8 +4950,9 @@ This Function is used to Import Multiple Patient Records
             if (isset($_FILES["report_document"]) && !empty($_FILES['report_document']['name'])) {
                 $fileInfo = pathinfo($_FILES["report_document"]["name"]);
                 $img_name = $insert_id . '.' . $fileInfo['extension'];
-                if (move_uploaded_file($_FILES["report_document"]["tmp_name"], "./uploads/patient_images/" . $img_name)) {
-                    $data_img = array('id' => $insert_id, 'document' => 'uploads/patient_images/' . $img_name);
+                $stored_doc = $this->media_storage->moveNamedUpload($_FILES["report_document"]["tmp_name"], 'patient_images', $img_name);
+                if ($stored_doc) {
+                    $data_img = array('id' => $insert_id, 'document' => $stored_doc);
                     $this->patient_model->add_diagnosis($data_img);
 
                     // SaaS: add the uploaded report document size to the storage quota usage.
@@ -5004,9 +5005,8 @@ This Function is used to Import Multiple Patient Records
 
                 $fileInfo = pathinfo($_FILES["report_document"]["name"]);
                 $img_name = $id . '.' . $fileInfo['extension'];
-                if (move_uploaded_file($_FILES["report_document"]["tmp_name"], "./uploads/patient_images/" . $img_name)) {
-                    $new_doc_path = 'uploads/patient_images/' . $img_name;
-
+                $new_doc_path = $this->media_storage->moveNamedUpload($_FILES["report_document"]["tmp_name"], 'patient_images', $img_name);
+                if ($new_doc_path) {
                     // If the new upload has a different extension, the old physical file is NOT
                     // overwritten by move_uploaded_file — remove it so it does not orphan/leak.
                     if (!empty($saas_old_doc) && $saas_old_doc !== $new_doc_path) {
@@ -6092,8 +6092,9 @@ This Function is used to Import Multiple Patient Records
             if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
                 $fileInfo = pathinfo($_FILES["file"]["name"]);
                 $img_name = $patient_id . '.' . $fileInfo['extension'];
-                if (move_uploaded_file($_FILES["file"]["tmp_name"], "./uploads/patient_images/" . $img_name)) {
-                    $data_img = array('id' => $patient_id, 'image' => 'uploads/patient_images/' . $img_name);
+                $stored_img = $this->media_storage->moveNamedUpload($_FILES["file"]["tmp_name"], 'patient_images', $img_name);
+                if ($stored_img) {
+                    $data_img = array('id' => $patient_id, 'image' => $stored_img);
                     $this->patient_model->add($data_img);
 
                     // SaaS: add the uploaded patient image size to the storage quota usage.
