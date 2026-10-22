@@ -218,6 +218,18 @@ class Notification extends Admin_Controller
         $data                     = array();
         $data['title']            = $this->lang->line('email_config_list');
         $notificationlist         = $this->notificationsetting_model->get();
+        $this->load->library('messaging_account');
+        if ($this->messaging_account->isCentral() && !empty($notificationlist)) {
+            $product = $this->messaging_account->productCode();
+            foreach ($notificationlist as $note) {
+                if (empty($note->template_id)) {
+                    $note->template_id = $product . '_' . $note->type . '_sms';
+                }
+                if (empty($note->whatsapp_template_id)) {
+                    $note->whatsapp_template_id = $product . '_' . $note->type . '_whatsapp';
+                }
+            }
+        }
         $data['notificationlist'] = $notificationlist;
         $this->form_validation->set_rules('email_type', $this->lang->line('email_type'), 'required');
         if ($this->input->server('REQUEST_METHOD') == "POST") {
@@ -327,6 +339,21 @@ class Notification extends Admin_Controller
     {
         $id             = $this->input->post('id', TRUE);
         $data['record'] = $this->notificationsetting_model->get($id);
+        $this->load->library('messaging_account');
+        if ($this->messaging_account->isCentral() && !empty($data['record'])) {
+            $product = $this->messaging_account->productCode();
+            $type = is_object($data['record']) ? ($data['record']->type ?? '') : ($data['record']['type'] ?? '');
+            if ($type !== '') {
+                if (is_object($data['record'])) {
+                    if (empty($data['record']->template_id)) {
+                        $data['record']->template_id = $product . '_' . $type . '_sms';
+                    }
+                    if (empty($data['record']->whatsapp_template_id)) {
+                        $data['record']->whatsapp_template_id = $product . '_' . $type . '_whatsapp';
+                    }
+                }
+            }
+        }
         $template       = $this->load->view('admin/notification/gettemplate', $data, true);
         $response       = array('status' => 1, 'template' => $template);
         return $this->output

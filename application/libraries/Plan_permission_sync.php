@@ -86,6 +86,19 @@ class Plan_permission_sync
 
         $gated = $this->CI->plan_feature_gate->gatedModuleMap();
 
+        // Older tenant clones omit WhatsApp Messaging; create rows when the plan allows it.
+        if ($this->CI->plan_feature_gate->can('whatsapp_sms')) {
+            try {
+                $prevDb = $this->CI->db;
+                $this->CI->db = $db;
+                $this->CI->load->library('whatsapp_module_setup');
+                $this->CI->whatsapp_module_setup->ensure();
+                $this->CI->db = $prevDb;
+            } catch (Throwable $e) {
+                log_message('error', 'WhatsApp module ensure during plan sync: ' . $e->getMessage());
+            }
+        }
+
         if ($db->table_exists('permission_group')) {
             $groups = $db->select('id, short_code, is_active')->get('permission_group')->result_array();
             foreach ($groups as $group) {

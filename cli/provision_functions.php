@@ -243,6 +243,94 @@ function hospital_cli_bootstrap_tenant(array $defaultCfg, $tenantDatabase, $tena
 }
 
 /**
+ * Ensure whatsapp_config + permission_group/category/roles for WhatsApp Messaging.
+ */
+function hospital_cli_ensure_whatsapp_module_rows(mysqli $mysqli)
+{
+    $mysqli->query("CREATE TABLE IF NOT EXISTS `whatsapp_config` (
+        `id` int unsigned NOT NULL AUTO_INCREMENT,
+        `type` varchar(50) NOT NULL,
+        `name` varchar(100) DEFAULT NULL,
+        `username` varchar(255) DEFAULT NULL,
+        `password` varchar(255) DEFAULT NULL,
+        `authkey` varchar(512) DEFAULT NULL,
+        `contact` text,
+        `language` varchar(20) DEFAULT 'en',
+        `is_active` varchar(10) DEFAULT 'disabled',
+        `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+        `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (`id`),
+        KEY `type` (`type`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3");
+
+    if (!hospital_cli_table_exists($mysqli, 'permission_group')) {
+        return;
+    }
+
+    $res = $mysqli->query("SELECT id, is_active FROM permission_group WHERE short_code = 'whatsapp_messaging' LIMIT 1");
+    $row = $res ? $res->fetch_assoc() : null;
+    if ($res) {
+        $res->free();
+    }
+    if (!$row) {
+        $mysqli->query("INSERT INTO permission_group (name, short_code, is_active, system, sort_order) VALUES ('WhatsApp Messaging', 'whatsapp_messaging', 1, 0, 17.10)");
+        $groupId = (int) $mysqli->insert_id;
+    } else {
+        $groupId = (int) $row['id'];
+        if ((int) $row['is_active'] !== 1) {
+            $mysqli->query("UPDATE permission_group SET is_active = 1 WHERE id = {$groupId}");
+        }
+    }
+
+    if (!hospital_cli_table_exists($mysqli, 'permission_category')) {
+        return;
+    }
+
+    $res = $mysqli->query("SELECT id FROM permission_category WHERE short_code = 'whatsapp_setting' LIMIT 1");
+    $cat = $res ? $res->fetch_assoc() : null;
+    if ($res) {
+        $res->free();
+    }
+    if (!$cat) {
+        $sysRes = $mysqli->query("SELECT id FROM permission_group WHERE short_code = 'system_settings' LIMIT 1");
+        $sys = $sysRes ? $sysRes->fetch_assoc() : null;
+        if ($sysRes) {
+            $sysRes->free();
+        }
+        $permGroupId = !empty($sys['id']) ? (int) $sys['id'] : $groupId;
+        $mysqli->query("INSERT INTO permission_category (perm_group_id, name, short_code, enable_view, enable_add, enable_edit, enable_delete) VALUES ({$permGroupId}, 'WhatsApp Setting', 'whatsapp_setting', 1, 0, 1, 0)");
+        $catId = (int) $mysqli->insert_id;
+    } else {
+        $catId = (int) $cat['id'];
+    }
+
+    if ($catId <= 0 || !hospital_cli_table_exists($mysqli, 'roles_permissions')) {
+        return;
+    }
+
+    foreach (array(7, 1) as $roleId) {
+        $r = $mysqli->query("SELECT id FROM roles WHERE id = {$roleId} LIMIT 1");
+        $ok = $r && $r->num_rows > 0;
+        if ($r) {
+            $r->free();
+        }
+        if (!$ok) {
+            continue;
+        }
+        $e = $mysqli->query("SELECT id FROM roles_permissions WHERE role_id = {$roleId} AND perm_cat_id = {$catId} LIMIT 1");
+        $ex = $e ? $e->fetch_assoc() : null;
+        if ($e) {
+            $e->free();
+        }
+        if (!$ex) {
+            $mysqli->query("INSERT INTO roles_permissions (role_id, perm_cat_id, can_view, can_add, can_edit, can_delete) VALUES ({$roleId}, {$catId}, 1, 0, 1, 0)");
+        } else {
+            $mysqli->query("UPDATE roles_permissions SET can_view = 1, can_edit = 1 WHERE id = " . (int) $ex['id']);
+        }
+    }
+}
+
+/**
  * Disable plan-locked modules and clear matching roles_permissions after clone/bootstrap.
  *
  * @param array<string, mixed> $payload
@@ -283,6 +371,10 @@ function hospital_cli_sync_plan_permissions(mysqli $mysqli, array $payload, $ten
 
         return !($value === false || $value === null || $value === 0 || $value === '0');
     };
+
+    if ($can('whatsapp_sms')) {
+        hospital_cli_ensure_whatsapp_module_rows($mysqli);
+    }
 
     if (hospital_cli_table_exists($mysqli, 'permission_group')) {
         $result = $mysqli->query('SELECT id, short_code, is_active FROM permission_group');
@@ -339,7 +431,7 @@ function hospital_cli_sync_plan_permissions(mysqli $mysqli, array $payload, $ten
             $lockedPrefixes = array_merge($lockedPrefixes, array('referral_'));
         }
         if (!$can('whatsapp_sms')) {
-            $lockedPrefixes = array_merge($lockedPrefixes, array('email_sms', 'sms_setting', 'send_credential'));
+            $lockedPrefixes = array_merge($lockedPrefixes, array('email_sms', 'sms_setting', 'whatsapp_setting', 'send_credential'));
         }
         if (!$can('duty_roster')) {
             $lockedPrefixes = array_merge($lockedPrefixes, array('duty_roster', 'roster_'));

@@ -1140,8 +1140,16 @@ class Customlib
         if (!empty($notifications)) {
             foreach ($notifications as $note_key => $note_value) {
                 if ($note_value->type == $find) {
-                    return array('mail' => $note_value->is_mail, 'sms' => $note_value->is_sms, 'mobileapp' => $note_value->is_notification,'whatsapp'=>$note_value->is_whatsapp, 
-                        'template' => $note_value->template, 'template_id' => $note_value->template_id, 'subject' => $note_value->subject);
+                    return array(
+                        'mail' => $note_value->is_mail,
+                        'sms' => $note_value->is_sms,
+                        'mobileapp' => $note_value->is_notification,
+                        'whatsapp' => $note_value->is_whatsapp,
+                        'template' => $note_value->template,
+                        'template_id' => $note_value->template_id,
+                        'whatsapp_template_id' => isset($note_value->whatsapp_template_id) ? $note_value->whatsapp_template_id : '',
+                        'subject' => $note_value->subject,
+                    );
                 }
             }
         }

@@ -5,165 +5,149 @@ if (!defined('BASEPATH')) {
 }
 
 /**
- * Hospital Message Helper
+ * Apply {{placeholders}} and return message/subject plus a variables map for central MSG91.
  *
- * Each function here is responsible for hydrating {{placeholders}} in a
- * notification template and returning ['message' => ..., 'subject' => ...].
- *
- * These functions are called by Mailsmsconf::mailsms() before dispatching
- * to any gateway (email / sms / push / whatsapp).
+ * @param string $template
+ * @param string $subject
+ * @param array<string, mixed> $data
+ * @return array{message:string,subject:string,variables:array<string,string>}
  */
+function hospital_message_apply_placeholders($template, $subject, array $data)
+{
+    $CI = &get_instance();
+    if (empty($data['hospital_name'])) {
+        try {
+            $settings = $CI->setting_model->get();
+            if (!empty($settings[0]['name'])) {
+                $data['hospital_name'] = $settings[0]['name'];
+            }
+        } catch (Throwable $e) {
+            // ignore
+        }
+    }
+    if (empty($data['hospital_name'])) {
+        $data['hospital_name'] = 'Hospital';
+    }
 
-// -----------------------------------------------------------------------
-// OPD Patient Registration
-// -----------------------------------------------------------------------
+    $variables = array();
+    foreach ($data as $key => $value) {
+        if (is_array($value) || is_object($value)) {
+            continue;
+        }
+        $str = (string) $value;
+        $variables[(string) $key] = $str;
+        if ($str !== '') {
+            $template = str_replace('{{' . $key . '}}', $str, $template);
+            $subject = str_replace('{{' . $key . '}}', $str, $subject);
+        }
+    }
+
+    return array(
+        'message' => $template,
+        'subject' => $subject,
+        'variables' => $variables,
+    );
+}
+
 function hospitalOpdRegistration($patient_id, $opd_id, $template, $subject, $appointment_date)
 {
     $CI = &get_instance();
 
-    $patient                     = $CI->patient_model->getDetails($opd_id);
-    $patient['opdno']            = $CI->customlib->getSessionPrefixByType('opd_no') . $opd_id;
+    $patient = $CI->patient_model->getDetails($opd_id);
+    if (!is_array($patient)) {
+        $patient = array();
+    }
+    $patient['opdno'] = $CI->customlib->getSessionPrefixByType('opd_no') . $opd_id;
     $patient['appointment_date'] = $appointment_date;
 
-    foreach ($patient as $key => $value) {
-        if (!empty($value)) {
-            $template = str_replace('{{' . $key . '}}', $value, $template);
-            $subject  = str_replace('{{' . $key . '}}', $value, $subject);
-        }
-    }
-
-    return ['message' => $template, 'subject' => $subject];
+    return hospital_message_apply_placeholders($template, $subject, $patient);
 }
 
-// -----------------------------------------------------------------------
-// IPD Patient Registration
-// -----------------------------------------------------------------------
 function hospitalIpdRegistration($patient_id, $ipd_id, $template, $subject)
 {
     $CI = &get_instance();
 
-    $patient            = $CI->patient_model->getIpdDetails($ipd_id);
-    $patient['ipd_no']  = $CI->customlib->getSessionPrefixByType('ipd_no') . $ipd_id;
-
-    foreach ($patient as $key => $value) {
-        if (!empty($value)) {
-            $template = str_replace('{{' . $key . '}}', $value, $template);
-            $subject  = str_replace('{{' . $key . '}}', $value, $subject);
-        }
+    $patient = $CI->patient_model->getIpdDetails($ipd_id);
+    if (!is_array($patient)) {
+        $patient = array();
     }
+    $patient['ipd_no'] = $CI->customlib->getSessionPrefixByType('ipd_no') . $ipd_id;
 
-    return ['message' => $template, 'subject' => $subject];
+    return hospital_message_apply_placeholders($template, $subject, $patient);
 }
 
-// -----------------------------------------------------------------------
-// IPD Patient Discharged
-// -----------------------------------------------------------------------
 function hospitalIpdDischarged($details, $template, $subject)
 {
-    foreach ($details as $key => $value) {
-        if (!empty($value)) {
-            $template = str_replace('{{' . $key . '}}', $value, $template);
-            $subject  = str_replace('{{' . $key . '}}', $value, $subject);
-        }
-    }
-
-    return ['message' => $template, 'subject' => $subject];
+    return hospital_message_apply_placeholders($template, $subject, is_array($details) ? $details : array());
 }
 
-// -----------------------------------------------------------------------
-// OPD Patient Discharged
-// -----------------------------------------------------------------------
 function hospitalOpdDischarged($details, $template, $subject)
 {
-    if (!empty($details)) {
-        foreach ($details as $key => $value) {
-            if (!empty($value)) {
-                $template = str_replace('{{' . $key . '}}', $value, $template);
-                $subject  = str_replace('{{' . $key . '}}', $value, $subject);
-            }
-        }
-    }
-
-    return ['message' => $template, 'subject' => $subject];
+    return hospital_message_apply_placeholders($template, $subject, is_array($details) ? $details : array());
 }
 
-// -----------------------------------------------------------------------
-// Appointment Approved / Confirmation
-// -----------------------------------------------------------------------
 function hospitalAppointmentConfirmation($sender_details, $appointment_id, $template, $subject)
 {
     $CI = &get_instance();
 
-    $patient                  = $CI->appointment_model->getDetailsFornotification($appointment_id);
-    $patient['patient_name']  = $sender_details['patient_name'];
-
-    foreach ($patient as $key => $value) {
-        if (!empty($value)) {
-            $template = str_replace('{{' . $key . '}}', $value, $template);
-            $subject  = str_replace('{{' . $key . '}}', $value, $subject);
-        }
+    $patient = $CI->appointment_model->getDetailsFornotification($appointment_id);
+    if (!is_array($patient)) {
+        $patient = array();
+    }
+    if (!empty($sender_details['patient_name'])) {
+        $patient['patient_name'] = $sender_details['patient_name'];
     }
 
-    return ['message' => $template, 'subject' => $subject];
+    return hospital_message_apply_placeholders($template, $subject, $patient);
 }
 
-// -----------------------------------------------------------------------
-// Login Credential (patient or staff)
-// -----------------------------------------------------------------------
 function hospitalLoginCredential($credential_for, $sender_details, $template, $subject)
 {
     $CI = &get_instance();
+    if (!is_array($sender_details)) {
+        $sender_details = array();
+    }
 
     if ($credential_for == 'patient') {
-        $patient                        = $CI->patient_model->patientProfileDetails($sender_details['id']);
-        $sender_details['url']          = site_url('site/userlogin');
-        $sender_details['display_name'] = $patient['patient_name'];
+        $patient = $CI->patient_model->patientProfileDetails($sender_details['id']);
+        $sender_details['url'] = site_url('site/userlogin');
+        $sender_details['display_name'] = $patient['patient_name'] ?? '';
     } elseif ($credential_for == 'staff') {
-        $staff                          = $CI->staff_model->get($sender_details['id']);
-        $sender_details['url']          = site_url('site/login');
-        $sender_details['display_name'] = $staff['name'] . ' ' . $staff['surname'];
+        $staff = $CI->staff_model->get($sender_details['id']);
+        $sender_details['url'] = site_url('site/login');
+        $sender_details['display_name'] = trim(($staff['name'] ?? '') . ' ' . ($staff['surname'] ?? ''));
     }
 
-    foreach ($sender_details as $key => $value) {
-        if (!empty($value)) {
-            $template = str_replace('{{' . $key . '}}', $value, $template);
-            $subject  = str_replace('{{' . $key . '}}', $value, $subject);
-        }
-    }
-
-    return ['message' => $template, 'subject' => $subject];
+    return hospital_message_apply_placeholders($template, $subject, $sender_details);
 }
 
-// -----------------------------------------------------------------------
-// Live Consult (Zoom / telemedicine)
-// -----------------------------------------------------------------------
 function hospitalLiveConsult($conference_id, $template, $subject)
 {
     $CI = &get_instance();
 
     $conference = $CI->conference_model->getconference($conference_id);
-
-    foreach ($conference as $key => $value) {
-        if (!empty($value)) {
-            $template = str_replace('{{' . $key . '}}', $value, $template);
-            $subject  = str_replace('{{' . $key . '}}', $value, $subject);
-        }
+    if (!is_array($conference)) {
+        $conference = array();
     }
 
-    return ['message' => $template, 'subject' => $subject];
+    return hospital_message_apply_placeholders($template, $subject, $conference);
 }
 
-// -----------------------------------------------------------------------
-// Live Meeting (staff online meeting)
-// -----------------------------------------------------------------------
 function hospitalLiveMeetingStaff($staff_detail, $template, $subject)
 {
-    foreach ($staff_detail as $key => $value) {
-        if (!empty($value)) {
-            $template = str_replace('{{' . $key . '}}', $value, $template);
-            $subject  = str_replace('{{' . $key . '}}', $value, $subject);
-        }
-    }
+    return hospital_message_apply_placeholders($template, $subject, is_array($staff_detail) ? $staff_detail : array());
+}
 
-    return ['message' => $template, 'subject' => $subject];
+/**
+ * Payload for Smsgateway / Whatsappgateway (supports central MSG91 variable map).
+ *
+ * @param array{message?:string,variables?:array<string,string>} $body
+ * @return array{message:string,variables:array<string,string>}
+ */
+function hospital_channel_payload(array $body)
+{
+    return array(
+        'message' => isset($body['message']) ? (string) $body['message'] : '',
+        'variables' => isset($body['variables']) && is_array($body['variables']) ? $body['variables'] : array(),
+    );
 }

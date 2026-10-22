@@ -15,7 +15,14 @@
             <input type="text" name="template_id" id="template_id" class="form-control" value="<?php echo html_escape($record->template_id); ?>">
             <div class="text text-danger template_id_error"></div>
         </div>
-        <?php if ($this->module_lib->hasModule('whatsapp_messaging') && $this->module_lib->hasActive('whatsapp_messaging')): ?>
+        <?php
+        if (!isset($this->plan_feature_gate)) {
+            $this->load->library('plan_feature_gate');
+        }
+        $show_whatsapp_channel = $this->plan_feature_gate->can('whatsapp_sms')
+            || ($this->module_lib->hasModule('whatsapp_messaging') && $this->module_lib->hasActive('whatsapp_messaging'));
+        ?>
+        <?php if ($show_whatsapp_channel): ?>
             <?php if ($record->display_whatsapp): ?>
             <div class="mb-3">
                 <label class="form-label"><?php echo $this->lang->line('whatsapp_template_id'); ?></label>&nbsp;<small class="text-danger">(<?php echo $this->lang->line('this_field_require_for_whatsapp'); ?>)</small>

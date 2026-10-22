@@ -140,6 +140,33 @@
   $tb_role = isset($userdata_tb['user_type']) ? $userdata_tb['user_type'] : '';
   $tb_id   = isset($userdata_tb['id']) ? $userdata_tb['id'] : '';
 
+  /* Current SaaS plan for header badge (tenant subscription → hospital_plans name). */
+  $tb_plan_label = '';
+  $tb_plan_code  = '';
+  $tb_plan_url   = site_url('admin/planlimits');
+  try {
+      if (!isset($this->subscription_resolver)) {
+          $this->load->library('subscription_resolver');
+      }
+      $this->load->config('hospital_portal');
+      $_tb_tenant = trim((string) $this->session->userdata('tenant_id'));
+      $_tb_sub = $_tb_tenant !== '' ? $this->subscription_resolver->latestForTenant($_tb_tenant) : null;
+      if (is_array($_tb_sub) && !empty($_tb_sub['plan_code'])) {
+          $tb_plan_code = (string) $_tb_sub['plan_code'];
+          $_tb_plans = (array) $this->config->item('hospital_plans');
+          if (isset($_tb_plans[$tb_plan_code]['name']) && (string) $_tb_plans[$tb_plan_code]['name'] !== '') {
+              $tb_plan_label = (string) $_tb_plans[$tb_plan_code]['name'];
+          } else {
+              $tb_plan_label = $tb_plan_code;
+          }
+      }
+  } catch (Throwable $e) {
+      $tb_plan_label = '';
+  }
+  if ($tb_plan_label === '') {
+      $tb_plan_label = 'No plan';
+  }
+
   /* Resolve active language country_code for flag display */
   $tb_lang_cc = 'us';
   $_ls = $this->session->userdata('hospitaladmin');
@@ -476,6 +503,14 @@
     <?php } ?>
     </div><!-- /.tb-rail -->
 
+    <!-- Current plan (links to Plan & limits) -->
+    <a class="tb-plan<?php echo ($tb_plan_code === '') ? ' tb-plan--empty' : ''; ?>"
+       href="<?php echo html_escape($tb_plan_url); ?>"
+       title="<?php echo html_escape('Plan: ' . $tb_plan_label . ($tb_plan_code !== '' ? ' (' . $tb_plan_code . ')' : '')); ?>">
+      <span class="tb-plan-kicker">Plan</span>
+      <span class="tb-plan-name"><?php echo html_escape($tb_plan_label); ?></span>
+    </a>
+
     <!-- User signet: Profile + Password + Logout -->
     <div class="dropdown">
       <a class="tb-signet" href="#" data-bs-toggle="dropdown">
@@ -490,7 +525,14 @@
         <li class="px-3 py-2 border-bottom">
           <div class="fw-bold text-capitalize"><?php echo html_escape($tb_name); ?></div>
           <div class="text-muted small"><?php echo html_escape($tb_role); ?></div>
+          <div class="text-muted small mt-1">
+            <i class="fa fa-id-badge me-1"></i><?php echo html_escape($tb_plan_label); ?>
+            <?php if ($tb_plan_code !== '') { ?>
+              <span class="opacity-75">(<?php echo html_escape($tb_plan_code); ?>)</span>
+            <?php } ?>
+          </div>
         </li>
+        <li><a class="dropdown-item" href="<?php echo html_escape($tb_plan_url); ?>"><i class="fa fa-sliders me-2"></i>Plan &amp; limits</a></li>
         <li><a class="dropdown-item" href="<?php echo base_url('admin/staff/profile/' . $tb_id); ?>"><i class="fa fa-user me-2"></i><?php echo $this->lang->line('profile'); ?></a></li>
         <li><a class="dropdown-item" href="<?php echo base_url('admin/admin/changepass'); ?>"><i class="fa fa-key me-2"></i><?php echo $this->lang->line('change_password'); ?></a></li>
         <li><hr class="dropdown-divider"></li>

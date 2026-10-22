@@ -62,6 +62,19 @@ class Planlimits extends Admin_Controller
             'storage' => $this->resourcequota->getUsage('storage'),
         );
 
+        $messaging_usage = array(
+            'sms_used' => 0,
+            'sms_quota' => 0,
+            'whatsapp_used' => 0,
+            'whatsapp_quota' => 0,
+        );
+        try {
+            $this->load->library(array('messaging_account', 'central_message_gateway'));
+            $messaging_usage = $this->central_message_gateway->settingsSummary();
+        } catch (Throwable $e) {
+            log_message('error', 'Planlimits messaging usage: ' . $e->getMessage());
+        }
+
         $data = array(
             'module' => 'setup',
             'title' => 'Plan & limits',
@@ -73,6 +86,7 @@ class Planlimits extends Admin_Controller
             'feature_labels' => $featureLabels,
             'quota_limits' => $quotaLimits,
             'usage' => $usage,
+            'messaging_usage' => $messaging_usage,
             'upgrade_url' => site_url('site/subscription'),
         );
 

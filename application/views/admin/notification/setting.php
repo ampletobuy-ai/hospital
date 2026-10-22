@@ -1,3 +1,10 @@
+<?php
+if (!isset($this->plan_feature_gate)) {
+    $this->load->library('plan_feature_gate');
+}
+$show_whatsapp_channel = $this->plan_feature_gate->can('whatsapp_sms')
+    || ($this->module_lib->hasModule('whatsapp_messaging') && $this->module_lib->hasActive('whatsapp_messaging'));
+?>
 <div class="row">
             <?php $this->load->view('setting/sidebar'); ?>
             <div class="col-md-10">
@@ -22,7 +29,7 @@
                                     <th><?php echo $this->lang->line('event'); ?></th>
                                     <th><?php echo $this->lang->line('option'); ?></th>
                                     <th><?php echo $this->lang->line('template_id'); ?></th>
-                                    <?php if ($this->module_lib->hasModule('whatsapp_messaging') && $this->module_lib->hasActive('whatsapp_messaging')){ ?>
+                                    <?php if ($show_whatsapp_channel) { ?>
                                     <th><?php echo $this->lang->line('whatsapp_template_id'); ?></th>
                                     <?php } ?>
                                     <th><?php echo $this->lang->line('sample_message'); ?></th>
@@ -65,7 +72,7 @@
     <?php
 }
     ?>
-<?php if ($this->module_lib->hasModule('whatsapp_messaging') && $this->module_lib->hasActive('whatsapp_messaging')){ ?>
+<?php if ($show_whatsapp_channel) { ?>
 <?php if ($note_value->display_whatsapp) { ?>
                                                 <label class="form-check form-check-inline">
                                                     <input type="checkbox" name="whatsapp_<?php echo $note_value->id; ?>" value="1" <?php echo set_checkbox('whatsapp_' . $note_value->id, 1, set_value('whatsapp_' . $note_value->id, $note_value->is_whatsapp) ? true : false); ?>>
@@ -75,7 +82,7 @@
 <?php } ?>
                                             </td>
                                             <td width="15%"><?php echo $note_value->template_id ; ?></td>
-                                            <?php if ($this->module_lib->hasModule('whatsapp_messaging') && $this->module_lib->hasActive('whatsapp_messaging')){ ?>
+                                            <?php if ($show_whatsapp_channel) { ?>
                                             <td width="15%"><?php echo $note_value->whatsapp_template_id ; ?></td>
                                             <?php } ?>
                                             <td width="25%">

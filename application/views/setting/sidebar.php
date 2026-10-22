@@ -26,17 +26,26 @@
 
             <div class="tablists-divider"></div>		
 			
-			<?php if($this->rbac->hasPrivilege('sms_setting', 'can_view')) { ?>
+			<?php
+            // Tenant messaging only: central mode uses platform MSG91 (see Plan & limits).
+            // Read env directly — avoid loading libraries from this view (can fatal mid-render).
+            if (!function_exists('hospital_env')) {
+                require_once APPPATH . 'helpers/env_helper.php';
+                if (function_exists('hospital_env_boot')) {
+                    hospital_env_boot(dirname(APPPATH));
+                }
+            }
+            $messaging_is_tenant = strtolower(trim((string) hospital_env('MESSAGING_ACCOUNT', 'central'))) === 'tenant';
+            ?>
+			<?php if ($messaging_is_tenant && $this->rbac->hasPrivilege('sms_setting', 'can_view')) { ?>
                 <li><a class="<?php echo set_Innermenu('smsconfig/index'); ?>" href="<?php echo base_url(); ?>smsconfig"><?php echo $this->lang->line('sms_setting'); ?></a></li>
             <?php } ?>
 
 			<?php
-			if($this->auth->addonchk('shwm')){
-           if ($this->module_lib->hasModule('whatsapp_messaging') && $this->module_lib->hasActive('whatsapp_messaging')) {
-            if($this->rbac->hasPrivilege('whatsapp_setting', 'can_view')) { ?>
+            // Same gate as SMS Setting: plan privilege whatsapp_setting (maps to whatsapp_sms).
+            if ($messaging_is_tenant && $this->rbac->hasPrivilege('whatsapp_setting', 'can_view')) { ?>
                 <li><a class="<?php echo set_Innermenu('whatsappconfig/index'); ?>" href="<?php echo base_url(); ?>whatsappconfig"><?php echo $this->lang->line('whatsapp_setting'); ?></a></li>
-		   <?php } }
-            } ?>
+            <?php } ?>
 
 			<?php if ($this->rbac->hasPrivilege('email_setting', 'can_view')) { ?>
                 <li><a class="<?php echo set_Innermenu('emailconfig/index'); ?>" href="<?php echo base_url(); ?>emailconfig"><?php echo $this->lang->line('email_setting'); ?></a></li>

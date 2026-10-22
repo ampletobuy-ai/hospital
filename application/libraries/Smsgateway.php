@@ -23,11 +23,37 @@ class Smsgateway
      * If queue mode is ON → inserts into message_queue table.
      * If queue mode is OFF → sends directly via active SMS gateway.
      */
+    /**
+     * @param string|array $msg Message body or ['message'=>..., 'variables'=>[name=>value]]
+     */
     public function sendSMS($send_to, $msg, $template_id, $notification_type = '', $priority = 0)
     {
+        $variables = array();
+        $message = $msg;
+        if (is_array($msg)) {
+            $variables = isset($msg['variables']) && is_array($msg['variables']) ? $msg['variables'] : array();
+            $message = isset($msg['message']) ? $msg['message'] : '';
+        }
+
+        $this->_CI->load->library('messaging_account');
+        if ($this->_CI->messaging_account->isCentral()) {
+            if (empty($send_to) || ($message === '' && empty($variables) && $notification_type === '')) {
+                return false;
+            }
+            $this->_CI->load->library('central_message_gateway');
+
+            return $this->_CI->central_message_gateway->sendSms(array(
+                'template_key' => $notification_type ?: $template_id,
+                'template_name' => $template_id,
+                'mobile' => $send_to,
+                'message' => is_string($message) ? $message : '',
+                'variables' => $variables,
+            ));
+        }
+
         $sms_detail = $this->_CI->smsconfig_model->getActiveSMS();
 
-        if (empty($sms_detail) || empty($send_to) || empty($msg)) {
+        if (empty($sms_detail) || empty($send_to) || empty($message)) {
             return false;
         }
 
@@ -37,8 +63,9 @@ class Smsgateway
                 'sender_details'    => json_encode([
                     'forward_through' => 'sms',
                     'forward_value'   => $send_to,
-                    'message'         => $msg,
+                    'message'         => $message,
                     'template_id'     => $template_id,
+                    'variables'       => $variables,
                 ]),
                 'priority'          => $priority,
                 'schedule_date'     => '',
@@ -46,7 +73,7 @@ class Smsgateway
             return $this->_CI->MsgQueue_model->add($data);
         }
 
-        return $this->send($send_to, $msg, $template_id);
+        return $this->send($send_to, $message, $template_id);
     }
 
     // Legacy direct send — used by Cron queue processor and direct-mode calls

@@ -80,6 +80,7 @@ class Plan_feature_gate
         'medicine_purchase_return_report' => 'pharmacy',
         'stock_report' => 'pharmacy',
         'sms_setting' => 'whatsapp_sms',
+        'whatsapp_setting' => 'whatsapp_sms',
         'email_sms' => 'whatsapp_sms',
         'email_sms_log' => 'whatsapp_sms',
         'send_credential' => 'whatsapp_sms',
