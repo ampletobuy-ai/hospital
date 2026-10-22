@@ -148,9 +148,46 @@ class Central_db
 
     public function tenantDatabaseExists($databaseName)
     {
+        $databaseName = trim((string) $databaseName);
+        if ($databaseName === '') {
+            return false;
+        }
+
+        // Tenant DBs are created with the product (default) MySQL user. On shared
+        // platform MySQL the central user often cannot SHOW those schemas, which
+        // would make login skip a valid tenant. Prefer the product connection.
+        try {
+            include APPPATH . 'config/database.php';
+            $cfg = isset($db['default']) && is_array($db['default']) ? $db['default'] : array();
+            if (!empty($cfg['hostname']) && !empty($cfg['username'])) {
+                $port = (int) ($cfg['port'] ?? 3306);
+                if ($port <= 0) {
+                    $port = 3306;
+                }
+                $mysqli = @new mysqli(
+                    (string) $cfg['hostname'],
+                    (string) $cfg['username'],
+                    (string) ($cfg['password'] ?? ''),
+                    '',
+                    $port
+                );
+                if (empty($mysqli->connect_error)) {
+                    $escaped = $mysqli->real_escape_string($databaseName);
+                    $query = $mysqli->query("SHOW DATABASES LIKE '{$escaped}'");
+                    $exists = $query && $query->num_rows > 0;
+                    $mysqli->close();
+                    if ($exists) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Throwable $e) {
+            // Fall through to central connection check.
+        }
+
         $db = $this->connect();
-        $databaseName = $db->escape_str($databaseName);
-        $query = $db->query("SHOW DATABASES LIKE '{$databaseName}'");
+        $escaped = $db->escape_str($databaseName);
+        $query = $db->query("SHOW DATABASES LIKE '{$escaped}'");
 
         return $query && $query->num_rows() > 0;
     }

@@ -331,6 +331,49 @@ body                            { --depth: 1; }
   border: none;
 }
 
+.tb-plan {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 0;
+  max-width: 140px;
+  height: 34px;
+  margin-left: 6px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--topbar-ink) !important;
+  text-decoration: none !important;
+  line-height: 1.05;
+}
+.tb-plan:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--topbar-ink) !important;
+}
+.tb-plan-kicker {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.tb-plan-name {
+  font-size: 12px;
+  font-weight: 650;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tb-plan--empty {
+  background: transparent;
+  opacity: .85;
+}
+
 .tb-signet {
   display: flex; align-items: center; gap: 10px;
   height: 100%; padding: 0 14px 0 10px; margin-left: 4px;
@@ -412,6 +455,9 @@ body.sidebar-collapsed .content { margin-left: 64px; }
   .topbar .tb-rail .tb-btn[title="Calendar"],
   .topbar .tb-right .tb-divider { display: none; }
   .topbar .tb-signet .tb-signet-role { display: none; }
+  .topbar .tb-plan { max-width: 96px; padding: 0 8px; margin-left: 2px; }
+  .topbar .tb-plan-kicker { display: none; }
+  .topbar .tb-plan-name { font-size: 11px; max-width: 80px; }
   /* overflow:hidden on topbar clips dropdown menus — position:fixed lets them escape */
   .topbar .dropdown-menu {
     position: fixed !important;
@@ -435,6 +481,7 @@ body.sidebar-collapsed .content { margin-left: 64px; }
   .topbar .tb-rail { gap: 2px; }
   .topbar .tb-signet img,
   .topbar .tb-signet .tb-signet-avatar { width: 28px !important; height: 28px !important; }
+  .topbar .tb-plan { display: none; }
 }
 .topbar, .content {
   transition: left .25s ease, margin-left .25s ease;
