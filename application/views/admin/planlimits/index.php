@@ -70,6 +70,23 @@ $periodEnd = !empty($subscription['current_period_end'])
                                     <td class="text-end"><?php echo number_format(((int) $usage['storage']) / 1024, 1); ?> MB</td>
                                     <td class="text-end"><?php echo $storageLimitKb !== null ? number_format($storageLimitKb / 1024, 1) . ' MB' : '∞'; ?></td>
                                 </tr>
+                                <?php
+                                $messaging_usage = isset($messaging_usage) && is_array($messaging_usage) ? $messaging_usage : array();
+                                $smsUsed = (int) ($messaging_usage['sms_used'] ?? 0);
+                                $smsQuota = (int) ($messaging_usage['sms_quota'] ?? 0);
+                                $waUsed = (int) ($messaging_usage['whatsapp_used'] ?? 0);
+                                $waQuota = (int) ($messaging_usage['whatsapp_quota'] ?? 0);
+                                ?>
+                                <tr>
+                                    <td>SMS</td>
+                                    <td class="text-end"><?php echo $smsUsed; ?></td>
+                                    <td class="text-end"><?php echo $smsQuota > 0 ? $smsQuota : '∞'; ?></td>
+                                </tr>
+                                <tr>
+                                    <td>WhatsApp</td>
+                                    <td class="text-end"><?php echo $waUsed; ?></td>
+                                    <td class="text-end"><?php echo $waQuota; ?></td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>

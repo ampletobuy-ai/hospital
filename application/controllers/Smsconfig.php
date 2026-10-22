@@ -10,6 +10,11 @@ class Smsconfig extends Admin_Controller
     public function __construct()
     {
         parent::__construct();
+        $this->load->library('messaging_account');
+        // SMS Setting is for tenant gateways only; central mode uses Plan & limits.
+        if ($this->messaging_account->isCentral()) {
+            redirect('admin/planlimits');
+        }
     }
 
     public function index()
@@ -25,6 +30,9 @@ class Smsconfig extends Admin_Controller
         $sms_result         = $this->smsconfig_model->get();
         $data['statuslist'] = $this->customlib->getStatus();
         $data['smslist']    = $sms_result;
+        $data['messaging_is_central'] = false;
+        $data['central_messaging'] = array();
+
         $this->load->view('layout/header', $data);
         $this->load->view('smsconfig/smsList', $data);
         $this->load->view('layout/footer', $data);

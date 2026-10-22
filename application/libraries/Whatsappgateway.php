@@ -15,8 +15,9 @@ class Whatsappgateway
         $this->_CI           = &get_instance();
         $this->_CI->load->model('MsgQueue_model');
         $this->message_queue = $this->_CI->customlib->checkMessageMode();
+        $this->_CI->load->library('messaging_account');
 
-        // Load whatsapp config if model exists
+        // Load whatsapp config if model exists (tenant mode)
         if (file_exists(APPPATH . 'models/Whatsappconfig_model.php')) {
             $this->_CI->load->model('Whatsappconfig_model');
             $this->whatsapp_detail = $this->_CI->Whatsappconfig_model->getActiveWhatsApp();
@@ -26,7 +27,7 @@ class Whatsappgateway
     /**
      * Queue-aware WhatsApp dispatcher.
      * If queue mode ON  → inserts into message_queue table.
-     * If queue mode OFF → sends directly via Twilio or Meta.
+     * If queue mode OFF → sends directly via Twilio, Meta, or MSG91.
      *
      * @param string $notification_type  e.g. 'appointment_approved'
      * @param string $send_to            phone number with country code
@@ -35,10 +36,37 @@ class Whatsappgateway
      * @param int    $priority           1=high, 0=normal
      * @param string $schedule_date      optional datetime
      */
+    /**
+     * @param string|array $msg Message body or ['message'=>..., 'variables'=>[name=>value]]
+     */
     public function send($notification_type, $send_to, $msg, $template_id, $priority = 0, $schedule_date = '')
     {
         if (empty($send_to)) {
             return false;
+        }
+
+        $variables = array();
+        $message = $msg;
+        if (is_array($msg)) {
+            $variables = isset($msg['variables']) && is_array($msg['variables']) ? $msg['variables'] : array();
+            $message = isset($msg['message']) ? $msg['message'] : '';
+        }
+
+        if ($this->_CI->messaging_account->isCentral()) {
+            $this->_CI->load->library('central_message_gateway');
+            $templateKey = $notification_type;
+            if ($template_id !== '' && $template_id !== null) {
+                // Prefer notification type key; template_id may be msg91 name.
+                $templateKey = $notification_type ?: $template_id;
+            }
+
+            return $this->_CI->central_message_gateway->sendWhatsApp(array(
+                'template_key' => $templateKey,
+                'template_name' => $template_id,
+                'phone' => $send_to,
+                'message' => is_string($message) ? $message : '',
+                'variables' => $variables,
+            ));
         }
 
         if ($this->message_queue) {
@@ -48,15 +76,16 @@ class Whatsappgateway
                 'sender_details'    => json_encode([
                     'forward_through' => 'whatsapp',
                     'forward_value'   => $send_to,
-                    'message'         => $msg,
+                    'message'         => $message,
                     'template_id'     => $template_id,
+                    'variables'       => $variables,
                 ]),
                 'priority'          => $priority,
             ];
             return $this->_CI->MsgQueue_model->add($data);
         }
 
-        return $this->sentWhatsappMsg($send_to, $msg, $template_id);
+        return $this->sentWhatsappMsg($send_to, $message, $template_id);
     }
 
     /**
@@ -72,6 +101,8 @@ class Whatsappgateway
             return $this->sendByTwilio($this->whatsapp_detail, $send_to, $template_id, $msg);
         } elseif ($this->whatsapp_detail->type == 'meta') {
             return $this->sendMetaTemplate($this->whatsapp_detail, $send_to, $template_id, $this->whatsapp_detail->language, $msg);
+        } elseif ($this->whatsapp_detail->type == 'msg91') {
+            return $this->sendByMsg91($this->whatsapp_detail, $send_to, $template_id, $msg);
         }
 
         return false;
@@ -115,4 +146,19 @@ class Whatsappgateway
         return ($response && empty($response->error_message));
     }
     /* ===================== TWILIO ===================== */
+
+    /* ===================== MSG91 ===================== */
+    private function sendByMsg91($whatsapp_detail, $send_to, $template_id, $msg)
+    {
+        $params = [
+            'authkey'           => $whatsapp_detail->authkey,
+            'integrated_number' => $whatsapp_detail->contact,
+            'namespace'         => $whatsapp_detail->username,
+        ];
+        $this->_CI->load->library('msg91_whatsapp', $params);
+        $language = !empty($whatsapp_detail->language) ? $whatsapp_detail->language : 'en';
+
+        return (bool) $this->_CI->msg91_whatsapp->sendTemplate($send_to, $template_id, $language, $msg);
+    }
+    /* ===================== MSG91 ===================== */
 }

@@ -14,6 +14,48 @@
             <div class="card-header">
                 <h3 class="card-title titlefix"><?php echo $this->lang->line('sms_setting'); ?></h3>
             </div>
+            <?php
+            $messaging_is_central = !empty($messaging_is_central);
+            $central_messaging = isset($central_messaging) && is_array($central_messaging) ? $central_messaging : array();
+            if ($messaging_is_central) {
+                $sms_enabled_val = !empty($central_messaging['sms_enabled']) ? 1 : 0;
+            ?>
+            <div class="p-3">
+                <div class="alert alert-info mb-3">
+                    <p class="mb-2"><strong><?php echo $this->lang->line('central_messaging_title'); ?></strong></p>
+                    <p class="mb-2"><?php echo $this->lang->line('central_messaging_hint'); ?></p>
+                    <p class="mb-0">
+                        <?php echo $this->lang->line('sms'); ?>:
+                        <?php echo (int) ($central_messaging['sms_used'] ?? 0); ?> / <?php echo (int) ($central_messaging['sms_quota'] ?? 0); ?>
+                        &nbsp;·&nbsp;
+                        WhatsApp:
+                        <?php echo (int) ($central_messaging['whatsapp_used'] ?? 0); ?> / <?php echo (int) ($central_messaging['whatsapp_quota'] ?? 0); ?>
+                    </p>
+                    <?php if (!empty($central_messaging['whatsapp_needs_pack'])) { ?>
+                        <p class="mb-0 mt-2 text-muted"><?php echo $this->lang->line('central_whatsapp_pack_required'); ?></p>
+                    <?php } ?>
+                </div>
+                <form id="central_sms_preferences_form" action="<?php echo site_url('smsconfig/preferences'); ?>" method="post">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label"><?php echo $this->lang->line('central_sms_enabled'); ?></label>
+                                <select class="form-control" name="sms_enabled">
+                                    <option value="1" <?php echo $sms_enabled_val === 1 ? 'selected' : ''; ?>><?php echo $this->lang->line('enabled'); ?></option>
+                                    <option value="0" <?php echo $sms_enabled_val === 0 ? 'selected' : ''; ?>><?php echo $this->lang->line('disabled'); ?></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <?php if ($this->rbac->hasPrivilege('sms_setting', 'can_edit')) { ?>
+                    <div class="mt-2">
+                        <span class="central_sms_preferences_loader"></span>
+                        <button type="submit" class="btn btn-info btn-sm"><i class="fa fa-check-circle"></i> <?php echo $this->lang->line('save'); ?></button>
+                    </div>
+                    <?php } ?>
+                </form>
+            </div>
+            <?php } else { ?>
                     <div class="navscroll-wrap">
                     <button type="button" class="navscroll-btn navscroll-prev" aria-label="Scroll tabs left"><i class="fa fa-angle-left"></i></button>
                     <ul class="nav nav-tabs navlistscroll">
@@ -630,6 +672,7 @@
                             </form>
                         </div>
                     </div>
+            <?php } ?>
             <!-- /.tab-content -->
             </div>
         </div>
@@ -662,6 +705,36 @@ function check_sms_in_array($find, $array) {
 ?>
 
 
+<?php if (!empty($messaging_is_central)) { ?>
+<script type="text/javascript">
+(function ($) {
+    var img_path = "<?php echo $this->media_storage->getImageURL('backend/images/loading.gif'); ?>";
+    $('#central_sms_preferences_form').on('submit', function (e) {
+        e.preventDefault();
+        var $form = $(this);
+        $('.central_sms_preferences_loader').html('<img src="' + img_path + '">');
+        $.ajax({
+            type: 'POST',
+            dataType: 'JSON',
+            url: $form.attr('action'),
+            data: $form.serialize(),
+            success: function (data) {
+                if (data.st === 1) {
+                    errorMsg(data.msg.error || data.msg);
+                } else {
+                    successMsg(data.msg);
+                    setTimeout(function () { window.location.reload(); }, 800);
+                }
+                $('.central_sms_preferences_loader').html('');
+            },
+            error: function () {
+                $('.central_sms_preferences_loader').html('');
+            }
+        });
+    });
+}(jQuery));
+</script>
+<?php } else { ?>
 <script type="text/javascript">
     var img_path = "<?php echo $this->media_storage->getImageURL('backend/images/loading.gif'); ?>";
     $("#clickatell").submit(function (e) {
@@ -1019,3 +1092,4 @@ $("#bulk_sms").submit(function (e) {
         setTimeout(update, 250); // re-check after fonts/layout settle
     });
 </script>
+<?php } ?>

@@ -68,13 +68,13 @@ class Mailsmsconf
                 $this->CI->mailgateway->sentMail($send_for, $sender_details['email'], $body['subject'], $body['message']);
             }
             if ($chk_mail_sms['sms']) {
-                $this->CI->smsgateway->sendSMS($sender_details['contact_no'], $body['message'], $chk_mail_sms['template_id'], $send_for);
+                $this->CI->smsgateway->sendSMS($sender_details['contact_no'], hospital_channel_payload($body), $chk_mail_sms['template_id'], $send_for);
             }
             if ($chk_mail_sms['mobileapp'] && !empty($sender_details['app_key'])) {
                 $this->CI->pushnotification->sentNotification($send_for, $sender_details['app_key'], $body['subject'], $body['message']);
             }
             if ($chk_mail_sms['whatsapp'] && !empty($sender_details['contact_no'])) {
-                $this->CI->whatsappgateway->send($send_for, $sender_details['contact_no'], $body['message'], $chk_mail_sms['whatsapp_template_id'] ?? '');
+                $this->CI->whatsappgateway->send($send_for, $sender_details['contact_no'], hospital_channel_payload($body), $chk_mail_sms['whatsapp_template_id'] ?? '');
             }
 
         // ---------------------------------------------------------------
@@ -95,13 +95,13 @@ class Mailsmsconf
                 $this->CI->mailgateway->sentMail($send_for, $sender_details['email'], $body['subject'], $body['message']);
             }
             if ($chk_mail_sms['sms']) {
-                $this->CI->smsgateway->sendSMS($sender_details['contact_no'], $body['message'], $chk_mail_sms['template_id'], $send_for);
+                $this->CI->smsgateway->sendSMS($sender_details['contact_no'], hospital_channel_payload($body), $chk_mail_sms['template_id'], $send_for);
             }
             if ($chk_mail_sms['mobileapp'] && !empty($sender_details['app_key'])) {
                 $this->CI->pushnotification->sentNotification($send_for, $sender_details['app_key'], $body['subject'], $body['message']);
             }
             if ($chk_mail_sms['whatsapp'] && !empty($sender_details['contact_no'])) {
-                $this->CI->whatsappgateway->send($send_for, $sender_details['contact_no'], $body['message'], $chk_mail_sms['whatsapp_template_id'] ?? '');
+                $this->CI->whatsappgateway->send($send_for, $sender_details['contact_no'], hospital_channel_payload($body), $chk_mail_sms['whatsapp_template_id'] ?? '');
             }
 
         // ---------------------------------------------------------------
@@ -121,13 +121,13 @@ class Mailsmsconf
                 $this->CI->mailgateway->sentMail($send_for, $sender_details['email'], $body['subject'], $body['message']);
             }
             if ($chk_mail_sms['sms']) {
-                $this->CI->smsgateway->sendSMS($sender_details['contact_no'], $body['message'], $chk_mail_sms['template_id'], $send_for);
+                $this->CI->smsgateway->sendSMS($sender_details['contact_no'], hospital_channel_payload($body), $chk_mail_sms['template_id'], $send_for);
             }
             if ($chk_mail_sms['mobileapp'] && !empty($sender_details['app_key'])) {
                 $this->CI->pushnotification->sentNotification($send_for, $sender_details['app_key'], $body['subject'], $body['message']);
             }
             if ($chk_mail_sms['whatsapp'] && !empty($sender_details['contact_no'])) {
-                $this->CI->whatsappgateway->send($send_for, $sender_details['contact_no'], $body['message'], $chk_mail_sms['whatsapp_template_id'] ?? '');
+                $this->CI->whatsappgateway->send($send_for, $sender_details['contact_no'], hospital_channel_payload($body), $chk_mail_sms['whatsapp_template_id'] ?? '');
             }
 
         // ---------------------------------------------------------------
@@ -147,13 +147,13 @@ class Mailsmsconf
                 $this->CI->mailgateway->sentMail($send_for, $sender_details['email'], $body['subject'], $body['message']);
             }
             if ($chk_mail_sms['sms']) {
-                $this->CI->smsgateway->sendSMS($sender_details['contact_no'], $body['message'], $chk_mail_sms['template_id'], $send_for);
+                $this->CI->smsgateway->sendSMS($sender_details['contact_no'], hospital_channel_payload($body), $chk_mail_sms['template_id'], $send_for);
             }
             if ($chk_mail_sms['mobileapp'] && !empty($sender_details['app_key'])) {
                 $this->CI->pushnotification->sentNotification($send_for, $sender_details['app_key'], $body['subject'], $body['message']);
             }
             if ($chk_mail_sms['whatsapp'] && !empty($sender_details['contact_no'])) {
-                $this->CI->whatsappgateway->send($send_for, $sender_details['contact_no'], $body['message'], $chk_mail_sms['whatsapp_template_id'] ?? '');
+                $this->CI->whatsappgateway->send($send_for, $sender_details['contact_no'], hospital_channel_payload($body), $chk_mail_sms['whatsapp_template_id'] ?? '');
             }
 
         // ---------------------------------------------------------------
@@ -174,13 +174,13 @@ class Mailsmsconf
                 $this->CI->mailgateway->sentMail($send_for, $sender_details['email'], $body['subject'], $body['message']);
             }
             if ($chk_mail_sms['sms']) {
-                $this->CI->smsgateway->sendSMS($sender_details['mobileno'], $body['message'], $chk_mail_sms['template_id'], $send_for);
+                $this->CI->smsgateway->sendSMS($sender_details['mobileno'], hospital_channel_payload($body), $chk_mail_sms['template_id'], $send_for);
             }
             if ($chk_mail_sms['mobileapp'] && !empty($sender_details['app_key'])) {
                 $this->CI->pushnotification->sentNotification($send_for, $sender_details['app_key'], $body['subject'], $body['message']);
             }
             if ($chk_mail_sms['whatsapp'] && !empty($sender_details['mobileno'])) {
-                $this->CI->whatsappgateway->send($send_for, $sender_details['mobileno'], $body['message'], $chk_mail_sms['whatsapp_template_id'] ?? '');
+                $this->CI->whatsappgateway->send($send_for, $sender_details['mobileno'], hospital_channel_payload($body), $chk_mail_sms['whatsapp_template_id'] ?? '');
             }
 
         // ---------------------------------------------------------------
@@ -201,13 +201,13 @@ class Mailsmsconf
                 $this->CI->mailgateway->sentMail($send_for, $sender_details['email'], $body['subject'], $body['message'],1);
             }
             if ($chk_mail_sms['sms']) {
-                $this->CI->smsgateway->sendSMS($sender_details['contact_no'], $body['message'], $chk_mail_sms['template_id'], $send_for,1);
+                $this->CI->smsgateway->sendSMS($sender_details['contact_no'], hospital_channel_payload($body), $chk_mail_sms['template_id'], $send_for,1);
             }
             if ($chk_mail_sms['mobileapp'] && !empty($sender_details['app_key'])) {
                 $this->CI->pushnotification->sentNotification($send_for, $sender_details['app_key'], $body['subject'], $body['message'],1);
             }
             if ($chk_mail_sms['whatsapp'] && !empty($sender_details['contact_no'])) {
-                $this->CI->whatsappgateway->send($send_for, $sender_details['contact_no'], $body['message'], $chk_mail_sms['whatsapp_template_id'] ?? '',1);
+                $this->CI->whatsappgateway->send($send_for, $sender_details['contact_no'], hospital_channel_payload($body), $chk_mail_sms['whatsapp_template_id'] ?? '',1);
             }
 
         // ---------------------------------------------------------------
@@ -227,13 +227,13 @@ class Mailsmsconf
                 $this->CI->mailgateway->sentMail($send_for, $sender_details['email'], $body['subject'], $body['message']);
             }
             if ($chk_mail_sms['sms']) {
-                $this->CI->smsgateway->sendSMS($sender_details['contact_no'], $body['message'], $chk_mail_sms['template_id'], $send_for);
+                $this->CI->smsgateway->sendSMS($sender_details['contact_no'], hospital_channel_payload($body), $chk_mail_sms['template_id'], $send_for);
             }
             if ($chk_mail_sms['mobileapp'] && !empty($sender_details['app_key'])) {
                 $this->CI->pushnotification->sentNotification($send_for, $sender_details['app_key'], $body['subject'], $body['message']);
             }
             if ($chk_mail_sms['whatsapp'] && !empty($sender_details['contact_no'])) {
-                $this->CI->whatsappgateway->send($send_for, $sender_details['contact_no'], $body['message'], $chk_mail_sms['whatsapp_template_id'] ?? '');
+                $this->CI->whatsappgateway->send($send_for, $sender_details['contact_no'], hospital_channel_payload($body), $chk_mail_sms['whatsapp_template_id'] ?? '');
             }
 
         // ---------------------------------------------------------------
@@ -285,14 +285,14 @@ class Mailsmsconf
             if ($chk_mail_sms['sms'] && !empty($staff_sms_list)) {
                 foreach ($staff_sms_list as $contact_no => $staff_value) {
                     $sms_body = hospitalLiveMeetingStaff($staff_value, nl2br($template), $subject);
-                    $this->CI->smsgateway->sendSMS($contact_no, $sms_body['message'], $template_id, 'live_meeting');
+                    $this->CI->smsgateway->sendSMS($contact_no, hospital_channel_payload($sms_body), $template_id, 'live_meeting');
                 }
             }
 
             if ($chk_mail_sms['whatsapp'] && !empty($staff_sms_list)) {
                 foreach ($staff_sms_list as $contact_no => $staff_value) {
                     $wa_body = hospitalLiveMeetingStaff($staff_value, nl2br($template), $subject);
-                    $this->CI->whatsappgateway->send('live_meeting', $contact_no, $wa_body['message'], $chk_mail_sms['whatsapp_template_id'] ?? '');
+                    $this->CI->whatsappgateway->send('live_meeting', $contact_no, hospital_channel_payload($wa_body), $chk_mail_sms['whatsapp_template_id'] ?? '');
                 }
             }
         }

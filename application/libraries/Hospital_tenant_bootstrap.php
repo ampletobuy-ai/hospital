@@ -119,6 +119,27 @@ class Hospital_tenant_bootstrap
         } catch (Throwable $e) {
             log_message('error', 'Plan permission sync skipped during bootstrap: ' . $e->getMessage());
         }
+
+        // Ensure WhatsApp Messaging module rows exist when the plan includes whatsapp_sms.
+        try {
+            $this->CI =& get_instance();
+            if (!isset($this->CI->plan_feature_gate)) {
+                $this->CI->load->library('plan_feature_gate');
+            }
+            $this->CI->plan_feature_gate->loadForTenantId($tenantId);
+            if ($this->CI->plan_feature_gate->can('whatsapp_sms')) {
+                $this->CI->load->library('whatsapp_module_setup');
+                // Use CI db bound to the tenant connection passed into bootstrap when possible.
+                $prevDb = isset($this->CI->db) ? $this->CI->db : null;
+                $this->CI->db = $db;
+                $this->CI->whatsapp_module_setup->ensure();
+                if ($prevDb !== null) {
+                    $this->CI->db = $prevDb;
+                }
+            }
+        } catch (Throwable $e) {
+            log_message('error', 'WhatsApp module bootstrap skipped: ' . $e->getMessage());
+        }
     }
 
     /**
