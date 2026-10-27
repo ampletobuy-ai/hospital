@@ -73,4 +73,35 @@ class Messaging_account
 
         return $lang !== '' ? $lang : 'en';
     }
+
+    /**
+     * Public HTTPS URL for a central WhatsApp template IMAGE header, or null.
+     * Mirrors retail-pos MessagingAccount::whatsappHeaderImageUrl().
+     *
+     * @param string $templateKey e.g. opd_patient_registration
+     * @return string|null
+     */
+    public function whatsappHeaderImageUrl($templateKey)
+    {
+        $map = (array) $this->CI->config->item('messaging_whatsapp_header_images');
+        $configured = trim((string) ($map[$templateKey] ?? ''));
+        if ($configured === '') {
+            return null;
+        }
+
+        if (preg_match('#^https?://#i', $configured) === 1) {
+            return $configured;
+        }
+
+        $relative = ltrim(str_replace('\\', '/', $configured), '/');
+        $base = rtrim((string) hospital_env('HOSPITAL_BASE_URL', ''), '/');
+        if ($base === '' && function_exists('base_url')) {
+            $base = rtrim((string) base_url(), '/');
+        }
+        if ($base === '') {
+            return null;
+        }
+
+        return $base . '/' . $relative;
+    }
 }

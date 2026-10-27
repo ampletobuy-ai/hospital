@@ -250,6 +250,17 @@ class Central_message_gateway
     {
         $orderedKeys = array_values(is_array($template['variables'] ?? null) ? $template['variables'] : array());
         $components = array();
+
+        // Static IMAGE header (MSG91 header_1) — same pattern as retail-pos sale_invoice.
+        $templateKey = trim((string) ($template['key'] ?? ''));
+        $headerImageUrl = $templateKey !== '' ? $this->CI->messaging_account->whatsappHeaderImageUrl($templateKey) : null;
+        if ($headerImageUrl !== null && $headerImageUrl !== '') {
+            $components['header_1'] = array(
+                'type' => 'image',
+                'value' => $headerImageUrl,
+            );
+        }
+
         foreach ($orderedKeys as $index => $name) {
             $value = trim($this->resolveVariable($variables, $name));
             $components['body_' . ($index + 1)] = array(

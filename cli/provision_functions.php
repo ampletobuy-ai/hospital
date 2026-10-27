@@ -273,7 +273,7 @@ function hospital_cli_ensure_whatsapp_module_rows(mysqli $mysqli)
         $res->free();
     }
     if (!$row) {
-        $mysqli->query("INSERT INTO permission_group (name, short_code, is_active, system, sort_order) VALUES ('WhatsApp Messaging', 'whatsapp_messaging', 1, 0, 17.10)");
+        $mysqli->query("INSERT INTO permission_group (name, short_code, is_active, `system`, sort_order) VALUES ('WhatsApp Messaging', 'whatsapp_messaging', 1, 0, 17.10)");
         $groupId = (int) $mysqli->insert_id;
     } else {
         $groupId = (int) $row['id'];
