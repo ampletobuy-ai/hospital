@@ -724,14 +724,40 @@ class Customlib
 
     public function getHospitalCurrencyFormat()
     {
+        // Always prefer live sch_settings so Setup → Settings changes apply
+        // immediately for every logged-in user (session can stay stale on VPS).
+        static $currency_symbol = null;
+        if ($currency_symbol !== null) {
+            return $currency_symbol;
+        }
+
+        try {
+            if (!isset($this->CI->setting_model)) {
+                $this->CI->load->model('setting_model');
+            }
+            $setting = $this->CI->setting_model->getSetting();
+            if (!empty($setting) && isset($setting->currency_symbol) && $setting->currency_symbol !== '') {
+                $currency_symbol = $setting->currency_symbol;
+                return $currency_symbol;
+            }
+        } catch (Throwable $e) {
+            // Fall through to session below.
+        }
+
         $admin = $this->CI->session->userdata('hospitaladmin');
-        if ($admin) {
-            return $admin['currency_symbol'];
+        if ($admin && isset($admin['currency_symbol'])) {
+            $currency_symbol = $admin['currency_symbol'];
+            return $currency_symbol;
         }
         if ($this->CI->session->userdata('patient')) {
             $patient = $this->CI->session->userdata('patient');
-            return $patient['currency_symbol'];
+            if (isset($patient['currency_symbol'])) {
+                $currency_symbol = $patient['currency_symbol'];
+                return $currency_symbol;
+            }
         }
+
+        return $currency_symbol;
     }
 
     public function getLoggedInUserData()

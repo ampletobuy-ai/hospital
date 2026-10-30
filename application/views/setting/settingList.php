@@ -505,6 +505,20 @@ $genderList = $this->customlib->getGender();
         });
     });
 
+    // Suggest a symbol when Currency changes (Currency and Symbol are separate fields).
+    var currencySymbolMap = {
+        'INR': '₹', 'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'CNY': '¥',
+        'AED': 'د.إ', 'SAR': '﷼', 'AUD': 'A$', 'CAD': 'C$', 'SGD': 'S$',
+        'NPR': 'रू', 'PKR': '₨', 'BDT': '৳', 'LKR': 'Rs', 'MYR': 'RM',
+        'THB': '฿', 'KRW': '₩', 'CHF': 'CHF', 'NZD': 'NZ$', 'HKD': 'HK$'
+    };
+    $(document).on('change', 'select[name="sch_currency"]', function () {
+        var code = $(this).val();
+        if (currencySymbolMap[code]) {
+            $('input[name="sch_currency_symbol"]').val(currencySymbolMap[code]);
+        }
+    });
+
     $(document).on('click', '.submit_schsetting', function (e) {
         var $this = $(this);
         $this.btnLoading();

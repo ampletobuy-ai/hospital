@@ -291,7 +291,7 @@ class Schsettings extends Admin_Controller
         $this->form_validation->set_rules('sch_address', $this->lang->line('address'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('sch_email', $this->lang->line('email'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('sch_lang_id', $this->lang->line('language'), 'trim|required|xss_clean');
-        $this->form_validation->set_rules('sch_currency_symbol', $this->lang->line('currency_symbol'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('sch_currency_symbol', $this->lang->line('currency_symbol'), 'trim|required');
         $this->form_validation->set_rules('sch_timezone', $this->lang->line('time_zone'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('sch_currency', $this->lang->line('currency'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('sch_date_format', $this->lang->line('date_format'), 'trim|required|xss_clean');
@@ -337,7 +337,8 @@ class Schsettings extends Admin_Controller
                 'date_format'              => $this->input->post('sch_date_format', TRUE),
                 'time_format'              => $this->input->post('time_format', TRUE),
                 'currency'                 => $this->input->post('sch_currency', TRUE),
-                'currency_symbol'          => $this->input->post('sch_currency_symbol', TRUE),
+                // Keep UTF-8 currency glyphs (e.g. ₹) intact — do not XSS-filter this field.
+                'currency_symbol'          => trim((string) $this->input->post('sch_currency_symbol', FALSE)),
                 'theme'                    => $this->input->post('theme', TRUE),
                 'credit_limit'             => $this->input->post('credit_limit', TRUE),
                 'doctor_restriction'       => $this->input->post('doctor_restriction_mode', TRUE),
@@ -354,18 +355,72 @@ class Schsettings extends Admin_Controller
             );
             $this->setting_model->add($data);
             $this->load->helper('lang');
-            $this->session->userdata['hospitaladmin']['date_format']            = $this->input->post('sch_date_format', TRUE);
-            $this->session->userdata['hospitaladmin']['currency_symbol']        = $this->input->post('sch_currency_symbol', TRUE);
-            $this->session->userdata['hospitaladmin']['timezone']               = $this->input->post('sch_timezone', TRUE);
-            $this->session->userdata['hospitaladmin']['theme']                  = $this->input->post('theme', TRUE);
-            $this->session->userdata['hospitaladmin']['sh_variant']             = $this->input->post('theme', TRUE);
-            $this->session->userdata['hospitaladmin']['credit_limit']           = $this->input->post('credit_limit', TRUE);
-            $this->session->userdata['hospitaladmin']['opd_record_month']       = $this->input->post('opd_record_month', TRUE);
-            $this->session->userdata['hospitaladmin']['doctor_restriction']     = $this->input->post('doctor_restriction_mode', TRUE);
-            $this->session->userdata['hospitaladmin']['superadmin_restriction'] = $this->input->post('superadmin_restriction_mode', TRUE);
+            $this->syncHospitalAdminSessionFromSettings($data);
             set_language($this->input->post('sch_lang_id', TRUE));
             $array = array('status' => 'success', 'error' => '', 'message' => $this->lang->line('success_message'));
             echo json_encode($array);
+        }
+    }
+
+    /**
+     * Persist nested hospitaladmin session keys via set_userdata so production
+     * session drivers (files/redis/db) actually write the updated currency etc.
+     */
+    private function syncHospitalAdminSessionFromSettings(array $data)
+    {
+        $hospitaladmin = $this->session->userdata('hospitaladmin');
+        if (!is_array($hospitaladmin)) {
+            return;
+        }
+
+        if (isset($data['date_format'])) {
+            $hospitaladmin['date_format'] = $data['date_format'];
+        }
+        if (isset($data['currency_symbol'])) {
+            $hospitaladmin['currency_symbol'] = $data['currency_symbol'];
+        }
+        if (isset($data['timezone'])) {
+            $hospitaladmin['timezone'] = $data['timezone'];
+        }
+        if (isset($data['theme'])) {
+            $hospitaladmin['theme'] = $data['theme'];
+            $hospitaladmin['sh_variant'] = $data['theme'];
+        }
+        if (isset($data['credit_limit'])) {
+            $hospitaladmin['credit_limit'] = $data['credit_limit'];
+        }
+        if (array_key_exists('opd_record_month', $data) || $this->input->post('opd_record_month') !== null) {
+            $hospitaladmin['opd_record_month'] = $this->input->post('opd_record_month', TRUE);
+        }
+        if (isset($data['doctor_restriction'])) {
+            $hospitaladmin['doctor_restriction'] = $data['doctor_restriction'];
+        }
+        if (isset($data['superadmin_restriction'])) {
+            $hospitaladmin['superadmin_restriction'] = $data['superadmin_restriction'];
+        }
+        if (isset($data['is_rtl'])) {
+            $hospitaladmin['is_rtl'] = $data['is_rtl'];
+        }
+        if (isset($data['time_format'])) {
+            $hospitaladmin['time_format'] = $data['time_format'];
+        }
+
+        $this->session->set_userdata('hospitaladmin', $hospitaladmin);
+
+        // Patient panel sessions also cache currency_symbol at login.
+        $patient = $this->session->userdata('patient');
+        if (is_array($patient) && isset($data['currency_symbol'])) {
+            $patient['currency_symbol'] = $data['currency_symbol'];
+            if (isset($data['date_format'])) {
+                $patient['date_format'] = $data['date_format'];
+            }
+            if (isset($data['timezone'])) {
+                $patient['timezone'] = $data['timezone'];
+            }
+            if (isset($data['time_format'])) {
+                $patient['time_format'] = $data['time_format'];
+            }
+            $this->session->set_userdata('patient', $patient);
         }
     }
 
@@ -379,7 +434,7 @@ class Schsettings extends Admin_Controller
         $this->form_validation->set_rules('sch_address', $this->lang->line('address'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('sch_email', $this->lang->line('email'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('sch_lang_id', $this->lang->line('language'), 'trim|required|xss_clean');
-        $this->form_validation->set_rules('sch_currency_symbol', $this->lang->line('currency_symbol'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('sch_currency_symbol', $this->lang->line('currency_symbol'), 'trim|required');
         $this->form_validation->set_rules('sch_timezone', $this->lang->line('time_zone'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('sch_currency', $this->lang->line('currency'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('sch_date_format', $this->lang->line('date_format'), 'trim|required|xss_clean');
@@ -408,7 +463,7 @@ class Schsettings extends Admin_Controller
                 'time_format'              => $this->input->post('time_format', TRUE),
                 'is_rtl'                   => $this->input->post('sch_is_rtl', TRUE),
                 'currency'                 => $this->input->post('sch_currency', TRUE),
-                'currency_symbol'          => $this->input->post('sch_currency_symbol', TRUE),
+                'currency_symbol'          => trim((string) $this->input->post('sch_currency_symbol', FALSE)),
                 'theme'                    => $this->input->post('theme', TRUE),
                 'credit_limit'             => $this->input->post('credit_limit', TRUE),
                 'doctor_restriction'       => $this->input->post('doctor_restriction_mode', TRUE),
@@ -420,16 +475,7 @@ class Schsettings extends Admin_Controller
             );
             $this->setting_model->add($data);
             $this->load->helper('lang');
-            $this->session->userdata['hospitaladmin']['date_format']            = $this->input->post('sch_date_format', TRUE);
-            $this->session->userdata['hospitaladmin']['currency_symbol']        = $this->input->post('sch_currency_symbol', TRUE);
-            $this->session->userdata['hospitaladmin']['is_rtl']                 = $this->input->post('sch_is_rtl', TRUE);
-            $this->session->userdata['hospitaladmin']['timezone']               = $this->input->post('sch_timezone', TRUE);
-            $this->session->userdata['hospitaladmin']['theme']                  = $this->input->post('theme', TRUE);
-            $this->session->userdata['hospitaladmin']['sh_variant']             = $this->input->post('theme', TRUE);
-            $this->session->userdata['hospitaladmin']['credit_limit']           = $this->input->post('credit_limit', TRUE);
-            $this->session->userdata['hospitaladmin']['opd_record_month']       = $this->input->post('opd_record_month', TRUE);
-            $this->session->userdata['hospitaladmin']['doctor_restriction']     = $this->input->post('doctor_restriction_mode', TRUE);
-            $this->session->userdata['hospitaladmin']['superadmin_restriction'] = $this->input->post('superadmin_restriction_mode', TRUE);
+            $this->syncHospitalAdminSessionFromSettings($data);
             set_language($this->input->post('sch_lang_id', TRUE));
             $array = array('status' => 'success', 'error' => '', 'message' => $this->lang->line('success_message'));
             echo json_encode($array);
