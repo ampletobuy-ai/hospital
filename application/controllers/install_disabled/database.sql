@@ -4756,7 +4756,7 @@ CREATE TABLE `sch_settings` (
 --
 
 INSERT INTO `sch_settings` (`id`, `base_url`, `folder_path`, `name`, `biometric`, `biometric_device`, `email`, `phone`, `address`, `start_month`, `session_id`, `lang_id`, `languages`, `dise_code`, `date_format`, `time_format`, `currency`, `currency_symbol`, `is_rtl`, `timezone`, `image`, `mini_logo`, `theme`, `credit_limit`, `opd_record_month`, `is_active`, `cron_secret_key`, `doctor_restriction`, `superadmin_restriction`, `patient_panel`, `patient_delete_account`, `scan_code_type`, `message_mode`, `message_queue_attempts`, `message_queue_batch_size`, `mobile_api_url`, `app_primary_color_code`, `app_secondary_color_code`, `app_logo`, `notification_poll_interval`, `zoom_api_key`, `zoom_api_secret`, `created_at`, `updated_at`, `saas_key`) VALUES
-(1, NULL, NULL, 'Qubex Track', 0, NULL, 'Your Hospital Email', 'Your Hospital Phone', 'Your Hospital Address', '', NULL, 4, '[\"4\"]', 'Your Hospital Code', 'm/d/Y', '12-hour', 'USD', '$', 'disabled', 'UTC', '0.png', '0mini_logo.png', 'default.jpg', '20000', '1', 'no', '', 'disabled', 'enabled', 'enabled', 'disabled', 'barcode', 1, 3, 10, '', '#424242', '#eeeeee', '0app_logo.png', 60, '', '', '2021-10-21 23:58:24', '2026-06-25 06:35:55', NULL);
+(1, NULL, NULL, 'Qubex Track', 0, NULL, 'Your Hospital Email', 'Your Hospital Phone', 'Your Hospital Address', '', NULL, 4, '[\"4\"]', 'Your Hospital Code', 'd/m/Y', '24-hour', 'INR', '₹', 'disabled', 'Asia/Kolkata', '0.png', '0mini_logo.png', 'default.jpg', '20000', '1', 'no', '', 'disabled', 'enabled', 'enabled', 'disabled', 'barcode', 1, 3, 10, '', '#424242', '#eeeeee', '0app_logo.png', 60, '', '', '2021-10-21 23:58:24', '2026-06-25 06:35:55', NULL);
 
 -- --------------------------------------------------------
 

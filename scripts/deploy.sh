@@ -73,6 +73,9 @@ $COMPOSE exec -T app sh -c '
   chmod -R ug+rwX application/cache application/logs application/sessions uploads temp 2>/dev/null || true
 ' || true
 
+echo "==> Align legacy USD/\$ seed → INR/₹ (template + tenants; skips intentional other currencies)"
+$COMPOSE exec -T app php cli/fix_currency_inr_defaults.php || true
+
 echo "==> Healthcheck ${DEPLOY_HEALTHCHECK_URL}"
 code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 -L "${DEPLOY_HEALTHCHECK_URL}" || true)"
 echo "HTTP ${code}"
