@@ -1,10 +1,20 @@
 <?php
-$__print_details = (isset($print_details) && is_array($print_details)) ? $print_details : array();
+// printing_model->get('', $for) returns result_array() → [0 => [...]]
+// printing_model->get($id) / getheaderfooter() return a flat row_array().
+// Normalize both shapes so blank-line spacing actually applies on print.
+$__print_details_raw = (isset($print_details) && is_array($print_details)) ? $print_details : array();
+if (isset($__print_details_raw[0]) && is_array($__print_details_raw[0])) {
+    $__print_details = $__print_details_raw[0];
+} else {
+    $__print_details = $__print_details_raw;
+}
 $__blank_before = max(0, min(50, (int) ($__print_details['blank_lines_before'] ?? 0)));
 $__blank_after_header = max(0, min(50, (int) ($__print_details['blank_lines_after_header'] ?? 0)));
 $__has_print_header = !empty($__print_details['print_header']);
 $__line_px = 18;
 $__header_img_h = $__has_print_header ? 100 : 0;
+// header-space reserves room for the fixed header image + extra blank lines
+// (used for pre-printed letterhead when show_header is off / no image).
 $__header_space_h = $__header_img_h + ($__blank_before * $__line_px);
 $__content_pad_top = $__blank_after_header * $__line_px;
 ?>
@@ -32,7 +42,7 @@ body {
   overflow: hidden;
 }
 .fixed-print-header img { height: 100px; width: 100%; display: block; object-fit: cover; }
-.header-space  { height: <?php echo (int) $__header_space_h; ?>px !important; }
+.header-space  { height: <?php echo (int) $__header_space_h; ?>px !important; min-height: <?php echo (int) $__header_space_h; ?>px !important; }
 .footer-space  { height: 70px; }
 .table-print-full { width: 100%; border-collapse: collapse; }
 .print-area { padding: 0; }

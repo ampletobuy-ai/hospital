@@ -60,9 +60,13 @@
   .ps-0{padding-left: 0;}
   .ps-1{padding-left: 0px !important;}
   .ps-2px{padding-left: 2px;}
+  /* Height for .header-space / .fixed-print-header is set dynamically by
+     admin/shared/_print_css.php from print_setting blank_lines_* values.
+     Keep only layout defaults here so hardcoded 100px does not wipe blank lines. */
   .fixed-print-header, .header-space{
-    height: 100px;padding:0px;margin-bottom: 0;margin-top: 0;}
-  .fixed-print-header {position: fixed; top: 0; width: 100%;}
+    padding:0px;margin-bottom: 0;margin-top: 0;}
+  .fixed-print-header {position: fixed; top: 0; width: 100%; height: 100px;}
+  .header-space { height: 100px; }
   .footer-fixed, .footer-space {height: 70px;padding-top: 10px; overflow: hidden; }
   .footer-fixed {
     position: fixed;
