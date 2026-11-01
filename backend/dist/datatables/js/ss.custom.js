@@ -161,6 +161,10 @@ $(document).ready(function(){
         if ($.fn.DataTable.isDataTable('.'+_selector)) { // if exist datatable it will destrory first
          $('.'+_selector).DataTable().destroy();
        }
+        // Show more page number buttons (default DataTables value is 7 → ~5 visible).
+        if ($.fn.dataTable && $.fn.dataTable.ext && $.fn.dataTable.ext.pager) {
+            $.fn.dataTable.ext.pager.numbers_length = 10;
+        }
         // Resolve the export heading once so the print customize can decide whether
         // to keep the <h1> based on the REAL title, not on .download_label existence.
         var exportTitle = $('.'+_selector).data("exportTitle");
@@ -181,8 +185,9 @@ $(document).ready(function(){
     }).DataTable({
         // "scrollX": true,
         dom: '<"dt-toolbar"f<"dt-toolbar-right"lB>>r<t>ip',
-    
-         lengthMenu: [[100, -1], [100, "All"]],
+        pagingType: 'full_numbers',
+        // Page-size options step by 10 (plus larger jumps); default remains pageLength arg.
+         lengthMenu: [[10, 20, 50, 100, 200, 500, -1], [10, 20, 50, 100, 200, 500, "All"]],
        
           buttons: [
             {

@@ -36,10 +36,8 @@ function hospital_message_apply_placeholders($template, $subject, array $data)
         }
         $str = (string) $value;
         $variables[(string) $key] = $str;
-        if ($str !== '') {
-            $template = str_replace('{{' . $key . '}}', $str, $template);
-            $subject = str_replace('{{' . $key . '}}', $str, $subject);
-        }
+        $template = str_replace('{{' . $key . '}}', $str, $template);
+        $subject = str_replace('{{' . $key . '}}', $str, $subject);
     }
 
     return array(
@@ -57,8 +55,49 @@ function hospitalOpdRegistration($patient_id, $opd_id, $template, $subject, $app
     if (!is_array($patient)) {
         $patient = array();
     }
-    $patient['opdno'] = $CI->customlib->getSessionPrefixByType('opd_no') . $opd_id;
-    $patient['appointment_date'] = $appointment_date;
+
+    $opdNo = $CI->customlib->getSessionPrefixByType('opd_no') . $opd_id;
+    $patientName = trim((string) ($patient['patient_name'] ?? ''));
+    $doctorName = trim(
+        trim((string) ($patient['name'] ?? '')) . ' ' . trim((string) ($patient['surname'] ?? ''))
+    );
+
+    $appointmentRaw = trim((string) $appointment_date);
+    if ($appointmentRaw === '' && !empty($patient['appointment_date'])) {
+        $appointmentRaw = trim((string) $patient['appointment_date']);
+    }
+
+    $appointmentDate = $appointmentRaw;
+    $appointmentTime = '';
+    $ts = strtotime(str_replace('/', '-', $appointmentRaw));
+    if ($ts !== false) {
+        $appointmentDate = date('d-m-Y', $ts);
+        $appointmentTime = date('h:i A', $ts);
+    } elseif (preg_match('/^(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\s+(.+)$/', $appointmentRaw, $m)) {
+        $appointmentDate = $m[1];
+        $appointmentTime = trim($m[2]);
+    }
+
+    $hospitalName = 'Hospital';
+    try {
+        $settings = $CI->setting_model->get();
+        if (!empty($settings[0]['name'])) {
+            $hospitalName = (string) $settings[0]['name'];
+        }
+    } catch (Throwable $e) {
+        // ignore
+    }
+
+    $patient['opdno'] = $opdNo;
+    $patient['registration_number'] = $opdNo;
+    $patient['patient_name'] = $patientName;
+    $patient['customer_name'] = $patientName !== '' ? $patientName : 'Patient';
+    $patient['doctor_name'] = $doctorName !== '' ? $doctorName : 'Doctor';
+    $patient['appointment_date'] = $appointmentDate;
+    $patient['appointment_time'] = $appointmentTime;
+    $patient['patient_id'] = (string) ($patient['pid'] ?? $patient_id);
+    $patient['hospital_name'] = $hospitalName;
+    $patient['company_name'] = $hospitalName;
 
     return hospital_message_apply_placeholders($template, $subject, $patient);
 }

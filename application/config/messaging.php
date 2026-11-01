@@ -37,3 +37,20 @@ $config['messaging_quota'] = array(
 
 $config['messaging_whatsapp_pack_code'] = 'whatsapp_message_pack';
 $config['messaging_whatsapp_messages_per_pack'] = (int) hospital_env('MESSAGING_WHATSAPP_MESSAGES_PER_PACK', 500);
+
+/*
+|--------------------------------------------------------------------------
+| WhatsApp IMAGE header URLs (MSG91 header_1)
+|--------------------------------------------------------------------------
+|
+| Only templates whose MSG91 copy has an IMAGE header should be listed.
+| Absolute https URLs win; relative paths resolve against HOSPITAL_BASE_URL /
+| site base_url (web-accessible files under the hospital app).
+|
+*/
+$config['messaging_whatsapp_header_images'] = array(
+    'opd_patient_registration' => hospital_env(
+        'MESSAGING_WHATSAPP_OPD_REGISTRATION_HEADER_URL',
+        'backend/images/whatsapp-headers/OpdRegistration.png'
+    ),
+);

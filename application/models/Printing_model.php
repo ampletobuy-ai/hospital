@@ -7,6 +7,7 @@ if (!defined('BASEPATH')) {
 class Printing_model extends MY_Model
 {
     private $visibility_filtering = true;
+    private static $blank_line_schema_ready = false;
 
     /**
      * The settings screen must display saved content even when it is hidden
@@ -40,6 +41,7 @@ class Printing_model extends MY_Model
 
     public function add($data)
     {
+        $this->ensureBlankLineColumns();
         $this->db->trans_start(); # Starting Transaction
         $this->db->trans_strict(false); # See Note 01. If you wish can remove as well
         //=======================Code Start===========================
@@ -74,6 +76,8 @@ class Printing_model extends MY_Model
 
     public function get($id = '', $setting_for = '')
     {
+        $this->ensureBlankLineColumns();
+
         if (!empty($id)) {
             $query = $this->db->where("id", $id)->get("print_setting");
             return $this->applyVisibility($query->row_array());
@@ -83,8 +87,38 @@ class Printing_model extends MY_Model
         }
     }
 
+    /**
+     * Production tenant DBs provisioned before migrations 125/126 may lack
+     * blank-line / visibility columns. Ensure them on read so OPD bill print
+     * can honor Setup → Print Header Footer spacing settings.
+     */
+    private function ensureBlankLineColumns()
+    {
+        if (self::$blank_line_schema_ready) {
+            return;
+        }
+        self::$blank_line_schema_ready = true;
+
+        if (!$this->db->table_exists('print_setting')) {
+            return;
+        }
+        if (!$this->db->field_exists('show_header', 'print_setting')) {
+            $this->db->query("ALTER TABLE `print_setting` ADD COLUMN `show_header` TINYINT(1) NOT NULL DEFAULT 1 AFTER `print_footer`");
+        }
+        if (!$this->db->field_exists('show_footer', 'print_setting')) {
+            $this->db->query("ALTER TABLE `print_setting` ADD COLUMN `show_footer` TINYINT(1) NOT NULL DEFAULT 1 AFTER `show_header`");
+        }
+        if (!$this->db->field_exists('blank_lines_before', 'print_setting')) {
+            $this->db->query("ALTER TABLE `print_setting` ADD COLUMN `blank_lines_before` TINYINT(3) UNSIGNED NOT NULL DEFAULT 0 AFTER `show_footer`");
+        }
+        if (!$this->db->field_exists('blank_lines_after_header', 'print_setting')) {
+            $this->db->query("ALTER TABLE `print_setting` ADD COLUMN `blank_lines_after_header` TINYINT(3) UNSIGNED NOT NULL DEFAULT 0 AFTER `blank_lines_before`");
+        }
+    }
+
     public function getheaderfooter($setting_for)
-    {        
+    {
+        $this->ensureBlankLineColumns();
         $query = $this->db->where("setting_for", $setting_for)->get("print_setting");
         return $this->applyVisibility($query->row_array());
     }

@@ -165,6 +165,21 @@ try {
             $types[$def['key']] = true;
         }
 
+        // Prefer WhatsApp catalog body for notification_setting.template (email / local send preview).
+        // SMS/WhatsApp MSG91 content still comes from central message_templates per channel.
+        $templateBodies = array();
+        foreach ($definitions as $def) {
+            $key = (string) ($def['key'] ?? '');
+            if ($key === '') {
+                continue;
+            }
+            if (($def['channel'] ?? '') === 'whatsapp') {
+                $templateBodies[$key] = (string) $def['body'];
+            } elseif (($def['channel'] ?? '') === 'sms' && !isset($templateBodies[$key])) {
+                $templateBodies[$key] = (string) $def['body'];
+            }
+        }
+
         $updatedRows = 0;
         foreach (array_keys($types) as $type) {
             $smsId = $productCode . '_' . $type . '_sms';
@@ -174,14 +189,22 @@ try {
             $bind = '';
 
             if ($hasTemplateCol) {
-                $sets[] = "template_id = IF(template_id IS NULL OR template_id = '', ?, template_id)";
+                $sets[] = 'template_id = ?';
                 $params[] = $smsId;
                 $bind .= 's';
             }
             if ($hasWhatsappCol) {
-                $sets[] = "whatsapp_template_id = IF(whatsapp_template_id IS NULL OR whatsapp_template_id = '', ?, whatsapp_template_id)";
+                $sets[] = 'whatsapp_template_id = ?';
                 $params[] = $waId;
                 $bind .= 's';
+            }
+            if (isset($templateBodies[$type]) && hospital_cli_column_exists($mysqli, 'notification_setting', 'template')) {
+                $sets[] = 'template = ?';
+                $params[] = $templateBodies[$type];
+                $bind .= 's';
+            }
+            if (empty($sets)) {
+                continue;
             }
             $sql = 'UPDATE notification_setting SET ' . implode(', ', $sets) . ' WHERE type = ?';
             $params[] = $type;

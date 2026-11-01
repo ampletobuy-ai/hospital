@@ -23,8 +23,20 @@ function hospital_message_catalog_definitions()
     };
 
     return array(
-        $row('opd_patient_registration', 'OPD PATIENT REGISTRATION', 'sms', 'Dear [Patient Name], your OPD Registration at [Hospital Name] is successful on date [Appointment Date] with Patient Id [Patient Id] and OPD No [Opd No].', array('[Patient Name]', '[Appointment Date]', '[Patient Id]', '[Opd No]', '[Hospital Name]')),
-        $row('opd_patient_registration', 'OPD PATIENT REGISTRATION', 'whatsapp', 'Dear {{patient_name}} your OPD Registration at {{hospital_name}} is successful on date {{appointment_date}} with Patient Id {{patient_id}} and OPD No {{opdno}}', array('patient_name', 'hospital_name', 'appointment_date', 'patient_id', 'opdno')),
+        $row(
+            'opd_patient_registration',
+            'OPD PATIENT REGISTRATION',
+            'sms',
+            "Hi {{customer_name}}, Thank you for registering with {{company_name}}! Your OPD registration has been successfully completed. Registration No.: {{registration_number}}, Patient Name: {{patient_name}}, Doctor: {{doctor_name}}, Appointment Date: {{appointment_date}}, Appointment Time: {{appointment_time}}. We look forward to serving you and wish you good health. For any assistance or queries, please feel free to contact us.",
+            array('customer_name', 'company_name', 'registration_number', 'patient_name', 'doctor_name', 'appointment_date', 'appointment_time')
+        ),
+        $row(
+            'opd_patient_registration',
+            'OPD PATIENT REGISTRATION',
+            'whatsapp',
+            "Hi {{customer_name}},\n\nThank you for registering with *{{company_name}}*! Your OPD registration has been successfully completed.\n\n*OPD Registration Details*\n• Registration No.: {{registration_number}}\n• Patient Name: {{patient_name}}\n• Doctor: {{doctor_name}}\n• Appointment Date: {{appointment_date}}\n• Appointment Time: {{appointment_time}}\n\nWe look forward to serving you and wish you good health.\n\nFor any assistance or queries, please feel free to contact us.",
+            array('customer_name', 'company_name', 'registration_number', 'patient_name', 'doctor_name', 'appointment_date', 'appointment_time')
+        ),
 
         $row('ipd_patient_registration', 'IPD PATIENT REGISTRATION', 'sms', 'Dear [Patient Name], your IPD Registration at [Hospital Name] is successful with Patient Id [Patient Id] and IPD No [Ipd No].', array('[Patient Name]', '[Patient Id]', '[Ipd No]', '[Hospital Name]')),
         $row('ipd_patient_registration', 'IPD PATIENT REGISTRATION', 'whatsapp', 'Dear {{patient_name}} your IPD Registration at {{hospital_name}} is successful with Patient Id {{patient_id}} and IPD No {{ipd_no}}', array('patient_name', 'hospital_name', 'patient_id', 'ipd_no')),

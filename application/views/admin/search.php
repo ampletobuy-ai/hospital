@@ -366,6 +366,10 @@ $marital_status = $this->config->item('marital_status');
         'use strict';
         $(document).ready(function() {
             var search_text = $('#search_text').val();
+            // 10 page buttons in the pager; length menu steps by 10 (via initDatatable).
+            if ($.fn.dataTable && $.fn.dataTable.ext && $.fn.dataTable.ext.pager) {
+                $.fn.dataTable.ext.pager.numbers_length = 10;
+            }
             initDatatable('ajaxlist', 'admin/admin/getpatientdatatable', {
                 'search_text': search_text
             }, [], 100, [{
