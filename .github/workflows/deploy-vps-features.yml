@@ -146,6 +146,14 @@ jobs:
           envs: BUILD_ON_VPS,HEALTHCHECK_URL
           script: |
             set -euo pipefail
+            echo "==> Disk before emergency prune"
+            df -h / || true
+            # Free space before git/build — previous failed builds leave full disks.
+            docker container prune -f || true
+            docker image prune -af || true
+            docker builder prune -af || true
+            docker system prune -af || true
+            df -h / || true
             cd /opt/hospital
             git fetch origin Features
             git checkout Features
