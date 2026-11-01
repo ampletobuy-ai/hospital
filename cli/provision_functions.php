@@ -192,6 +192,9 @@ function hospital_cli_bootstrap_tenant(array $defaultCfg, $tenantDatabase, $tena
     $stmt->execute();
     $stmt->close();
 
+    // Template DB historically seeds USD/$ — force product locale defaults.
+    $mysqli->query("UPDATE sch_settings SET currency = 'INR', currency_symbol = '₹', timezone = 'Asia/Kolkata', date_format = 'd/m/Y' WHERE id = 1");
+
     // Product branding defaults for new tenants (Qubex Track).
     $mysqli->query("UPDATE front_cms_settings SET logo = './uploads/hospital_content/logo/qubex_track_logo.png', fav_icon = './uploads/hospital_content/logo/qubex_track_favicon.png' WHERE id = 1");
 

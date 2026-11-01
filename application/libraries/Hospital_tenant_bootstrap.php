@@ -35,6 +35,14 @@ class Hospital_tenant_bootstrap
 
         $existingSettings = $db->get_where('sch_settings', array('id' => 1), 1)->row_array();
         if ($existingSettings) {
+            // Upgrade legacy install seed ($ / USD+$) to product defaults without
+            // clobbering tenants that intentionally chose another currency.
+            $existingCurrency = (string) ($existingSettings['currency'] ?? '');
+            $existingSymbol = (string) ($existingSettings['currency_symbol'] ?? '');
+            if ($existingSymbol === '$' && ($existingCurrency === 'USD' || $existingCurrency === 'INR' || $existingCurrency === '')) {
+                $settingsPayload['currency'] = 'INR';
+                $settingsPayload['currency_symbol'] = '₹';
+            }
             $db->where('id', 1);
             $db->update('sch_settings', $settingsPayload);
         } else {
@@ -203,6 +211,13 @@ class Hospital_tenant_bootstrap
         } catch (Throwable $e) {
             // Keep hardcoded defaults.
         }
+
+        // Template DB / database.sql historically shipped USD/$ — always keep
+        // product locale defaults unless the signup payload overrides them.
+        $seed['currency'] = 'INR';
+        $seed['currency_symbol'] = '₹';
+        $seed['timezone'] = 'Asia/Kolkata';
+        $seed['date_format'] = 'd/m/Y';
 
         return array_merge($seed, $overrides);
     }

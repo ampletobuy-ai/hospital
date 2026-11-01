@@ -31,10 +31,21 @@ fi
 
 export HOSPITAL_IMAGE_TAG
 
+echo "==> Disk before cleanup"
+df -h / /var/lib/docker 2>/dev/null || df -h /
+
+# VPS builds accumulate dangling images/layers until containerd hits ENOSPC.
+echo "==> Pruning unused Docker data (keeps running containers/volumes)"
+docker container prune -f >/dev/null 2>&1 || true
+docker image prune -af >/dev/null 2>&1 || true
+docker builder prune -af >/dev/null 2>&1 || true
+docker system prune -af >/dev/null 2>&1 || true
+df -h / 2>/dev/null || true
+
 echo "==> Deploying hospital images @ ${HOSPITAL_IMAGE_TAG}"
 
-if [[ "${HOSPITAL_BUILD_ON_VPS}" == "1" ]]; then
-  echo "==> Building on VPS (HOSPITAL_BUILD_ON_VPS=1)"
+if [[ "${HOSPITAL_BUILD_ON_VPS}" == "1" ]] || [[ "${HOSPITAL_BUILD_ON_VPS}" == "true" ]]; then
+  echo "==> Building on VPS (HOSPITAL_BUILD_ON_VPS=${HOSPITAL_BUILD_ON_VPS})"
   # Allow compose build: temporarily clear pull_policy-only override by building with prod file
   docker compose -f docker-compose.prod.yml -f docker-compose.vps.yml build --pull
   $COMPOSE up -d --remove-orphans
@@ -45,6 +56,10 @@ else
   fi
   $COMPOSE up -d --remove-orphans
 fi
+
+echo "==> Pruning build cache left after image bake"
+docker builder prune -af >/dev/null 2>&1 || true
+docker image prune -f >/dev/null 2>&1 || true
 
 echo "==> Waiting for hospital-app..."
 ready=0
@@ -72,6 +87,9 @@ $COMPOSE exec -T app sh -c '
   chown -R www-data:www-data application/cache application/logs application/sessions uploads temp 2>/dev/null || true
   chmod -R ug+rwX application/cache application/logs application/sessions uploads temp 2>/dev/null || true
 ' || true
+
+echo "==> Align legacy USD/\$ seed → INR/₹ (template + tenants; skips intentional other currencies)"
+$COMPOSE exec -T app php cli/fix_currency_inr_defaults.php || true
 
 echo "==> Healthcheck ${DEPLOY_HEALTHCHECK_URL}"
 code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 -L "${DEPLOY_HEALTHCHECK_URL}" || true)"

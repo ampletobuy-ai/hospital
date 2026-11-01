@@ -19,3 +19,27 @@ temp/**
 cgi-bin
 docs
 *.md
+agent-transcripts
+**/.git
+**/tests
+**/Tests
+**/test
+**/phpunit*
+**/.github
+**/README*
+**/CHANGELOG*
+**/LICENSE*
+**/composer.lock
+# Huge CJK / specialty mPDF fonts unused by hospital PDFs (keeps DejaVu/Free*/etc.)
+application/third_party/omnipay/vendor/mpdf/mpdf/ttfonts/Sun-ExtA.ttf
+application/third_party/omnipay/vendor/mpdf/mpdf/ttfonts/Sun-ExtB.ttf
+application/third_party/omnipay/vendor/mpdf/mpdf/ttfonts/UnBatang_0613.ttf
+application/third_party/omnipay/vendor/mpdf/mpdf/ttfonts/Aegyptus.otf
+application/third_party/omnipay/vendor/mpdf/mpdf/ttfonts/Aegean.otf
+application/third_party/omnipay/vendor/mpdf/mpdf/ttfonts/Akkadian.otf
+application/third_party/omnipay/vendor/mpdf/mpdf/ttfonts/Jomolhari.ttf
+application/third_party/omnipay/vendor/mpdf/mpdf/ttfonts/Quivira.otf
+application/third_party/omnipay/vendor/mpdf/mpdf/ttfonts/damase_v.2.ttf
+application/third_party/omnipay/vendor/mpdf/mpdf/ttfonts/AboriginalSansREGULAR.ttf
+application/third_party/omnipay/vendor/mpdf/mpdf/ttfonts/Abyssinica_SIL.ttf
+application/third_party/omnipay/vendor/mpdf/mpdf/ttfonts/XB Riyaz*.ttf
