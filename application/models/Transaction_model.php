@@ -538,7 +538,9 @@ class Transaction_model extends MY_Model
            
         }  
        
-        $sql="select opd_details.id,'opd_no' module_no,visit_details.id as visit_id,visit_details.symptoms,visit_details.appointment_date, ipd_prescription_basic.finding_description, patients.patient_name,patients.dob,patients.as_of_date,patients.age,patients.month,patients.day,patients.gender,patients.mobileno,patients.guardian_name,patients.address,patients.is_antenatal,patients.id patientid,staff.name,staff.surname,staff.employee_id ".$field_variable." from opd_details 
+        // patientid must come from opd_details.patient_id — patients.id is NULL when the
+        // LEFT JOIN misses, which produced /admin/patient/profile/ links and blank names.
+        $sql="select opd_details.id,'opd_no' module_no,visit_details.id as visit_id,visit_details.symptoms,visit_details.appointment_date, ipd_prescription_basic.finding_description, patients.patient_name,patients.dob,patients.as_of_date,patients.age,patients.month,patients.day,patients.gender,patients.mobileno,patients.guardian_name,patients.address,patients.is_antenatal,opd_details.patient_id as patientid,staff.name,staff.surname,staff.employee_id ".$field_variable." from opd_details 
         left join visit_details on  opd_details.id=visit_details.opd_details_id 
         left join ipd_prescription_basic on ipd_prescription_basic.visit_details_id = visit_details.id  
         left join patients on patients.id = opd_details.patient_id
@@ -2040,16 +2042,52 @@ class Transaction_model extends MY_Model
             UNION ALL
             (SELECT 'transaction',
                     transactions.id,
-                    IFNULL(patients.patient_name, '—'),
+                    COALESCE(
+                        NULLIF(TRIM(p_direct.patient_name), ''),
+                        NULLIF(TRIM(p_opd.patient_name), ''),
+                        NULLIF(TRIM(p_ipd.patient_name), ''),
+                        NULLIF(TRIM(p_pharm.patient_name), ''),
+                        NULLIF(TRIM(p_path.patient_name), ''),
+                        NULLIF(TRIM(p_radio.patient_name), ''),
+                        NULLIF(TRIM(p_blood.patient_name), ''),
+                        NULLIF(TRIM(p_appt.patient_name), ''),
+                        NULLIF(TRIM(p_amb.patient_name), ''),
+                        NULLIF(TRIM(CONCAT(IFNULL(staff.name, ''), ' ', IFNULL(staff.surname, ''))), ''),
+                        '—'
+                    ),
                     'posted bill payment',
                     CONCAT('#TXN-', transactions.id),
                     UPPER(IFNULL(transactions.payment_mode, 'Billing')),
                     'info',
                     transactions.amount,
                     transactions.payment_date,
-                    'patient'
+                    CASE
+                        WHEN COALESCE(
+                            p_direct.id, p_opd.id, p_ipd.id, p_pharm.id,
+                            p_path.id, p_radio.id, p_blood.id, p_appt.id, p_amb.id
+                        ) IS NOT NULL THEN 'patient'
+                        WHEN staff.id IS NOT NULL THEN 'staff'
+                        ELSE 'patient'
+                    END
              FROM transactions
-             LEFT JOIN patients ON patients.id = transactions.patient_id
+             LEFT JOIN patients p_direct ON p_direct.id = transactions.patient_id
+             LEFT JOIN opd_details ON opd_details.id = transactions.opd_id
+             LEFT JOIN patients p_opd ON p_opd.id = opd_details.patient_id
+             LEFT JOIN ipd_details ON ipd_details.id = transactions.ipd_id
+             LEFT JOIN patients p_ipd ON p_ipd.id = ipd_details.patient_id
+             LEFT JOIN pharmacy_bill_basic ON pharmacy_bill_basic.id = transactions.pharmacy_bill_basic_id
+             LEFT JOIN patients p_pharm ON p_pharm.id = pharmacy_bill_basic.patient_id
+             LEFT JOIN pathology_billing ON pathology_billing.id = transactions.pathology_billing_id
+             LEFT JOIN patients p_path ON p_path.id = pathology_billing.patient_id
+             LEFT JOIN radiology_billing ON radiology_billing.id = transactions.radiology_billing_id
+             LEFT JOIN patients p_radio ON p_radio.id = radiology_billing.patient_id
+             LEFT JOIN blood_issue ON blood_issue.id = transactions.blood_issue_id
+             LEFT JOIN patients p_blood ON p_blood.id = blood_issue.patient_id
+             LEFT JOIN appointment ON appointment.id = transactions.appointment_id
+             LEFT JOIN patients p_appt ON p_appt.id = appointment.patient_id
+             LEFT JOIN ambulance_call ON ambulance_call.id = transactions.ambulance_call_id
+             LEFT JOIN patients p_amb ON p_amb.id = ambulance_call.patient_id
+             LEFT JOIN staff ON staff.id = transactions.received_by
              WHERE transactions.payment_date IS NOT NULL
              ORDER BY transactions.payment_date DESC
              LIMIT 8)

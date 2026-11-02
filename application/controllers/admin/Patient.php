@@ -2588,6 +2588,14 @@ This Function is used to Import Multiple Patient Records
 
     public function visitdetails($id, $opdid, $tab_type = 0)
     {
+        $id    = trim((string) $id);
+        $opdid = trim((string) $opdid);
+        if ($id === '' || $id === '0' || $opdid === '' || $opdid === '0') {
+            $this->session->set_flashdata('msg', '<div class="alert alert-danger">' . $this->lang->line('no_record_found') . '</div>');
+            redirect('admin/patient/search');
+            return;
+        }
+
         if (!empty($id)) {
             $result         = $this->patient_model->getDetails($opdid);       
             $data['result'] = $result;
@@ -3047,6 +3055,15 @@ This Function is used to Import Multiple Patient Records
             access_denied();
         }
 
+        // Bare /admin/patient/profile/ (no id) used to render the profile view with an
+        // empty $result and undefined $opd_details_id → HTTP 500 on production (PHP 8).
+        $id = trim((string) $id);
+        if ($id === '' || $id === '0') {
+            $this->session->set_flashdata('msg', '<div class="alert alert-danger">' . $this->lang->line('no_record_found') . '</div>');
+            redirect('admin/patient/search');
+            return;
+        }
+
         $this->session->set_userdata('top_menu', 'OPD_Out_Patient');
         $data["marital_status"]     = $this->marital_status;
         $data["payment_mode"]       = $this->payment_mode;
@@ -3089,11 +3106,17 @@ This Function is used to Import Multiple Patient Records
         $diagnosis_details      = array();
         $opd_details            = array();
 
-        $timeline_list = array();
+        $timeline_list  = array();
+        $opd_details_id = array();
         if (!empty($id)) {
             $result         = $this->patient_model->getpatientDetails($id);
             $opd_details_id = $this->patient_model->getopdmaxid($id);
-            $timeline_list = $this->timeline_model->getPatientTimeline($id, $timeline_status = '');
+            $timeline_list  = $this->timeline_model->getPatientTimeline($id, $timeline_status = '');
+        }
+        if (empty($result)) {
+            $this->session->set_flashdata('msg', '<div class="alert alert-danger">' . $this->lang->line('no_record_found') . '</div>');
+            redirect('admin/patient/search');
+            return;
         }
         $data["opd_icd_codes"] = array();
         if (!empty($opd_details_id) && !empty($opd_details_id['opdid'])) {
@@ -6993,14 +7016,23 @@ This Function is used to Import Multiple Patient Records
         if (!empty($reportdata->data)) {
             foreach ($reportdata->data as $key => $value) {
 
-                $first_action = "<a href=" . base_url() . 'admin/patient/profile/' . $value->patientid .">";
+                $patient_id = isset($value->patientid) ? trim((string) $value->patientid) : '';
+                $opd_label  = $this->customlib->getSessionPrefixByType($value->module_no) . $value->id;
+                // Prefer visit details (patient + OPD) so OPD No opens the visit, not a bare profile URL.
+                if ($patient_id !== '' && $patient_id !== '0') {
+                    $opd_cell = "<a href=\"" . base_url('admin/patient/visitdetails/' . $patient_id . '/' . $value->id) . "\">" . $opd_label . "</a>";
+                } else {
+                    $opd_cell = $opd_label;
+                }
 
                 $row   = array();
                 $row[] = $this->customlib->YYYYMMDDTodateFormat($value->appointment_date);
-                $row[] = $first_action . $this->customlib->getSessionPrefixByType($value->module_no) . $value->id . "</a>";              
+                $row[] = $opd_cell;
                 $row[] = $this->customlib->getSessionPrefixByType('checkup_id') . $value->visit_id;
-                $row[] = composePatientName($value->patient_name, $value->patientid);
-                $row[] = $this->customlib->get_patient_current_age($value->patientid);              
+                $row[] = composePatientName($value->patient_name, $patient_id);
+                $row[] = ($patient_id !== '' && $patient_id !== '0')
+                    ? $this->customlib->get_patient_current_age($patient_id)
+                    : '';
                 
                 if($value->gender){
                     $row[]        = $this->lang->line(strtolower($value->gender));

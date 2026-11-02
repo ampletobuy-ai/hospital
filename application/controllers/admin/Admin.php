@@ -960,8 +960,10 @@ class Admin extends Admin_Controller
                 else                  { $time_ago = date('M j', $ts); }
             }
             // Show the name with its type, e.g. "Nitin (Patient)" / "Nitin (Staff)".
-            $actor = $r['subject'] ?: '—';
-            if ($actor !== '—' && !empty($r['subject_type'])) {
+            $actor = trim((string) ($r['subject'] ?? ''));
+            if ($actor === '' || $actor === '—') {
+                $actor = '—';
+            } elseif (!empty($r['subject_type'])) {
                 $type_label = ($r['subject_type'] === 'staff') ? $this->lang->line('staff') : $this->lang->line('patient');
                 $actor     .= ' (' . $type_label . ')';
             }
