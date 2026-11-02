@@ -2177,6 +2177,9 @@ class Customlib
         
 		$this->CI->load->model('patient_model');		
 		$result = $this->CI->patient_model->getpatientbyid($patient_id);
+		if (empty($result) || !is_array($result)) {
+			return '';
+		}
 		
 		$age= $result['age'];
 		$month= $result['month'];
