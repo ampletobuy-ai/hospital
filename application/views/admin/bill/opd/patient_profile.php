@@ -141,6 +141,7 @@ $_initials = mb_strtoupper($_initials);
                                                 <?php }
                                             }
                                         ?>
+                                        <th class="text-end"><?php echo $this->lang->line('balance_amount') . ' (' . $currency_symbol . ')'; ?></th>
                                         <th class="text-end noExport"><?php echo $this->lang->line('action') ?></th>
                                     </tr>
                                 </thead>

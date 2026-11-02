@@ -2011,8 +2011,17 @@ class Patient_model extends MY_Model
         $field_variable      = implode(',', $field_var_array);
         $custom_field_column = implode(',', $custom_field_column_array);
 
+        $balance_sql = '(IFNULL((SELECT SUM(pc.amount) FROM patient_charges pc WHERE pc.opd_id = opd_details.id), 0)
+            - IFNULL((SELECT SUM(t.amount) FROM transactions t WHERE t.opd_id = opd_details.id), 0)) AS balance_amount';
+
+        $orderable = 'opd_details.id,opd_details.case_reference_id,visit_details.appointment_date,staff.name,visit_details.refference,visit_details.symptoms,generated_by_staff.name';
+        if (!empty($custom_field_column)) {
+            $orderable .= ',' . $custom_field_column;
+        }
+        $orderable .= ',balance_amount';
+
         $this->datatables
-            ->select('opd_details.case_reference_id,opd_details.id as opd_id,opd_details.patient_id as patientid,opd_details.is_ipd_moved,max(visit_details.id) as visit_id,visit_details.appointment_date,visit_details.refference,visit_details.symptoms,patients.id as pid,patients.patient_name,visit_details.is_antenatal,patients.gender,staff.id as staff_id,staff.name,staff.surname,staff.employee_id,consult_charges.standard_charge,patient_charges.apply_charge,generated_by_staff.name as generated_byname,generated_by_staff.surname as generated_bysurname,generated_by_staff.employee_id as generated_byemployee_id,' . $field_variable)
+            ->select('opd_details.case_reference_id,opd_details.id as opd_id,opd_details.patient_id as patientid,opd_details.is_ipd_moved,max(visit_details.id) as visit_id,visit_details.appointment_date,visit_details.refference,visit_details.symptoms,patients.id as pid,patients.patient_name,visit_details.is_antenatal,patients.gender,staff.id as staff_id,staff.name,staff.surname,staff.employee_id,consult_charges.standard_charge,patient_charges.apply_charge,generated_by_staff.name as generated_byname,generated_by_staff.surname as generated_bysurname,generated_by_staff.employee_id as generated_byemployee_id,' . $balance_sql . (!empty($field_variable) ? ',' . $field_variable : ''))
 
             ->join('visit_details', 'opd_details.id = visit_details.opd_details_id')
 
@@ -2022,15 +2031,14 @@ class Patient_model extends MY_Model
             ->join('patient_charges', 'opd_details.id=patient_charges.opd_id', 'left')
             ->join('staff as generated_by_staff', 'generated_by_staff.id = opd_details.generated_by', "left")
             ->searchable('opd_details.id,opd_details.case_reference_id,visit_details.appointment_date,staff.name,visit_details.refference,visit_details.symptoms')
-            ->orderable('opd_details.id,opd_details.case_reference_id,visit_details.appointment_date,staff.name,visit_details.refference,visit_details.symptoms,
-                generated_by_staff.name as generated_byname,'."$custom_field_column".'')
+            ->orderable($orderable)
             ->sort('visit_details.id', 'desc')
             ->where('opd_details.patient_id', $patientid)
             ->where('opd_details.discharged', 'no')
             ->group_by('visit_details.opd_details_id', '')
             ->from('opd_details');
         $result = $this->datatables->generate('json');
-       
+
         return $result;
     }
 
@@ -4752,6 +4760,7 @@ class Patient_model extends MY_Model
             if ($show_antenatal) {
                 $orderable_cols[] = 'visit_details.is_antenatal';  // RBAC-gated (antenatal.can_view)
             }
+            $orderable_cols[] = 'balance_amount';                // OPD outstanding (charges − payments)
         }
         // Action column is excluded — auto-non-sortable (initDatatable default columnDefs targets:[-1]).
         $orderable_string = implode(',', $orderable_cols);
@@ -4774,8 +4783,12 @@ class Patient_model extends MY_Model
 				$this->datatables->where('visit_details.appointment_date <',  $toDay );
 			}
 			
+        // Same outstanding formula as Bill_model::getOutstandingTotal() OPD arm.
+        $balance_sql = '(IFNULL((SELECT SUM(pc.amount) FROM patient_charges pc WHERE pc.opd_id = opd_details.id), 0)
+            - IFNULL((SELECT SUM(t.amount) FROM transactions t WHERE t.opd_id = opd_details.id), 0)) AS balance_amount';
+
         $this->datatables
-            ->select('opd_details.case_reference_id,opd_details.id as opd_id,opd_details.patient_id as patientid,opd_details.is_ipd_moved,max(visit_details.id) as visit_id,visit_details.appointment_date,visit_details.refference,visit_details.symptoms,patients.id as pid,patients.patient_name,staff.id as staff_id,staff.name,staff.surname,staff.employee_id,consult_charges.standard_charge,patient_charges.apply_charge,visit_details.is_antenatal,generated_by_staff.name as generated_byname,generated_by_staff.surname as generated_bysurname,generated_by_staff.employee_id as generated_byemployee_id,patients.gender,patients.guardian_name,patients.mobileno,max(visit_details.appointment_date) as last_visit,count(opd_details.patient_id) as total_visit,' . $field_variable)
+            ->select('opd_details.case_reference_id,opd_details.id as opd_id,opd_details.patient_id as patientid,opd_details.is_ipd_moved,max(visit_details.id) as visit_id,visit_details.appointment_date,visit_details.refference,visit_details.symptoms,patients.id as pid,patients.patient_name,staff.id as staff_id,staff.name,staff.surname,staff.employee_id,consult_charges.standard_charge,patient_charges.apply_charge,visit_details.is_antenatal,generated_by_staff.name as generated_byname,generated_by_staff.surname as generated_bysurname,generated_by_staff.employee_id as generated_byemployee_id,patients.gender,patients.guardian_name,patients.mobileno,max(visit_details.appointment_date) as last_visit,count(opd_details.patient_id) as total_visit,' . $balance_sql . (!empty($field_variable) ? ',' . $field_variable : ''))
             ->join('visit_details', 'opd_details.id = visit_details.opd_details_id')
             ->join('staff', 'staff.id = visit_details.cons_doctor', "inner")
             ->join('staff as generated_by_staff', 'generated_by_staff.id = opd_details.generated_by', "left")
