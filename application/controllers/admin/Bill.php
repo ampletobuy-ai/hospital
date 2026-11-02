@@ -2885,6 +2885,9 @@ class Bill extends Admin_Controller
                 $row[]  =  $value->is_antenatal==1 ?  "Yes" :  "No";
 				}
 
+                $balance_amount = isset($value->balance_amount) ? (float) $value->balance_amount : 0.0;
+                $row[] = amountFormat($balance_amount);
+
                 $row[] = $action;
                 $dt_data[] = $row;
             }
@@ -2967,6 +2970,8 @@ class Bill extends Admin_Controller
                     }
                 }
                 //====================
+                $balance_amount = isset($value->balance_amount) ? (float) $value->balance_amount : 0.0;
+                $row[]     = amountFormat($balance_amount);
                 $row[]     = $action;
                 $dt_data[] = $row;
             }

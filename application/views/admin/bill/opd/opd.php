@@ -64,6 +64,7 @@ $currency_symbol = $this->customlib->getHospitalCurrencyFormat();
 									<?php if ($this->rbac->hasPrivilege('antenatal', 'can_view')) {  ?>
                                     <th class="text-end"><?php echo $this->lang->line('is_antenatal'); ?></th>
 									<?php  } ?>
+                                    <th class="text-end"><?php echo $this->lang->line('balance_amount') . ' (' . $currency_symbol . ')'; ?></th>
                                     <th class="noExport text-end"><?php echo $this->lang->line('action'); ?></th>
                                     </tr>
                                 </thead>
