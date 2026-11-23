@@ -176,6 +176,7 @@ Super Admin (`role_id=7`) always retains override within **plan-allowed** module
 | `patient_visit_report` |
 | `patient_bill_report` |
 | `daily_transaction_report` |
+| `all_transaction_report` |
 | `income_report` |
 | `expense_report` |
 | `staff_attendance_report` |
@@ -190,7 +191,7 @@ Super Admin (`role_id=7`) always retains override within **plan-allowed** module
 | Lab | `pathology_patient_report`, `pathology_balance_report`, `radiology_patient_report`, `radiology_balance_report` |
 | Blood / Ambulance / OT | `blood_donor_report`, `blood_issue_report`, `component_issue_report`, `ambulance_report`, `ot_report` |
 | TPA | `tpa_report` |
-| Finance deep | `all_transaction_report`, `balance_amount_report`, `processing_transaction_report`, `income_group_report`, `expense_group_report` |
+| Finance deep | `balance_amount_report`, `processing_transaction_report`, `income_group_report`, `expense_group_report` |
 | Inventory | `inventory_stock_report`, `add_item_report`, `issue_inventory_report`, `stock_report` |
 | HR / Audit | `payroll_report`, `payroll_month_report`, `staff_day_wise_attendance_report`, `user_log`, `audit_trail_report`, `email_sms_log` |
 | Other | `birth_report`, `death_report`, `live_consultation_report`, `live_meeting_report` |
