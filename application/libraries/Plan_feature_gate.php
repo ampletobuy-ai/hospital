@@ -112,6 +112,7 @@ class Plan_feature_gate
         'patient_visit_report',
         'patient_bill_report',
         'daily_transaction_report',
+        'all_transaction_report',
         'income_report',
         'expense_report',
         'staff_attendance_report',
